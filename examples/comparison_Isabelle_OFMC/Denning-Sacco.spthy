@@ -1,0 +1,98 @@
+theory DenningSacco
+begin
+
+
+section{* Denning-Sacco Shared Key Protocol *}
+
+text{*
+  Modeled after the description in the SPORE library:
+
+    http://www.lsv.ens-cachan.fr/Software/spore/denningSacco.html
+
+  Notable differences:
+
+    1. We do not yet have support for reasoning about timestamps.
+
+    2. We are using explicit global constants instead of implicit typing to
+       discern the different encryptions.
+
+    3. We are using a hack to support the encrypted ticket: We are pattern
+       matching inside the encryption, but with fresh variables. Hence, the
+       initiator 'I' only checks the structure of the ticket but not its
+       contents. As the explicit global constants already identify the format
+       of a message, this check does remove any traces.
+
+       ( This hack was inspired by the model used in Isabelle/OFMC. However
+         there not even fresh variables are used. )
+
+    4. Similar to the model in Isabelle/OFMC, we added a transfer of some
+       arbitrary payload to show that the session key really works as intended.
+
+       Note, that we do not require this, as we could also formulate the
+       session-key secrecy property directly. See the our example models in the
+       'examples' directory.
+
+*}
+
+protocol DenningSacco
+{
+  1. I -> S: I,R
+  2.   <- S: {'TT1', R, kIR, T, {'TT2', I, kIR, T}k(R,S)}k(I,S)
+     I <-  : {'TT1', R, kIR, T, {'TT2', I, SomekIR, SomeT}k(R,S)}k(I,S)
+  3. I ->  : {'TT2', I, SomekIR, SomeT}k(R,S)
+       -> R: {'TT2', I, kIR, T}k(R,S)
+  4. I <- R: {'TT3', Payload}kIR
+}
+
+
+subsection{* Security Properties *}
+
+properties (of DenningSacco)
+  auto: auto-properties
+
+  // payload secrecy
+  R_Payload_secrecy:  secret(R, -, Payload, {I,R,S}) 
+  I_Payload_secrecy:  secret(I, 4, Payload, {I,R,S}) 
+  
+
+text{*
+  Note that the following authentication properties only ensure the existence
+  of partner threads of a certain structure and not the uniqueness.
+  
+  The stronger property of session key freshness has to be specified and proven
+  in Isabelle/HOL on the basis of the automatically produced proofs for the
+  properties specified in this input file of ScytherP.
+*}
+
+property (of DenningSacco) I_auth:
+  premises
+    "role(1) = I"
+    "step(1, I_4)"
+    "uncompromised(I#1, R#1, S#1)"
+  imply threads 2, 3 such that
+    "  role(2) = R
+     & role(3) = S
+     & I#1  = I#2    & I#2  = I#3
+     & R#1  = R#2    & R#2  = R#3
+     & S#1  = S#2    & S#2  = S#3
+     & kIR#1 = kIR#2 & kIR#2 = kIR#3
+     & T#1 = T#2     & T#2 = T#3
+     & Payload#1 = Payload#2 
+    "
+
+property (of DenningSacco) R_auth:
+  premises
+    "role(2) = R"
+    "step(2, R_4)"
+    "uncompromised(I#2, R#2, S#2)"
+  imply threads 1, 3 such that
+    "  role(1) = I
+     & role(3) = S
+     & I#1  = I#2    & I#2  = I#3
+     & R#1  = R#2    & R#2  = R#3
+     & S#1  = S#2    & S#2  = S#3
+     & kIR#1 = kIR#2 & kIR#2 = kIR#3
+     & T#1 = T#2     & T#2 = T#3
+    "
+end
+

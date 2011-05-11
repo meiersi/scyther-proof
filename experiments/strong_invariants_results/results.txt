@@ -1,0 +1,93 @@
+
+
+% generator:   scytherP version 0.1.0 r62351, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=0 --no-soundness-check --hide=auto --shortest --Output=output_SR protocols/comparison_Isabelle_OFMC/Andrew.spthy protocols/comparison_Isabelle_OFMC/Bilateral-Key_Exchange.spthy protocols/comparison_Isabelle_OFMC/Denning-Sacco.spthy protocols/comparison_Isabelle_OFMC/nsl.spthy protocols/comparison_Isabelle_OFMC/tls-simplified.spthy protocols/comparison_Isabelle_OFMC/WideMouthFrog.spthy protocols/auto_properties/TLS_paulson.spthy protocols/auto_properties/Yahalom2.spthy --isabelle
+% date:        2010-01-27 16:01:51.363003 UTC
+% system:      i386/linux
+% input revs.: 62355
+
+Protocol               & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs & Checking Time & Isabelle Status & Isabelle Message\\
+Andrew                 & 62355    &     2 &      2 &      1 &       0.029249s &           10 &                    7 &               0 &    11.605609s & checked         &                 \\
+Bilateral-Key_Exchange & 62355    &     2 &      2 &      1 &       0.026151s &           16 &                   12 &               0 &    13.687625s & checked         &                 \\
+Denning-Sacco          & 62355    &     2 &      2 &      1 &       0.389645s &           37 &                   18 &               0 &    55.546648s & checked         &                 \\
+nsl                    & 62355    &     4 &      2 &      1 &       0.032506s &           17 &                   15 &               0 &     11.73075s & checked         &                 \\
+tls-simplified         & 62355    &     4 &      1 &      1 &       0.137727s &           16 &                   13 &               0 &    14.964595s & checked         &                 \\
+WideMouthFrog          & 62355    &     2 &      1 &      1 &       0.058907s &           16 &                   10 &               0 &    15.314954s & checked         &                 \\
+TLS_paulson            & 62355    &     4 &      2 &      1 &        0.32882s &           22 &                   16 &               0 &    75.760199s & checked         &                 \\
+Yahalom2               & 62355    &     2 &      2 &      1 &       0.174532s &           21 &                   15 &               0 &     28.35644s & checked         &                 \\
+
+
+% generator:   scytherP version 0.1.0 r62475, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=0 --no-soundness-check --hide=auto --shortest --Output=output_SR protocols/comparison_Isabelle_OFMC/Andrew.spthy protocols/comparison_Isabelle_OFMC/Bilateral-Key_Exchange.spthy protocols/comparison_Isabelle_OFMC/Denning-Sacco.spthy protocols/comparison_Isabelle_OFMC/nsl.spthy protocols/comparison_Isabelle_OFMC/tls-simplified.spthy protocols/comparison_Isabelle_OFMC/WideMouthFrog.spthy protocols/auto_properties/Yahalom2.spthy protocols/auto_properties/TLS_paulson.spthy protocols/auto_properties/KerberosV_autoprops.spthy protocols/clean/KerberosV.spthy
+% date:        2010-01-31 18:52:09.246603 UTC
+% system:      i386/linux
+% input revs.: 62444, 0
+
+Protocol               & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+Andrew                 & 62444    &     2 &      2 &      1 &       0.024029s &           10 &                    7 &               0\\
+Bilateral-Key_Exchange & 62444    &     2 &      2 &      1 &       0.023825s &           16 &                   12 &               0\\
+Denning-Sacco          & 62444    &     2 &      2 &      1 &       0.391394s &           37 &                   18 &               0\\
+nsl                    & 62444    &     4 &      2 &      1 &       0.033225s &           17 &                   15 &               0\\
+tls-simplified         & 62444    &     4 &      1 &      1 &       0.140311s &           16 &                   13 &               0\\
+WideMouthFrog          & 62444    &     2 &      1 &      1 &       0.074115s &           16 &                   10 &               0\\
+Yahalom2               & 62444    &     2 &      2 &      1 &       0.183152s &           21 &                   15 &               0\\
+TLS_paulson            & 62444    &     4 &      2 &      1 &       0.337114s &           22 &                   16 &               0\\
+KerberosV_autoprops    & 0        &     3 &      3 &      1 &      34.692708s &           41 &                   36 &               0\\
+KerberosV              & 62444    &    12 &      3 &      3 &       2.899884s &           43 &                   36 &               0\\
+
+
+% generator:   scytherP version 0.1.0 r62475, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=0 --no-soundness-check --hide=auto --shortest --Output=output_SR protocols/comparison_Isabelle_OFMC/Andrew.spthy protocols/comparison_Isabelle_OFMC/Bilateral-Key_Exchange.spthy protocols/comparison_Isabelle_OFMC/Denning-Sacco.spthy protocols/comparison_Isabelle_OFMC/nsl.spthy protocols/comparison_Isabelle_OFMC/tls-simplified.spthy protocols/comparison_Isabelle_OFMC/WideMouthFrog.spthy protocols/auto_properties/Yahalom2.spthy protocols/auto_properties/TLS_paulson.spthy protocols/auto_properties/KerberosV_autoprops.spthy protocols/clean/KerberosV.spthy --isabelle --isabelle-threads=1
+% date:        2010-01-31 19:04:43.42484 UTC
+% system:      i386/linux
+% input revs.: 62444, 0
+
+Protocol               & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs & Checking Time & Isabelle Status & Isabelle Message\\
+Andrew                 & 62444    &     2 &      2 &      1 &       0.031163s &           10 &                    7 &               0 &    12.965516s & checked         &                 \\
+Bilateral-Key_Exchange & 62444    &     2 &      2 &      1 &        0.02373s &           16 &                   12 &               0 &    16.285306s & checked         &                 \\
+Denning-Sacco          & 62444    &     2 &      2 &      1 &       0.382805s &           37 &                   18 &               0 &    71.923398s & checked         &                 \\
+nsl                    & 62444    &     4 &      2 &      1 &       0.035129s &           17 &                   15 &               0 &    14.621604s & checked         &                 \\
+tls-simplified         & 62444    &     4 &      1 &      1 &       0.135668s &           16 &                   13 &               0 &     18.65827s & checked         &                 \\
+WideMouthFrog          & 62444    &     2 &      1 &      1 &        0.05824s &           16 &                   10 &               0 &    17.758569s & checked         &                 \\
+Yahalom2               & 62444    &     2 &      2 &      1 &       0.176046s &           21 &                   15 &               0 &    36.446706s & checked         &                 \\
+TLS_paulson            & 62444    &     4 &      2 &      1 &        0.33181s &           22 &                   16 &               0 &   101.108147s & checked         &                 \\
+KerberosV_autoprops    & 0        &     3 &      3 &      1 &      34.021585s &           41 &                   36 &               0 &   191.487009s & checked         &                 \\
+KerberosV              & 62444    &    12 &      3 &      3 &       2.903349s &           43 &                   36 &               0 &    177.53057s & checked         &                 \\
+
+
+% generator:   scytherP version 0.1.0 r62475, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=0 --no-soundness-check --hide=auto --shortest --Output=output_SR protocols/comparison_Isabelle_OFMC/Andrew.spthy protocols/comparison_Isabelle_OFMC/Bilateral-Key_Exchange.spthy protocols/comparison_Isabelle_OFMC/Denning-Sacco.spthy protocols/comparison_Isabelle_OFMC/nsl.spthy protocols/comparison_Isabelle_OFMC/tls-simplified.spthy protocols/comparison_Isabelle_OFMC/WideMouthFrog.spthy protocols/auto_properties/Yahalom2.spthy protocols/auto_properties/TLS_paulson.spthy protocols/auto_properties/KerberosV_autoprops.spthy protocols/clean/KerberosV.spthy --isabelle
+% date:        2010-01-31 19:15:40.227556 UTC
+% system:      i386/linux
+% input revs.: 62444, 0
+
+Protocol               & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs & Checking Time & Isabelle Status & Isabelle Message\\
+Andrew                 & 62444    &     2 &      2 &      1 &       0.026789s &           10 &                    7 &               0 &    11.055646s & checked         &                 \\
+Bilateral-Key_Exchange & 62444    &     2 &      2 &      1 &       0.027383s &           16 &                   12 &               0 &    12.813533s & checked         &                 \\
+Denning-Sacco          & 62444    &     2 &      2 &      1 &       0.383957s &           37 &                   18 &               0 &    55.024993s & checked         &                 \\
+nsl                    & 62444    &     4 &      2 &      1 &       0.034457s &           17 &                   15 &               0 &    11.986329s & checked         &                 \\
+tls-simplified         & 62444    &     4 &      1 &      1 &       0.138792s &           16 &                   13 &               0 &    15.210843s & checked         &                 \\
+WideMouthFrog          & 62444    &     2 &      1 &      1 &       0.059443s &           16 &                   10 &               0 &    15.207953s & checked         &                 \\
+Yahalom2               & 62444    &     2 &      2 &      1 &       0.176064s &           21 &                   15 &               0 &    28.099982s & checked         &                 \\
+TLS_paulson            & 62444    &     4 &      2 &      1 &       0.331315s &           22 &                   16 &               0 &    75.604641s & checked         &                 \\
+KerberosV_autoprops    & 0        &     3 &      3 &      1 &      33.860531s &           41 &                   36 &               0 &   145.567761s & checked         &                 \\
+KerberosV              & 62444    &    12 &      3 &      3 &       2.892756s &           43 &                   36 &               0 &    132.04585s & checked         &                 \\
+
+
+% generator:   scytherP version 0.1.0 r62475, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=0 --no-soundness-check --hide=auto --shortest --Output=output_SR protocols/comparison_Isabelle_OFMC/Andrew.spthy protocols/comparison_Isabelle_OFMC/Bilateral-Key_Exchange.spthy protocols/comparison_Isabelle_OFMC/Denning-Sacco.spthy protocols/comparison_Isabelle_OFMC/nsl.spthy protocols/comparison_Isabelle_OFMC/tls-simplified.spthy protocols/comparison_Isabelle_OFMC/WideMouthFrog.spthy protocols/auto_properties/Yahalom2.spthy protocols/auto_properties/TLS_paulson.spthy protocols/auto_properties/KerberosV_autoprops.spthy protocols/clean/KerberosV.spthy --isabelle
+% date:        2010-02-01 10:48:47.145156 UTC
+% system:      i386/linux
+% input revs.: 62444, 62477
+
+Protocol               & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs & Checking Time & Isabelle Status & Isabelle Message\\
+Andrew                 & 62444    &     2 &      2 &      1 &       0.036673s &           10 &                    7 &               0 &    11.473885s & checked         &                 \\
+Bilateral-Key_Exchange & 62444    &     2 &      2 &      1 &       0.026684s &           16 &                   12 &               0 &    13.226383s & checked         &                 \\
+Denning-Sacco          & 62444    &     2 &      2 &      1 &       0.388649s &           37 &                   18 &               0 &    56.376801s & checked         &                 \\
+nsl                    & 62444    &     4 &      2 &      1 &       0.039135s &           17 &                   15 &               0 &      12.5851s & checked         &                 \\
+tls-simplified         & 62444    &     4 &      1 &      1 &       0.154522s &           16 &                   13 &               0 &    14.929596s & checked         &                 \\
+WideMouthFrog          & 62444    &     2 &      1 &      1 &       0.070082s &           16 &                   10 &               0 &    15.727471s & checked         &                 \\
+Yahalom2               & 62444    &     2 &      2 &      1 &       0.190423s &           21 &                   15 &               0 &    29.337422s & checked         &                 \\
+TLS_paulson            & 62444    &     4 &      2 &      1 &       0.342653s &           22 &                   16 &               0 &    77.357775s & checked         &                 \\
+KerberosV_autoprops    & 62477    &     3 &      3 &      1 &       34.10177s &           41 &                   36 &               0 &   148.349935s & checked         &                 \\
+KerberosV              & 62444    &    12 &      3 &      3 &       2.919082s &           43 &                   36 &               0 &   134.433633s & checked         &                 \\

@@ -1,0 +1,592 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+	<title>Security Protocol Proof Visualization</title>
+	<script type="text/javascript" src="js/jquery.js"></script>
+	<script type="text/javascript" src="js/ui/jquery.ui.core.js"></script>
+	<script type="text/javascript" src="js/ui/jquery.ui.widget.js"></script>
+	<script type="text/javascript" src="js/ui/jquery.ui.mouse.js"></script>
+	<script type="text/javascript" src="js/ui/jquery.ui.draggable.js"></script>
+	<script type="text/javascript" src="js/ui/jquery.ui.tabs.js"></script>
+	<script type="text/javascript" src="js/ui/jquery.effects.core.js"></script>
+	<script type="text/javascript" src="js/jquery.layout.js"></script>
+
+        <script src="js/tooltip/lib/jquery.bgiframe.js" type="text/javascript"></script>
+        <script src="js/tooltip/lib/jquery.dimensions.js" type="text/javascript"></script>
+        <script src="js/tooltip/jquery.tooltip.js" type="text/javascript"></script> 
+
+        <script type="text/javascript" src="js/json_parse.js"></script>
+        <script type="text/javascript" src="theory.js"></script>
+
+        <link rel="stylesheet" href="js/tooltip/jquery.tooltip.css" />
+        <link rel="stylesheet" href="css/ui-lightness/jquery.ui.all.css" /> 
+        <link rel="stylesheet" href="css/scyther-proof.css" />
+
+        <script type="text/javascript">
+          // a single global variable holding the ScytherP info
+          var scytherP = undefined;
+
+          // Isolating the translation of indices to the corresponding textual
+          // representations.
+          function graphRef(refIdx) { return "graphRef_" + refIdx; }
+          function caseRef(refIdx)  { return "caseRef_"  + refIdx; }
+          function thmRef(refIdx)   { return "thmRef_"   + refIdx; }
+          function explRef(refIdx)   { return "explRef_"   + refIdx; }
+          function graphFileName (graphIdx) { return "img/graph_" + graphIdx + ".png"; }
+
+           // corresponding selection functions
+           function selectGraphRef (refIdx) { return $("#"+graphRef(refIdx)); }
+           function selectCaseRef(refIdx) { return $("#"+caseRef(refIdx)); }
+           function selectThmRef(refIdx)  { return $("#"+thmRef(refIdx)); }
+           function selectExplRef(refIdx)  { return $("[name="+explRef(refIdx)+"]"); }
+
+          // Using the displays
+          function hideAllDisplays () {
+            $("#ui-pane-explanation").addClass("hidden");
+            $("#ui-sequent-display").addClass("hidden");
+            $("#ui-case-display").addClass("hidden");
+            $("#ui-graph-display").addClass("hidden");
+          }
+
+          function displayGraph(graphIdx) {
+            hideAllDisplays();
+            $("#ui-graph-display").removeClass("hidden");
+            $("#graph-img").attr("src", graphFileName(graphIdx));
+          }
+
+          function displaySequent(premIdx, conclIdx) {
+            hideAllDisplays();
+            $("#ui-sequent-display").removeClass("hidden");
+            $("#prem-img").attr("src", graphFileName(premIdx));
+            $("#concl-img").attr("src", graphFileName(conclIdx));
+          }
+
+          function displayCase(c) {
+            // switch displays
+            hideAllDisplays();
+            $("#ui-case-display").removeClass("hidden");
+            // attach images
+            var mkImage = function(name, graphIdx) {
+                return '<img src="' + graphFileName(graphIdx) + '" title="' + name + '"/>';
+              };
+            var mkNamedImage = function(name, graphIdx) {
+                var img = mkImage(name, graphIdx);
+                var name_div = '<div>case: ' + name + '</div>';
+                return '<div class="named-image">' + name_div + img + '</div>';
+              };
+            $("#ui-case-display .original")
+              .empty().append(mkImage('Original', c[0]));
+            var nonTrivial = $("#ui-case-display .non-trivial").empty();
+            var trivial = $("#ui-case-display .trivial").empty();
+            jQuery.each(c[1], function(i, subcase) {
+                var display = undefined;
+                if (subcase[0][1])
+                  display = trivial;
+                else
+                  display = nonTrivial;
+                display.append(mkNamedImage(subcase[0][0], subcase[1]));
+              });
+          }
+
+          // Detecting if shift key is held
+          var shiftIsDown;
+
+          function installShiftDownHandler() {
+            shiftIsDown = false;
+
+            $(document).keydown(function(e) {
+              if (e.which == 16)
+                shiftIsDown = true;
+            });
+
+            $(document).keyup(function(e) {
+              if (e.which == 16) 
+                shiftIsDown = false;
+            });
+          }
+
+          function ifShiftDown (fun, arg) {
+            if (shiftIsDown)
+              fun(arg);
+          }
+
+          // rollover effect for highlighting clickable items
+          // (obj must be a jQuery object denoting the elements that should be marked)
+          function installHighlightClickable (obj, info) {
+            obj.attr('title', info);
+            obj.hover(
+                function(e) {
+                  //$(this).css('backgroundColor', '#e0e0ee');
+                  $(this).stop().animate({backgroundColor: '#e9e9f9'}, 'fast');
+                }
+              , function(e) {
+                  //$(this).css('backgroundColor', 'white');
+                  $(this).stop().animate({backgroundColor: 'white'}, 'fast');
+                }
+            );
+          }
+          
+          // Highlighting references to proof states and case distinctions.
+          function undoHighlights () {
+            if (scytherP.removeHighlights != undefined) 
+              scytherP.removeHighlights();
+          }
+
+          function highlightElem (selector) {
+            selector().addClass("highlighted");
+            scytherP.removeHighlights = function(){
+              selector().removeClass("highlighted");
+            }
+          }
+
+          function highlightGraphRef (refIdx) {
+            undoHighlights();
+            var seq = scytherP.proofstates[refIdx][1];
+            //displaySequent(seq[0], seq[1]);
+            displayGraph(seq);
+            highlightElem( function() { return selectGraphRef(refIdx); } );
+          }
+
+          function highlightCaseRef (refIdx) {
+            undoHighlights();
+            var c = scytherP.cases[refIdx][1];
+            displayCase(c);
+            highlightElem( function() { return selectCaseRef(refIdx); } );
+          }
+
+          function highlightExplRef (refIdx) {
+            // undoHighlights();
+            var expl = scytherP.explanations[refIdx][1];
+            displayExplanation(expl);
+            // highlightElem( function() { return selectCaseRef(refIdx); } );
+          }
+
+          // displaying additional explanations
+          function displayExplanation (explanation) {
+            $("#ui-explanation-display").html(explanation);
+          }
+          
+          // building the generation info
+          function installGenerationInfo (info) {
+            var mkLink = function(file) {
+                return ('<a href="' + file[1] +'" target="new">' + file[0] + '</a>');
+              };
+            $("#gen-info-header").html(info.header);
+            $("#gen-info-time").html(info.time);
+            $("#gen-info-system").html(info.system);
+            $("#gen-info-input-file").html(mkLink(info.inputFile));
+            $("#gen-info-proof-script").html(mkLink(info.proofScript));
+            $("#gen-info-command-line").html(info.commandLine);
+            var certStatus = info.certificateStatus;
+            if (info.logFile != undefined)
+              certStatus += ' (' + mkLink(info.logFile) + ')';
+            $("#gen-info-certificate-status").html(certStatus);
+          }
+
+          // reference for the layout.
+          var myLayout; 
+
+          $(document).ready(function () {
+              // install layout
+              myLayout = $('body').layout();
+              //myLayout.toggle("north");
+              //myLayout.toggle("east");
+              myLayout.sizePane("west", 400);
+
+              // initialize tabs in east pane
+              $('#ui-tabs-east').tabs();
+
+              // install shift-down handler
+              installShiftDownHandler();
+
+              // parse json info
+              scytherP = json_parse(scytherP_theory_JSON);
+              scytherP.curRefIdx = "";
+              // install inner html
+              $("#proof").html(scytherP.theory);
+              // install generation info
+              installGenerationInfo(scytherP.generationInfo);
+              // install event handlers for sequent references
+              jQuery.each(scytherP.proofstates, function(idx, assoc){
+                var refIdx =assoc[0];
+                var obj = selectGraphRef(refIdx);
+                obj.bind("click", function(e){
+                  highlightGraphRef(refIdx);
+                });
+                obj.bind("mouseover", function(e){
+                  ifShiftDown(highlightGraphRef, refIdx);
+                });
+                installHighlightClickable(obj, 'click to show visualization');
+              });
+
+              // install event handlers for case references
+              jQuery.each(scytherP.cases, function(idx, assoc){
+                var refIdx = assoc[0];
+                var obj = selectCaseRef(refIdx);
+                obj.bind("mouseover", function(e){
+                  ifShiftDown(highlightCaseRef, refIdx);
+                });
+                obj.bind("click", function(e){
+                  highlightCaseRef(refIdx);
+                });
+                installHighlightClickable(obj, 'click to show case distinction');
+              });
+
+              // install event handlers for explanation references
+              jQuery.each(scytherP.explanations, function(idx, assoc){
+                var refIdx = assoc[0];
+                var obj = selectExplRef(refIdx);
+                obj.bind("mouseover", function(e){
+                  ifShiftDown(highlightExplRef, refIdx);
+                });
+                obj.bind("click", function(e){
+                  highlightExplRef(refIdx);
+                });
+              });
+
+              // install event handlers for theorem references
+              jQuery.each(scytherP.theoremRefs, function(idx, assoc){
+                var refIdx =assoc[0];
+                selectThmRef(refIdx)
+                  .tooltip({
+                    track: true,
+                    delay: 200,
+                    fade: 100,
+                    opacity: .7,
+                    bodyHandler: function() {
+                      return $("<img/>").attr("src", graphFileName(assoc[1]))
+                                        .addClass("sequent-tooltip");
+                    }
+                  });
+              });
+              
+              // hide all displays except pane explanation
+              hideAllDisplays();
+              $("#ui-pane-explanation").removeClass("hidden");
+          });
+	</script>
+</head>
+<body>
+
+<div class="ui-layout-north">
+  <div id="gen-info">
+     <p id="gen-info-header" class="header"></p>
+       <table>
+         <tr>
+           <td class="topic">Generation date:</td>
+           <td id="gen-info-time"></td>
+         </tr>
+         <tr>
+           <td class="topic">Input file:</td>
+           <td id="gen-info-input-file" class="file"></td>
+         </tr>
+         <tr>
+           <td class="topic">Isabelle/HOL certificate:</td>
+           <td id="gen-info-proof-script" class="file">
+             <a href="files/CR_talk_cert_auto.thy" target="new">CR_talk_cert_auto.thy</a>
+           </td>
+         </tr>
+         <tr>
+           <td/>
+           <td id="gen-info-certificate-status"></td>
+         </tr>
+         <tr>
+           <td class="topic">System information:</td>
+           <td id="gen-info-system"></td>
+         </tr>
+         <tr>
+           <td class="topic">Command line:</td>
+           <td id="gen-info-command-line"></td>
+         </tr>
+       </table>
+  </div>
+</div>
+
+<div class="ui-layout-west">
+        <div id="proof">Failed to load 'theory.js'. JavaScript needs to be
+        enabled for the visualization to work.</div>
+</div>
+
+<div class="ui-layout-east">
+  <div id="ui-tabs-east" class="ui-tabs">
+      <ul>
+          <li><a href="#help-tab"><span>Help</span></a></li>
+          <li><a href="#debug-tab"><span>Debug Info</span></a></li>
+      </ul>
+      <div id="help-tab">
+          <h1>Overview</h1>
+          <p>
+            This HTML page is a visualization of a security protocol
+            correctness proof. The underlying theory (i.e. protocol model,
+            verification theory, and verification algorithm) is described in
+            the paper <a href="http://www.inf.ethz.ch/personal/meiersi/publications/index.html#strong_invariants">Strong
+            Invariants for the Efficient Construction of Machine-Checked
+            Protocol Security Proofs</a> by Meier, Cremers, and Basin.
+          </p>
+          
+          <p>
+            The page was generated automatically and you can find additional
+            information about the the generation process in the top pane. If
+            you need more space to investigate the proofs and visualizations,
+            you can adjust the layout by moving the splitters.
+          </p>
+
+          <h1>Security Protocol Theories</h1>
+            <p>
+              In the left pane, you find a pretty-printed version of the security
+              protocol theory that was verified. A security protocol theory is a
+              sequence of protocol definitions and security properties that these
+              protocols (should) satisfy. Each property that is satisfied is
+              accompanied by a proof. Most elements of the left pane can be
+              visualized. Just click on them to display their visualization in
+              the center pane.
+            </p>
+
+          <h2>Protocol Definitions</h2>
+            
+              A protocol is a set of roles where each role is a list of send
+              and receive steps, which use pattern matching for sending and
+              receiving messages. The labels of send and receive steps have no
+              operational meaning. However, they are used for referencing these
+              steps in the properties and proofs. Patterns are constructed
+              using the following syntax.
+              <table>
+                <tr>
+                  <td>'c'
+                  </td>
+                  <td>A global constant named <span class="math">c</span>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>~n
+                  </td>
+                  <td>A freshly generated value (e.g., a nonce) named <span class="math">n</span>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>?v
+                  </td>
+                  <td>A message variable named <span class="math">v</span>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>a
+                  </td>
+                  <td>An agent variable named <span class="math">a</span>; i.e. "no-prefix" marks agent variables.
+                  </td>
+                </tr>
+                <tr>
+                  <td>h(m)
+                  </td>
+                  <td>The hash of the pattern <span class="math">m</span>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>{m}k
+                  </td>
+                  <td>The encryption of the pattern <span class="math">m</span> with the key <span class="math">k</span>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>sign{m}k
+                  </td>
+                  <td>A signature of the pattern <span class="math">m</span> that can be <em>verified</em> with the key <span class="math">k</span>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>x1,..,xn
+                  </td>
+                  <td>The left-associative tuple <span class="math">(..((x1,x2),x3),..,xn)</span> of the patterns <span class="math">x1,..,xn</span>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>pk(a)
+                  </td>
+                  <td>The long-term public key of <span class="math">a</span>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>sk(a)
+                  </td>
+                  <td>The long-term private key of <span class="math">a</span>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>k(a,b)
+                  </td>
+                  <td>The long-term shared key between <span class="math">a</span> and <span class="math">b</span>.
+                  </td>
+                </tr>
+              </table>
+              Please see our paper for additional information.
+            
+
+          <h2>Protocol Properties</h2>
+            <p>
+              There are two types of properties that can be proven
+              automatically: (1) Type invariants are required to make the case
+              distinction on the possible sources of a message finite despite
+              the untyped model we are working with. (2) Security properties
+              like secrecy and authentication.
+            </p>
+           
+            <span class="paragraph">Type invariants</span>
+              state for each message variable of every role of
+              the protocol what its possible contents can be in a reachable
+              state of the protocol. In the paper referenced above, we only
+              describe a single type invariant; namely that every message
+              variable is either instantiated with a nonce or something the
+              intruder knows before the variable was instantiated. We have
+              generalized this construction such that the "type" of a variable
+              can be specified more precisely. Types denote sets of messages
+              parametrized over the system state and a thread i. They are built
+              according to the following syntax.
+              <table>
+                <tr>
+                  <td>Known@R_l
+                  </td>
+                  <td>All messages known before thread i executed step l of role R.
+                  </td>
+                </tr>
+                <tr>
+                  <td>n@R
+                  </td>
+                  <td>A nonce named n generated by some thread j executing role R.
+                  </td>
+                </tr>
+                <tr>
+                  <td>ty1 | ty2
+                  </td>
+                  <td>The union of the messages denoted by ty1 and ty2.
+                  </td>
+                </tr>
+                <tr>
+                  <td>...
+                  </td>
+                  <td>Standard cryptographic constructors as for patterns.
+                  </td>
+                </tr>
+              </table>
+            
+
+          <p><span class="paragraph">Security properties</span>
+            are specified in the form of sequents (called judgments in the
+            paper) where all thread identifiers in the premise are universally
+            quantified and all additional thread identifiers in the conclusion
+            are existentially quantified. Thread identifiers are prefixed with
+            '#'. Local variables and actual freshly generated values are
+            denoted by their corresponding patterns suffixed with the
+            identifier of the thread that they are local to. Apart from these
+            constructions the syntax of messages and the predicates used in the
+            security property specifications should self-explanatory. 
+          </p>
+
+          <h2>Proofs</h2>
+          <p>
+            Proofs are trees consisting of nested case distinctions,
+            resolutions with already proven theorems, and triviality
+            justifications. The calculus employed is described in the paper
+            referenced above. The syntax for the proofs was inspired the
+            Isabelle's proof language ISAR. For the actual proof script that
+            can be machine-checked using Isabelle/HOL together with our
+            formalization of the verification theory, see the reference in the
+            top pane.
+          </p>
+
+          <p>
+            Note that for properties <em>not</em> satisfied by the protocol, the
+            proof may contain missing branches. In these cases, the
+            corresponding proof script is not accepted by Isabelle/HOL. Moreover, 
+            the proof state is likely to indicate an attack.
+          </p>
+
+          <p>
+            All non-trivial elements of the proofs can be visualized by
+            clicking on them. For a case distinction on the possible sources of a
+            message m, we also highlight this message in the visualization by a
+            double border.
+          </p>
+
+          <h2>Visualization</h2>
+
+            There are three types of nodes:
+            <ol>
+              <li>Red colored ellipses list messages the intruder is supposed to know.
+              </li>
+              <li>
+                Colored rectangles list information about threads. They either
+                just denote that a role step was executed by the given thread
+                or they list additional equalities or compromisedness
+                information about the given thread. The quantification of
+                thread identifiers is denoted by the prefix "some" in the box
+                with the additional information.
+              </li>
+              <li>
+                Gray rectangles list logical facts that cannot be associated to
+                a fixed thread.
+              </li>
+            </ol>
+            The nodes are connected by edges denoting the required ordering
+            with respect to the reachable state in whose context we are
+            conducting the proof. Edges from the additional thread information
+            boxes to the first step executed by that thread have no logical
+            meaning in our verification theory. They could however be seen as
+            "thread creation" events.
+          
+
+          <h1>Further Information</h1>
+          <p>
+            All of the work present here is work in progress. Both our
+            implementation of the proof-generation tool as well as the
+            Isabelle/HOL theories are scheduled to be open-sourced. If you
+            would like to have a preliminary snapshot or if you have
+            further questions, ideas, suggestions, ... please don't hesitate to
+            write a mail to <a
+            href="mailto:simon.meier@inf.ethz.ch">simon.meier@inf.ethz.ch</a>.
+          </p>
+      </div>
+      <div id="debug-tab">
+        <p id="test-animate" class="debug">Debug information for the last selected item providing it:</p>
+        <pre id="ui-explanation-display"></pre>
+      </div>
+  </div>
+</div>
+
+<div class="ui-layout-center">
+   <div id="ui-pane-explanation">
+     <table>
+       <tr><td></td><td></td><td style="text-align: center">^^</td><td></td><td></td></tr>
+       <tr><td></td><td></td><td>Top pane: information about proof generation and checking</td><td></td><td></td></tr>
+       <tr><td>&lt;&lt;</td><td>Left Pane: proof script (select proof states by clicking)</td><td></td><td>Right pane: help and debug info </td><td>&gt;&gt;</td></tr>
+       <tr><td></td><td></td><td><br><br><br><br>Center pane: visualization display</td><td></td><td></td></tr>
+     </table>
+   </div>
+   <div id="ui-sequent-display" style="width: 100%">
+      <div id="outer-prem" class="outer" style="width: 50%">
+        <div id="inner-prem" class="inner">
+          <img id="prem-img" width="100%" title="" alt="Premise" />
+        </div>
+      </div>
+      <div id="outer-concl" class="outer" style="width: 50%">
+        <div id="inner-concl" class="inner">
+          <img id="concl-img" width="100%" title="" alt="Conclusion" />
+        </div>
+      </div>
+   </div>
+   <div id="ui-graph-display" style="width: 100%; height: 100%">
+      <img id="graph-img"/>
+   </div>
+   <div id="ui-case-display" style="width: 100%; height: 100%">
+     <h3>Case distinction performed on:</h3>
+     <div class="original"></div>
+     <h3>Non-trivial cases:</h3>
+     <div class="non-trivial"></div>
+     <h3>Trivial cases:</h3>
+     <div class="trivial"></div>
+   </div>
+</div>
+
+</body>
+</html>
+

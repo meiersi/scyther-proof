@@ -1,0 +1,385 @@
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --isabelle --XSymbol --timeout=180 --shortest --Output=output_SR protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/KerberosV.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/WooLam.spthy protocols/Yahalom2.spthy
+% date:        2010-01-18 14:29:20.80748 UTC
+% system:      i386/linux
+% input revs.: 62105
+
+Protocol     & Revision & Generation Time & #chain rules & #forward resolutions & #missing proofs & Checking Time & Isabelle Status & Isabelle Message\\
+BKE          & 62105    &           0.05s &         25.0 &                 23.0 &             0.0 &           18s & checked         &                 \\
+CR_paper     & 62105    &              0s &         10.0 &                  5.0 &             0.0 &            7s & checked         &                 \\
+DenningSacco & 62105    &           0.11s &         38.0 &                 21.0 &             0.0 &           63s & checked         &                 \\
+KerberosV    & 62105    &           1.73s &         43.0 &                 36.0 &             0.0 &          143s & checked         &                 \\
+NS_Public    & 62105    &           0.02s &         20.0 &                 14.0 &             0.0 &           15s & checked         &                 \\
+OtwayRees    & 62105    &           0.87s &         29.0 &                 23.0 &             0.0 &           46s & checked         &                 \\
+TLS          & 62105    &           0.28s &         20.0 &                 16.0 &             0.0 &           74s & checked         &                 \\
+WMF          & 62105    &           0.01s &         16.0 &                  7.0 &             0.0 &           15s & checked         &                 \\
+WooLam       & 62105    &           0.58s &         39.0 &                 28.0 &             0.0 &          117s & checked         &                 \\
+Yahalom2     & 62105    &           0.15s &         22.0 &                 11.0 &             0.0 &           32s & checked         &                 \\
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --isabelle --XSymbol --timeout=180 --first --Output=output_FR protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/KerberosV.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/WooLam.spthy protocols/Yahalom2.spthy
+% date:        2010-01-18 14:47:59.32374 UTC
+% system:      i386/linux
+% input revs.: 62105
+
+Protocol     & Revision & Generation Time & #chain rules & #forward resolutions & #missing proofs & Checking Time & Isabelle Status & Isabelle Message                                                                                                                                                  \\
+BKE          & 62105    &           0.05s &         26.0 &                 24.0 &             0.0 &           19s & checked         &                                                                                                                                                                   \\
+CR_paper     & 62105    &              0s &         10.0 &                  5.0 &             0.0 &            7s & checked         &                                                                                                                                                                   \\
+DenningSacco & 62105    &           0.12s &         50.0 &                 23.0 &             0.0 &           78s & check failed    & "***          ((\\<alpha>__ \\<circ>\\<^sub>s sa__)(|AV ''S'' tid\\<^isub>0__|)))|}\n***  (K ((\\<alpha>__ \\<circ>\\<^sub>s sa__)(|AV ''I'' tid\\<^isub>0__|))\n"\\
+KerberosV    & 62105    &              1s &        184.0 &                 64.0 &             0.0 &          180s & check failed    & "timeout: 180.0s"                                                                                                                                                 \\
+NS_Public    & 62105    &           0.03s &         21.0 &                 15.0 &             0.0 &           24s & checked         &                                                                                                                                                                   \\
+OtwayRees    & 62105    &           2.43s &        163.0 &                 71.0 &             0.0 &          180s & check failed    & "timeout: 180.0s"                                                                                                                                                 \\
+TLS          & 62105    &            0.7s &         40.0 &                 19.0 &             0.0 &          180s & check failed    & "timeout: 180.0s"                                                                                                                                                 \\
+WMF          & 62105    &           0.07s &         16.0 &                  7.0 &             0.0 &           74s & checked         &                                                                                                                                                                   \\
+WooLam       & 62105    &           1.04s &         40.0 &                 29.0 &             0.0 &          180s & check failed    & "timeout: 180.0s"                                                                                                                                                 \\
+Yahalom2     & 62105    &           0.63s &         23.0 &                 12.0 &             0.0 &          180s & check failed    & "timeout: 180.0s"                                                                                                                                                 \\
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --XSymbol --timeout=180 --shortest --Output=output_SR protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/KerberosV.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/WooLam.spthy protocols/Yahalom2.spthy
+% date:        2010-01-18 14:53:33.594859 UTC
+% system:      i386/linux
+% input revs.: 62105
+
+Protocol     & Revision & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE          & 62105    &           0.05s &         25.0 &                 23.0 &             0.0\\
+CR_paper     & 62105    &              0s &         10.0 &                  5.0 &             0.0\\
+DenningSacco & 62105    &           0.13s &         38.0 &                 21.0 &             0.0\\
+KerberosV    & 62105    &           2.08s &         43.0 &                 36.0 &             0.0\\
+NS_Public    & 62105    &           0.03s &         20.0 &                 14.0 &             0.0\\
+OtwayRees    & 62105    &           0.92s &         29.0 &                 23.0 &             0.0\\
+TLS          & 62105    &           0.36s &         20.0 &                 16.0 &             0.0\\
+WMF          & 62105    &           0.01s &         16.0 &                  7.0 &             0.0\\
+WooLam       & 62105    &           0.69s &         39.0 &                 28.0 &             0.0\\
+Yahalom2     & 62105    &           0.13s &         22.0 &                 11.0 &             0.0\\
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --XSymbol --timeout=180 --first --Output=output_FR protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/KerberosV.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/WooLam.spthy protocols/Yahalom2.spthy
+% date:        2010-01-18 14:53:37.674251 UTC
+% system:      i386/linux
+% input revs.: 62105
+
+Protocol     & Revision & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE          & 62105    &           0.02s &         26.0 &                 24.0 &             0.0\\
+CR_paper     & 62105    &              0s &         10.0 &                  5.0 &             0.0\\
+DenningSacco & 62105    &           0.12s &         50.0 &                 23.0 &             0.0\\
+KerberosV    & 62105    &           1.21s &        184.0 &                 64.0 &             0.0\\
+NS_Public    & 62105    &           0.03s &         21.0 &                 15.0 &             0.0\\
+OtwayRees    & 62105    &           1.61s &        163.0 &                 71.0 &             0.0\\
+TLS          & 62105    &           0.29s &         40.0 &                 19.0 &             0.0\\
+WMF          & 62105    &           0.01s &         16.0 &                  7.0 &             0.0\\
+WooLam       & 62105    &           0.41s &         40.0 &                 29.0 &             0.0\\
+Yahalom2     & 62105    &           0.08s &         23.0 &                 12.0 &             0.0\\
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --XSymbol --timeout=180 --shortest --no-reuse --Output=output_SN protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/KerberosV.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/WooLam.spthy protocols/Yahalom2.spthy
+% date:        2010-01-18 15:00:05.456429 UTC
+% system:      i386/linux
+% input revs.: 62105
+
+Protocol     & Revision & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE          & 62105    &           0.09s &         89.0 &                  0.0 &             0.0\\
+CR_paper     & 62105    &           0.01s &         19.0 &                  0.0 &             0.0\\
+DenningSacco & 62105    &           1.19s &         93.0 &                  0.0 &             0.0\\
+KerberosV    & 62105    &   timeout: 180s &              &                      &                \\
+NS_Public    & 62105    &           0.52s &         66.0 &                  0.0 &             0.0\\
+OtwayRees    & 62105    &           3.91s &         61.0 &                  0.0 &             0.0\\
+TLS          & 62105    &          20.44s &         66.0 &                  0.0 &             0.0\\
+WMF          & 62105    &           0.03s &         31.0 &                  0.0 &             0.0\\
+WooLam       & 62105    &   timeout: 180s &              &                      &                \\
+Yahalom2     & 62105    &           1.27s &         45.0 &                  0.0 &             0.0\\
+
+-------- easy ---------
+
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=180 --shortest --no-reuse --Output=output_SN protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy
+% date:        2010-01-18 15:09:17.041462 UTC
+% system:      i386/linux
+% input revs.: 62105
+
+Protocol     & Revision & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE          & 62105    &           0.17s &         89.0 &                  0.0 &             0.0\\
+CR_paper     & 62105    &              0s &         19.0 &                  0.0 &             0.0\\
+DenningSacco & 62105    &           0.99s &         93.0 &                  0.0 &             0.0\\
+NS_Public    & 62105    &           0.42s &         66.0 &                  0.0 &             0.0\\
+OtwayRees    & 62105    &           3.15s &         61.0 &                  0.0 &             0.0\\
+TLS          & 62105    &          16.42s &         66.0 &                  0.0 &             0.0\\
+WMF          & 62105    &           0.03s &         31.0 &                  0.0 &             0.0\\
+Yahalom2     & 62105    &           1.32s &         45.0 &                  0.0 &             0.0\\
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=180 --first --no-reuse --Output=output_FN protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy
+% date:        2010-01-18 15:09:24.951852 UTC
+% system:      i386/linux
+% input revs.: 62105
+
+Protocol     & Revision & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE          & 62105    &           0.13s &        141.0 &                  0.0 &             0.0\\
+CR_paper     & 62105    &              0s &         19.0 &                  0.0 &             0.0\\
+DenningSacco & 62105    &            0.8s &        162.0 &                  0.0 &             0.0\\
+NS_Public    & 62105    &           0.42s &        123.0 &                  0.0 &             0.0\\
+OtwayRees    & 62105    &           3.89s &        428.0 &                  0.0 &             0.0\\
+TLS          & 62105    &           2.18s &        222.0 &                  0.0 &             0.0\\
+WMF          & 62105    &           0.02s &         31.0 &                  0.0 &             0.0\\
+Yahalom2     & 62105    &           0.28s &         75.0 &                  0.0 &             0.0\\
+
+
+
+-- WOOLAM uses 3525 chain rule applications in first mode without reuse
+scytherP --Output=output_SN/ --first -A --no-reuse protocols/WooLam.spthy protocols/WooLam.spthy  C:3525 F:0 M:0  84.431546s
+
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=180 --first --Output=output_FR protocols/BKE.spthy protocols/CR_paper.spthy protocols/KerberosV.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/WooLam.spthy protocols/Yahalom2.spthy
+% date:        2010-01-18 15:51:31.391972 UTC
+% system:      i386/linux
+% input revs.: 62105
+
+Protocol  & Revision & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE       & 62105    &           0.05s &         26.0 &                 24.0 &             0.0\\
+CR_paper  & 62105    &              0s &         10.0 &                  5.0 &             0.0\\
+KerberosV & 62105    &           1.23s &        184.0 &                 64.0 &             0.0\\
+NS_Public & 62105    &           0.03s &         21.0 &                 15.0 &             0.0\\
+OtwayRees & 62105    &           1.65s &        163.0 &                 71.0 &             0.0\\
+TLS       & 62105    &           0.31s &         40.0 &                 19.0 &             0.0\\
+WMF       & 62105    &           0.01s &         16.0 &                  7.0 &             0.0\\
+WooLam    & 62105    &           0.39s &         40.0 &                 29.0 &             0.0\\
+Yahalom2  & 62105    &           0.08s &         23.0 &                 12.0 &             0.0\\
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=180 --first --no-reuse --Output=output_FN protocols/BKE.spthy protocols/CR_paper.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/WooLam.spthy protocols/Yahalom2.spthy
+% date:        2010-01-18 15:53:27.331811 UTC
+% system:      i386/linux
+% input revs.: 62105
+
+Protocol  & Revision & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE       & 62105    &           0.08s &        141.0 &                  0.0 &             0.0\\
+CR_paper  & 62105    &           0.01s &         19.0 &                  0.0 &             0.0\\
+NS_Public & 62105    &           0.27s &        123.0 &                  0.0 &             0.0\\
+OtwayRees & 62105    &           4.54s &        428.0 &                  0.0 &             0.0\\
+TLS       & 62105    &           2.61s &        222.0 &                  0.0 &             0.0\\
+WMF       & 62105    &           0.04s &         31.0 &                  0.0 &             0.0\\
+WooLam    & 62105    &         104.15s &       3525.0 &                  0.0 &             0.0\\
+Yahalom2  & 62105    &           0.39s &         75.0 &                  0.0 &             0.0\\
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=180 --first --Output=output_FR protocols/BKE.spthy protocols/CR_paper.spthy protocols/KerberosV.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/WooLam.spthy protocols/Yahalom2.spthy
+% date:        2010-01-18 16:22:18.157919 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol  & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE       & 62105    &    12 &      2 &      1 &           0.04s &           26 &                   24 &               0\\
+CR_paper  & 62119    &     3 &      2 &      2 &              0s &           10 &                    5 &               0\\
+KerberosV & 62105    &    12 &      3 &      3 &              1s &          184 &                   64 &               0\\
+NS_Public & 62105    &     8 &      2 &      1 &           0.02s &           21 &                   15 &               0\\
+OtwayRees & 62105    &     9 &      3 &      2 &           1.35s &          163 &                   71 &               0\\
+TLS       & 62105    &    10 &      2 &      3 &           0.34s &           40 &                   19 &               0\\
+WMF       & 62105    &     7 &      1 &      1 &           0.01s &           16 &                    7 &               0\\
+WooLam    & 62105    &     9 &      3 &      3 &           0.28s &           40 &                   29 &               0\\
+Yahalom2  & 62105    &     9 &      2 &      1 &           0.07s &           23 &                   12 &               0\\
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=180 --first --no-reuse --Output=output_FN protocols/BKE.spthy protocols/CR_paper.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/WooLam.spthy protocols/Yahalom2.spthy
+% date:        2010-01-18 16:24:28.451202 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol  & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE       & 62105    &    12 &      2 &      1 &           0.08s &          141 &                    0 &               0\\
+CR_paper  & 62119    &     3 &      2 &      2 &              0s &           19 &                    0 &               0\\
+NS_Public & 62105    &     8 &      2 &      1 &           0.26s &          123 &                    0 &               0\\
+OtwayRees & 62105    &     9 &      3 &      2 &           3.79s &          428 &                    0 &               0\\
+TLS       & 62105    &    10 &      2 &      3 &           2.07s &          222 &                    0 &               0\\
+WMF       & 62105    &     7 &      1 &      1 &           0.03s &           31 &                    0 &               0\\
+WooLam    & 62105    &     9 &      3 &      3 &         111.13s &         3525 &                    0 &               0\\
+Yahalom2  & 62105    &     9 &      2 &      1 &           0.55s &           75 &                    0 &               0\\
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=180 --shortest --isabelle --Output=output_SR protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy protocols/WooLam.spthy protocols/KerberosV.spthy
+% date:        2010-01-18 17:39:33.372149 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol     & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs & Checking Time & Isabelle Status & Isabelle Message\\
+BKE          & 62105    &    12 &      2 &      1 &           0.01s &           25 &                   23 &               0 &           18s & checked         &                 \\
+CR_paper     & 62119    &     3 &      2 &      2 &           0.02s &           10 &                    5 &               0 &            7s & checked         &                 \\
+DenningSacco & 62105    &    11 &      2 &      1 &           0.11s &           38 &                   21 &               0 &           62s & checked         &                 \\
+NS_Public    & 62105    &     8 &      2 &      1 &           0.03s &           20 &                   14 &               0 &           13s & checked         &                 \\
+OtwayRees    & 62105    &     9 &      3 &      2 &           0.81s &           29 &                   23 &               0 &           43s & checked         &                 \\
+TLS          & 62105    &    10 &      2 &      3 &           0.27s &           20 &                   16 &               0 &           63s & checked         &                 \\
+WMF          & 62105    &     7 &      1 &      1 &           0.01s &           16 &                    7 &               0 &           15s & checked         &                 \\
+Yahalom2     & 62105    &     9 &      2 &      1 &           0.13s &           22 &                   11 &               0 &           30s & checked         &                 \\
+WooLam       & 62105    &     9 &      3 &      3 &           0.57s &           39 &                   28 &               0 &          107s & checked         &                 \\
+KerberosV    & 62105    &    12 &      3 &      3 &           1.74s &           43 &                   36 &               0 &          131s & checked         &                 \\
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=1 --shortest --Output=output_SR protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy protocols/WooLam.spthy protocols/KerberosV.spthy
+% date:        2010-01-18 19:28:39.630376 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol     & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE          & 62105    &    12 &      2 &      1 &           0.02s &           25 &                   23 &               0\\
+CR_paper     & 62119    &     3 &      2 &      2 &              0s &           10 &                    5 &               0\\
+DenningSacco & 62105    &    11 &      2 &      1 &           0.13s &           38 &                   21 &               0\\
+NS_Public    & 62105    &     8 &      2 &      1 &           0.03s &           20 &                   14 &               0\\
+OtwayRees    & 62105    &     9 &      3 &      2 &           0.92s &           29 &                   23 &               0\\
+TLS          & 62105    &    10 &      2 &      3 &           0.29s &           20 &                   16 &               0\\
+WMF          & 62105    &     7 &      1 &      1 &           0.03s &           16 &                    7 &               0\\
+Yahalom2     & 62105    &     9 &      2 &      1 &           0.14s &           22 &                   11 &               0\\
+WooLam       & 62105    &     9 &      3 &      3 &           0.65s &           39 &                   28 &               0\\
+KerberosV    & 62105    &    12 &      3 &      3 &     timeout: 1s &              &                      &                \\
+
+
+% generator:   scytherP version 0.1.0 r62107, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=1 --first --Output=output_FR protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy protocols/WooLam.spthy protocols/KerberosV.spthy
+% date:        2010-01-18 19:29:22.260555 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol     & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE          & 62105    &    12 &      2 &      1 &           0.05s &           26 &                   24 &               0\\
+CR_paper     & 62119    &     3 &      2 &      2 &              0s &           10 &                    5 &               0\\
+DenningSacco & 62105    &    11 &      2 &      1 &           0.12s &           50 &                   23 &               0\\
+NS_Public    & 62105    &     8 &      2 &      1 &           0.02s &           21 &                   15 &               0\\
+OtwayRees    & 62105    &     9 &      3 &      2 &     timeout: 1s &              &                      &                \\
+TLS          & 62105    &    10 &      2 &      3 &           0.35s &           40 &                   19 &               0\\
+WMF          & 62105    &     7 &      1 &      1 &           0.01s &           16 &                    7 &               0\\
+Yahalom2     & 62105    &     9 &      2 &      1 &           0.07s &           23 &                   12 &               0\\
+WooLam       & 62105    &     9 &      3 &      3 &            0.4s &           40 &                   29 &               0\\
+KerberosV    & 62105    &    12 &      3 &      3 &     timeout: 1s &              &                      &                \\
+
+
+% generator:   scytherP version 0.1.0 r62120, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=1 --shortest --isabelle --Output=output_SR protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy protocols/WooLam.spthy protocols/KerberosV.spthy
+% date:        2010-01-18 21:39:57.263479 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs &            \\
+BKE      & 62105    &    12 &      2 &      1 &           0.01s &           25 &                   23 &               0 & interrupted\\
+
+
+% generator:   scytherP version 0.1.0 r62120, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=300 --shortest --isabelle --Output=output_SR protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy protocols/WooLam.spthy protocols/KerberosV.spthy
+% date:        2010-01-18 21:48:25.200386 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol     & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs & Checking Time & Isabelle Status & Isabelle Message\\
+BKE          & 62105    &    12 &      2 &      1 &           0.01s &           25 &                   23 &               0 &           17s & checked         &                 \\
+CR_paper     & 62119    &     3 &      2 &      2 &              0s &           10 &                    5 &               0 &            7s & checked         &                 \\
+DenningSacco & 62105    &    11 &      2 &      1 &            0.1s &           38 &                   21 &               0 &           61s & checked         &                 \\
+NS_Public    & 62105    &     8 &      2 &      1 &           0.02s &           20 &                   14 &               0 &           13s & checked         &                 \\
+OtwayRees    & 62105    &     9 &      3 &      2 &           0.83s &           29 &                   23 &               0 &           44s & checked         &                 \\
+TLS          & 62105    &    10 &      2 &      3 &           0.27s &           20 &                   16 &               0 &           62s & checked         &                 \\
+WMF          & 62105    &     7 &      1 &      1 &           0.01s &           16 &                    7 &               0 &           14s & checked         &                 \\
+Yahalom2     & 62105    &     9 &      2 &      1 &           0.13s &           22 &                   11 &               0 &           30s & checked         &                 \\
+WooLam       & 62105    &     9 &      3 &      3 &           0.55s &           39 &                   28 &               0 &          107s & checked         &                 \\
+KerberosV    & 62105    &    12 &      3 &      3 &           1.76s &           43 &                   36 &               0 &          129s & checked         &                 \\
+
+
+% generator:   scytherP version 0.1.0 r62120, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=300 --shortest --isabelle --no-reuse --Output=output_SN protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy protocols/WooLam.spthy protocols/KerberosV.spthy
+% date:        2010-01-18 22:08:30.464656 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol     & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs & Checking Time & Isabelle Status & Isabelle Message\\
+BKE          & 62105    &    12 &      2 &      1 &           0.08s &           89 &                    0 &               0 &           27s & checked         &                 \\
+CR_paper     & 62119    &     3 &      2 &      2 &              0s &           19 &                    0 &               0 &            7s & checked         &                 \\
+DenningSacco & 62105    &    11 &      2 &      1 &           0.99s &           93 &                    0 &               0 &          120s & checked         &                 \\
+NS_Public    & 62105    &     8 &      2 &      1 &           0.42s &           66 &                    0 &               0 &           26s & checked         &                 \\
+OtwayRees    & 62105    &     9 &      3 &      2 &           3.19s &           61 &                    0 &               0 &           72s & checked         &                 \\
+TLS          & 62105    &    10 &      2 &      3 &          16.38s &           66 &                    0 &               0 &          247s & checked         &                 \\
+WMF          & 62105    &     7 &      1 &      1 &           0.03s &           31 &                    0 &               0 &           19s & checked         &                 \\
+Yahalom2     & 62105    &     9 &      2 &      1 &           1.27s &           45 &                    0 &               0 &           63s & checked         &                 \\
+WooLam       & 62105    &     9 &      3 &      3 &   timeout: 300s &              &                      &                 &               &                 &                 \\
+KerberosV    & 62105    &    12 &      3 &      3 &   timeout: 300s &              &                      &                 &               &                 &                 \\
+
+
+% generator:   scytherP version 0.1.0 r62120, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=300 --first --Output=output_FR protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy protocols/WooLam.spthy protocols/KerberosV.spthy
+% date:        2010-01-18 22:08:33.924999 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol     & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE          & 62105    &    12 &      2 &      1 &           0.03s &           26 &                   24 &               0\\
+CR_paper     & 62119    &     3 &      2 &      2 &              0s &           10 &                    5 &               0\\
+DenningSacco & 62105    &    11 &      2 &      1 &           0.11s &           50 &                   23 &               0\\
+NS_Public    & 62105    &     8 &      2 &      1 &           0.02s &           21 &                   15 &               0\\
+OtwayRees    & 62105    &     9 &      3 &      2 &           1.39s &          163 &                   71 &               0\\
+TLS          & 62105    &    10 &      2 &      3 &           0.27s &           40 &                   19 &               0\\
+WMF          & 62105    &     7 &      1 &      1 &           0.01s &           16 &                    7 &               0\\
+Yahalom2     & 62105    &     9 &      2 &      1 &           0.07s &           23 &                   12 &               0\\
+WooLam       & 62105    &     9 &      3 &      3 &           0.33s &           40 &                   29 &               0\\
+KerberosV    & 62105    &    12 &      3 &      3 &           0.99s &          184 &                   64 &               0\\
+
+
+% generator:   scytherP version 0.1.0 r62120, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=300 --first --no-reuse --Output=output_FN protocols/BKE.spthy protocols/CR_paper.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy protocols/WooLam.spthy
+% date:        2010-01-18 22:09:52.730244 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol  & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs\\
+BKE       & 62105    &    12 &      2 &      1 &           0.07s &          141 &                    0 &               0\\
+CR_paper  & 62119    &     3 &      2 &      2 &              0s &           19 &                    0 &               0\\
+NS_Public & 62105    &     8 &      2 &      1 &           0.24s &          123 &                    0 &               0\\
+OtwayRees & 62105    &     9 &      3 &      2 &           3.78s &          428 &                    0 &               0\\
+TLS       & 62105    &    10 &      2 &      3 &           1.92s &          222 &                    0 &               0\\
+WMF       & 62105    &     7 &      1 &      1 &           0.02s &           31 &                    0 &               0\\
+Yahalom2  & 62105    &     9 &      2 &      1 &           0.27s &           75 &                    0 &               0\\
+WooLam    & 62105    &     9 &      3 &      3 &          72.27s &         3525 &                    0 &               0\\
+
+
+% generator:   scytherP version 0.1.0 r62120, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=300 --first --Output=output_FR protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy protocols/WooLam.spthy --isabelle
+% date:        2010-01-18 23:35:45.939459 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol     & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs & Checking Time & Isabelle Status & Isabelle Message                                                                                                                            \\
+BKE          & 62105    &    12 &      2 &      1 &           0.01s &           26 &                   24 &               0 &           18s & checked         &                                                                                                                                             \\
+CR_paper     & 62119    &     3 &      2 &      2 &              0s &           10 &                    5 &               0 &            7s & checked         &                                                                                                                                             \\
+DenningSacco & 62105    &    11 &      2 &      1 &           0.11s &           50 &                   23 &               0 &           76s & check failed    & "***       (\\<alpha>__ \\<circ>\\<^sub>s sa__)(|NV ''kIR'' tid0__|),\n***       (\\<alpha>__ \\<circ>\\<^sub>s sa__)(|NV ''T'' tid0__|),\n"\\
+NS_Public    & 62105    &     8 &      2 &      1 &           0.02s &           21 &                   15 &               0 &           13s & checked         &                                                                                                                                             \\
+OtwayRees    & 62105    &     9 &      3 &      2 &           1.37s &          163 &                   71 &               0 &          380s & checked         &                                                                                                                                             \\
+TLS          & 62105    &    10 &      2 &      3 &           0.29s &           40 &                   19 &               0 &          282s & checked         &                                                                                                                                             \\
+WMF          & 62105    &     7 &      1 &      1 &           0.01s &           16 &                    7 &               0 &           15s & checked         &                                                                                                                                             \\
+Yahalom2     & 62105    &     9 &      2 &      1 &           0.07s &           23 &                   12 &               0 &           35s & checked         &                                                                                                                                             \\
+WooLam       & 62105    &     9 &      3 &      3 &           0.32s &           40 &                   29 &               0 &          118s & checked         &                                                                                                                                             \\
+
+
+% generator:   scytherP version 0.1.0 r62120, (C) Simon Meier, ETH Zurich 2009
+% command:     scytherP --report=results.txt --ASCII --timeout=300 --first --no-reuse --Output=output_FN protocols/BKE.spthy protocols/CR_paper.spthy protocols/DenningSacco.spthy protocols/NS_Public.spthy protocols/OtwayRees.spthy protocols/TLS.spthy protocols/WMF.spthy protocols/Yahalom2.spthy protocols/WooLam.spthy --isabelle
+% date:        2010-01-19 06:33:29.420307 UTC
+% system:      i386/linux
+% input revs.: 62105, 62119
+
+Protocol     & Revision & #sec. & #auth. & #other & Generation Time & #chain rules & #forward resolutions & #missing proofs & Checking Time & Isabelle Status & Isabelle Message                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \\
+BKE          & 62105    &    12 &      2 &      1 &           0.07s &          141 &                    0 &               0 &           42s & checked         &                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \\
+CR_paper     & 62119    &     3 &      2 &      2 &              0s &           19 &                    0 &               0 &            8s & checked         &                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \\
+DenningSacco & 62105    &    11 &      2 &      1 &           0.48s &          162 &                    0 &               0 &          216s & check failed    & "***       (\\<alpha>__ \\<circ>\\<^sub>s sa__)(|NV ''kIR'' tid0__|),\n***       (\\<alpha>__ \\<circ>\\<^sub>s sa__)(|NV ''T'' tid0__|),\n"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \\
+NS_Public    & 62105    &     8 &      2 &      1 &           0.24s &          123 &                    0 &               0 &           50s & checked         &                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \\
+OtwayRees    & 62105    &     9 &      3 &      2 &           3.81s &          428 &                    0 &               0 &          891s & checked         &                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \\
+TLS          & 62105    &    10 &      2 &      3 &           1.97s &          222 &                    0 &               0 &         2764s & checked         &                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \\
+WMF          & 62105    &     7 &      1 &      1 &           0.03s &           31 &                    0 &               0 &           20s & checked         &                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \\
+Yahalom2     & 62105    &     9 &      2 &      1 &           0.31s &           75 &                    0 &               0 &          103s & checked         &                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \\
+WooLam       & 62105    &     9 &      3 &      3 &           72.8s &         3525 &                    0 &               0 &        20891s & check failed    & "Running ESPL-scytherP-WooLam_cert_auto ...\n/home/simon/local/bin/Isabelle2009-1/lib/scripts/run-polyml: Zeile 74: 14745 Terminated              \"$POLY\" -q $ML_OPTIONS\nESPL-scytherP-WooLam_cert_auto FAILED\n(see also /home/simon/.isabelle/heaps/Isabelle2009-1/polyml-5.3.0_x86-linux/log/ESPL-scytherP-WooLam_cert_auto)\n\n        s(|NV ''nb'' tid1|) = LN ''nb'' ?tid2.0 &\n        s(|NV ''nb'' tid3|) = LN ''nb'' ?tid2.0 &\n        St (tid1, A_1) \\<prec> St (?tid2.0, B_1) &\n        St (tid1, A_3) \\<prec> St (tid3, S_4) &\n        St (tid1, A_7) \\<prec> St (?tid2.0, B_7) &\n        St (tid1, A_2) \\<prec> St (tid1, A_3) &\n        St (tid1, A_6) \\<prec> St (tid1, A_7) &\n        St (?tid2.0, B_2) \\<prec> St (tid1, A_2) &\n        St (?tid2.0, B_4) \\<prec> St (tid3, S_4) &\n        St (?tid2.0, B_6) \\<prec> St (tid1, A_6) &\n        St (?tid2.0, B_1) \\<prec> St (?tid2.0, B_2) &\n        St (?tid2.0, B_3) \\<prec> St (?tid2.0, B_4) &\n        St (?tid2.0, B_5) \\<prec> St (?tid2.0, B_6) &\n        St (tid3, S_5) \\<prec> St (?tid2.0, B_5) &\n        St (tid3, S_4) \\<prec> St (tid3, S_5)\nlemma S_ni_synch:\n [| roleMap r ?tid3.0 = Some S; s(|AV ''A'' ?tid3.0|) ~: Compromised;\n    s(|AV ''B'' ?tid3.0|) ~: Compromised;\n    s(|AV ''S'' ?tid3.0|) ~: Compromised; (?tid3.0, S_4) : steps t |]\n ==> EX tid1 tid2.\n        roleMap r tid1 = Some A &\n        roleMap r tid2 = Some B &\n        s(|AV ''A'' tid2|) = s(|AV ''A'' tid1|) &\n        s(|AV ''A'' ?tid3.0|) = s(|AV ''A'' tid1|) &\n        s(|AV ''B'' tid2|) = s(|AV ''B'' tid1|) &\n        s(|AV ''B'' ?tid3.0|) = s(|AV ''B'' tid1|) &\n        s(|AV ''S'' tid2|) = s(|AV ''S'' tid1|) &\n        s(|AV ''S'' ?tid3.0|) = s(|AV ''S'' tid1|) &\n        s(|NV ''na'' tid2|) = LN ''na'' tid1 &\n        s(|NV ''na'' ?tid3.0|) = LN ''na'' tid1 &\n        s(|NV ''nb'' tid1|) = LN ''nb'' tid2 &\n        s(|NV ''nb'' ?tid3.0|) = LN ''nb'' tid2 &\n        St (tid1, A_1) \\<prec> St (tid2, B_1) &\n        St (tid1, A_3) \\<prec> St (?tid3.0, S_4) &\n        St (tid1, A_2) \\<prec> St (tid1, A_3) &\n        St (tid2, B_2) \\<prec> St (tid1, A_2) &\n        St (tid2, B_4) \\<prec> St (?tid3.0, S_4) &\n        St (tid2, B_1) \\<prec> St (tid2, B_2) &\n        St (tid2, B_3) \\<prec> St (tid2, B_4)\nlemma weak_atomicity: complete (t, r, s) atomicAnn\n\n"\\

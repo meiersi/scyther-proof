@@ -1,0 +1,76 @@
+theory WideMouthFrog
+begin
+
+section{* Wide Mouthed Frog *}
+
+text{*
+  The protocol is modeled after the description in the SPORE library:
+
+    http://www.lsv.ens-cachan.fr/Software/spore/wideMouthedFrog.html
+
+  Note that we cannot reason about the timestamps in our current model.
+  Furthermore, our current calculus for backwards reasoning is too weak
+  to reason about the original protocol
+
+    1: I -> S: I, {TimeI, R, kIR}k(I,S)
+    2: R <- S:    {TimeS, I, kIR}k(R,S)
+
+  because the server S could receive the message {TimeI, R, kIR}k(I,S)
+  arbitrarily many times from himself. Therefore, we added global constants
+  identifying the different steps.
+*}
+
+protocol WMF
+{
+  1. I -> S: I,R, {'step1', TimeI, R, kIR}k(I,S)
+  2. R <- S: S,I, {'step2', TimeS, I, kIR}k(R,S)
+}
+
+
+subsection{* Secrecy Properties *}
+
+properties (of WMF)
+  I_kIR_sec: secret(I, -, kIR, {I,R,S}) 
+  S_kIR_sec: secret(S, 1, kIR, {I,R,S}) 
+  R_kIR_sec: secret(R, 2, kIR, {I,R,S}) 
+
+
+subsection{* Authentication Properties *}
+
+text{*
+  The authentication guarantee for the initiator is trivial because it does not
+  receive any confirmation that the responder received the new session-key.
+*}
+
+property (of WMF) S_ni_synch:
+  premises
+    "role(3) = S"
+    "step(3, S_1)"
+    "uncompromised(I#3, S#3)"
+  imply threads 1 such that
+    " role(1) = I
+    & I#1 = I#3 
+    & R#1 = R#3
+    & S#1 = S#3
+    & TimeI#1 = TimeI#3
+    & kIR#1 = kIR#3 
+    &   St(1, I_1) < St(3, S_1)"
+
+property (of WMF) R_ni_synch:
+  premises
+    "role(2) = R"
+    "step(2, R_2)"
+    "uncompromised(I#2, R#2, S#2)"
+  imply threads 1, 3 such that
+    " role(1) = I
+    & role(3) = S
+    & I#1 = I#2      & I#2 = I#3
+    & R#1 = R#2      & R#2 = R#3
+    & S#1 = S#2      & S#2 = S#3
+    & TimeI#1 = TimeI#3
+    & TimeS#2 = TimeS#3
+    & kIR#1 = kIR#2  & kIR#2 = kIR#3
+    &   St(1, I_1) < St(3, S_1)
+      < St(3, S_2) < St(2, R_2)"
+
+end

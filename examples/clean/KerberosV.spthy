@@ -1,0 +1,208 @@
+theory KerberosV_no_timestamps
+begin
+
+section{* The Kerberos Protocol, Version V *}
+
+text{*
+  Modeled after Bella's model in Isabelle/src/HOL/Auth/KerberosV.thy.
+
+  The differences to Bella's model are the following:
+
+    1. We do not model the timestamps and the timing properties because our
+       model does not support reasoning about them yet.
+
+    2. We do not model session key leakage, as our support for key compromise
+       properties is not ready yet.
+
+    3. We provide more general authentication and secrecy properties, as we do
+       not assume a priory the uncompromisedness of the ticket granting server.
+       Furthermore, the authentication propertis are more fine-grained due to
+       our more precise execution model.
+
+    4. We use explicit global constants instead of implicit typing to identify
+       the different encryptions.
+*}
+
+protocol KerberosV
+{
+  1. C -> A: C,T,n1
+  
+  2.   <- A: A, {'TT21', AuthKey, C }k(T,A), {'TT22', AuthKey, n1, T}k(C,A)
+     C <-  : A, TicketGrantingTicket,        {'TT22', AuthKey, n1, T}k(C,A)
+
+
+  3. C ->  : A, C, TicketGrantingTicket,       {'TT3', C}AuthKey, C, S, n2
+       -> T: A, C, {'TT21', AuthKey, C}k(T,A), {'TT3', C}AuthKey, C, S, n2
+
+  4.   <- T: T, {'TT41', ServerKey, C}k(S,T), {'TT42', ServerKey, n2, S}AuthKey 
+     C <-  : T, ServerTicket,                 {'TT42', ServerKey, n2, S}AuthKey
+
+
+  5. C ->  : T, ServerTicket,                 {'TT5', C, t}ServerKey
+       -> S: T, {'TT41', ServerKey, C}k(S,T), {'TT5', C, t}ServerKey     
+
+  6. C <- S: {'TT6', t}ServerKey
+}
+
+
+subsection{* Secrecy Properties *}
+
+properties (of KerberosV)
+  auto: msc-typing
+
+  A_AuthKey_sec: secret(A, -, AuthKey, {C,A,T})
+  C_AuthKey_sec: secret(C, 2, AuthKey, {C,A,T})
+  T_AuthKey_sec: secret(T, 3, AuthKey, {C,A,T})
+
+  T_ServerKey_sec: secret(T, -, ServerKey, {C,A,T,S})
+  C_ServerKey_sec: secret(C, 4, ServerKey, {C,A,T,S})
+
+  C_t_sec: secret(C, -, t, {C,A,T,S})
+
+
+subsection{* Authentication Properties *}
+
+text{*
+  To simplify proof search, we first prove the following two first send
+  properties.
+*}
+
+property (of KerberosV) C_n1_first_send:
+  premises
+    "role(1) = C"
+    "knows(n1#1)"
+  imply
+    "St(1,C_1) < Ln(n1#1)"
+
+property (of KerberosV) C_n2_first_send:
+  premises
+    "role(1) = C"
+    "knows(n2#1)"
+  imply
+    "St(1,C_3) < Ln(n2#1)"
+
+property (of KerberosV) C_ni_synch:
+  premises
+    "role(1) = C"
+    "uncompromised(C#1, A#1, T#1, S#1)"
+    "step(1, C_6)"
+  imply threads 2, 3, 4 such that
+    "
+     // consequence from exchange with authenticator
+     role(2) = A &
+     A#1 = A#2 & 
+     C#1 = C#2 & 
+     T#1 = T#2 &
+     AuthKey#1 = AuthKey#2 & 
+     n1#1 = n1#2 &
+     
+     // consequence from exchange with ticket granting server
+     role(3) = T &
+     A#1 = A#3 & 
+     C#1 = C#3 & 
+     T#1 = T#3 &
+     S#1 = S#3 &
+     AuthKey#1 = AuthKey#3 &
+     n2#1 = n2#3 &
+     ServerKey#1 = ServerKey#3 &
+
+     // consequence from exchange with server
+     role(4) = S &
+     C#1 = C#4 & 
+     T#1 = T#4 &
+     S#1 = S#4 &
+     t#1 = t#4 &
+     ServerKey#1 = ServerKey#4 &
+
+     // ordering
+     St(1, C_1) < St(2, A_1) <
+     St(2, A_2) < St(1, C_2) <
+     St(1, C_3) < St(3, T_3) <
+     St(3, T_4) < St(1, C_4) <
+     St(1, C_5) < St(4, S_5) <
+     St(4, S_6) < St(1, C_6)
+     "
+
+property (of KerberosV) T_ni_synch:
+  premises
+    "role(3) = T"
+    "uncompromised(C#3, A#3, T#3)"
+    "step(3, T_3)"
+  imply threads 1, 2 such that
+    "
+     // consequence from receiving from client
+     role(1) = C &
+     A#1 = A#3 & 
+     C#1 = C#3 & 
+     T#1 = T#3 &
+     AuthKey#1 = AuthKey#3 &
+
+     // consequence of client receiving from authenticator
+     role(2) = A &
+     A#1 = A#2 & 
+     C#1 = C#2 & 
+     T#1 = T#2 &
+     AuthKey#1 = AuthKey#2 & 
+     n1#1 = n1#2 &
+
+     // ordering consequences
+     St(1, C_1) < St(2, A_1) <
+     St(2, A_2) < St(1, C_2) <
+     St(1, C_3) < St(3, T_3)
+    "
+
+text{*
+  here we can only formulate a weaker authentication property because the
+  uncompromisedness of the authenticator cannot be verified directly by the server.
+  What we can prove is under the assumption that we got our ServerKey from
+  some ticket granting server and this server was talking to an uncompromised
+  authenticator, then we have sort of an authentication.
+*}
+
+property (of KerberosV) S_auth:
+  premises
+    "role(4) = S"
+    "uncompromised(C#4, S#4, T#4)"
+    "step(4, S_5)"
+
+    "role(3) = T"
+    "uncompromised(A#3)"
+    "ServerKey#4 = ServerKey#3"
+  imply threads 1, 2 such that
+    "
+     // consequence from exchange with authenticator
+     role(1) = C &
+     role(2) = A &
+     A#1 = A#2 & 
+     C#1 = C#2 & 
+     T#1 = T#2 &
+     AuthKey#1 = AuthKey#2 & 
+     n1#1 = n1#2 &
+     
+     // consequence from exchange with ticket granting server
+     A#1 = A#3 & 
+     C#1 = C#3 & 
+     T#1 = T#3 &
+     S#1 = S#3 &
+     AuthKey#1 = AuthKey#3 &
+     n2#1 = n2#3 &
+     ServerKey#1 = ServerKey#3 &
+
+     // consequence from exchange with client
+     C#1 = C#4 & 
+     T#1 = T#4 &
+     S#1 = S#4 &
+     t#1 = t#4 &
+     ServerKey#1 = ServerKey#4 &
+
+     // ordering consequences
+     St(1, C_1) < St(2, A_1) <
+     St(2, A_2) < St(1, C_2) <
+     St(1, C_3) < St(3, T_3) <
+     St(3, T_4) < St(1, C_4) <
+     St(1, C_5) < St(4, S_5)
+    "
+
+end
+
+

@@ -1,0 +1,43 @@
+theory NeedImplicitUnpairing begin
+
+protocol P {
+
+  1. I -> R: {'1', (ni, I)}pk(R)
+  2. I <- R: {'2', (ni, R)}pk(I)
+
+}
+
+properties (of P)
+  auto: msc-typing
+
+  I_sec_ni: secret(I, -, ni, {I,R})
+
+/* 
+
+The property 'I_sec_ni' is expanded as follows.
+
+  property (of P) I_sec_ni:
+    for all #0 the premises
+      "role( #0 ) = I"
+      "uncompromised( I#0, R#0 )"
+      "knows(~ni#0)"
+    imply "False"
+
+It cannot be proven when pairing is handled by appealing to the Chain rule due
+to the following problem.
+
+The proof must start with enumerating the sources of '~ni#0' as there are no
+other rules that apply. One case is that '~ni#0' is learned from decrypting
+'?ni#1' sent in the step 'R_2' of a thread #1 executing the responder role.
+This is impossible because thread #1 must receive his first message from thread
+#0, as the intruder cannot fake it due to only learning '?ni#1' after '(#1,
+R_2)' (i.e. faking this first message leads to a violation of the irreflexivity
+of the event ordering). However, without implicit unpairing, this fake case
+cannot be handled as the sources of '(?ni#1, I#1)' could also come from the
+second step of yet another thread '#2' executing the responder role. We do
+not have more information about thread '#2' than about '#1' and hence, our
+proof strategy will loop.
+
+*/
+
+end

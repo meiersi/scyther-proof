@@ -1,0 +1,1 @@
+jquery-ui-1.8.2/jquery-1.4.2.js
