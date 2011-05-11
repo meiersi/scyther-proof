@@ -1,0 +1,101 @@
+theory repeated_session_key 
+begin
+
+
+/* repeated session key exchange: proof search has to be done using the flags
+     '-s -b3'.
+
+This protocol construction has an exponential minimal proof size when no reuse
+is being done.
+
+*/
+
+
+
+
+protocol RSK {
+   1. I -> R: { '1',  k1, k1 }k(I,R)
+   2. I <- R: { '2',  k2, k2 }k1
+   3. I -> R: { '3',  k3, k3 }k2
+   4. I <- R: { '4',  k4, k4 }k3
+   5. I -> R: { '5',  k5, k5 }k4
+   6. I <- R: { '6',  k6, k6 }k5
+   7. I -> R: { '7',  k7, k7 }k6
+   8. I <- R: { '8',  k8, k8 }k7
+   9. I -> R: { '9',  k9, k9 }k8
+
+  10. I <- R: {'10', k10, k10}k9
+  11. I -> R: {'11', k11, k11}k10
+  12. I <- R: {'12', k12, k12}k11
+  13. I -> R: {'13', k13, k13}k12
+  14. I <- R: {'14', k14, k14}k13
+  15. I -> R: {'15', k15, k15}k14
+  16. I <- R: {'16', k16, k16}k15
+  17. I -> R: {'17', k17, k17}k16
+  18. I <- R: {'18', k18, k18}k17
+  19. I -> R: {'19', k19, k19}k18
+}
+
+properties (of RSK)
+  I_kIR_sec: secret(I, -, k(I,R), {I,R})
+  R_kIR_sec: secret(R, -, k(I,R), {I,R})
+
+  I_k1_sec: secret(I, -, k1, {I,R})
+  R_k1_sec: secret(R, 1, k1, {I,R})
+
+  R_k2_sec: secret(R, -, k2, {I,R})
+  I_k2_sec: secret(I, 2, k2, {I,R})
+
+  I_k3_sec: secret(I, -, k3, {I,R})
+  R_k3_sec: secret(R, 3, k3, {I,R})
+
+  R_k4_sec: secret(R, -, k4, {I,R})
+  I_k4_sec: secret(I, 4, k4, {I,R})
+
+  I_k5_sec: secret(I, -, k5, {I,R})
+  R_k5_sec: secret(R, 5, k5, {I,R})
+
+  R_k6_sec: secret(R, -, k6, {I,R})
+  I_k6_sec: secret(I, 6, k6, {I,R})
+
+  I_k7_sec: secret(I, -, k7, {I,R})
+  R_k7_sec: secret(R, 7, k7, {I,R})
+
+  R_k8_sec: secret(R, -, k8, {I,R})
+  I_k8_sec: secret(I, 8, k8, {I,R})
+
+  I_k9_sec: secret(I, -, k9, {I,R})
+  R_k9_sec: secret(R, 9, k9, {I,R})
+
+  R_k10_sec: secret(R, -,  k10, {I,R})
+  I_k10_sec: secret(I, 10, k10, {I,R})
+
+  I_k11_sec: secret(I, -,  k11, {I,R})
+  R_k11_sec: secret(R, 11, k11, {I,R})
+
+  R_k12_sec: secret(R, -,  k12, {I,R})
+  I_k12_sec: secret(I, 12, k12, {I,R})
+
+  I_k13_sec: secret(I, -,  k13, {I,R})
+  R_k13_sec: secret(R, 13, k13, {I,R})
+
+  R_k14_sec: secret(R, -,  k14, {I,R})
+  I_k14_sec: secret(I, 14, k14, {I,R})
+
+  I_k15_sec: secret(I, -,  k15, {I,R})
+  R_k15_sec: secret(R, 15, k15, {I,R})
+
+  R_k16_sec: secret(R, -,  k16, {I,R})
+  I_k16_sec: secret(I, 16, k16, {I,R})
+
+  I_k17_sec: secret(I, -,  k17, {I,R})
+  R_k17_sec: secret(R, 17, k17, {I,R})
+
+  R_k18_sec: secret(R, -,  k18, {I,R})
+  I_k18_sec: secret(I, 18, k18, {I,R})
+
+  I_k19_sec: secret(I, -,  k19, {I,R})
+  R_k19_sec: secret(R, 19, k19, {I,R})
+
+
+end

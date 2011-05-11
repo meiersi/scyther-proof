@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+  <title>Proof</title>
+<script type="text/javascript" src="jquery-1.3.2.js"></script>
+<script type="text/javascript" src="json_parse.js"></script>
+<script type="text/javascript" src="theory.js"></script>
+
+<style type="text/css">
+  .normal {}
+  .highlighted { color:blue }
+  .keyword { font-weight:bold }
+</style>
+
+
+<script type="text/javascript">
+  // a single global variable holding the ScytherP info
+  var scytherP = undefined;
+
+  // getting a sequent reference
+  function getSeqRef(refIdx) { return ($("#seqRef_" + refIdx)); }
+
+  // setting a sequent
+  function setSequent (refIdx, sequent) {
+    // update frames
+    parent["premise"].location.href = "sequent_" + sequent +"_prem.png";
+    parent["conclusion"].location.href = "sequent_" + sequent +"_concl.png";
+    // update highlighted text
+    with (scytherP) {
+      if (curRefIdx != null)
+        getSeqRef(curRefIdx).attr("class", "normal");
+      getSeqRef(refIdx).attr("class", "highlighted");
+      curRefIdx = refIdx;
+    }
+  }
+
+  // document preparation when loaded
+  $(document).ready(function(){
+    // parse json info
+    scytherP = json_parse(scytherP_theory_JSON);
+    scytherP.curRefIdx = "";
+    // install inner html
+    document.getElementById("proof").innerHTML = scytherP.theoryHtml;
+    // install event handlers
+    jQuery.each(scytherP.seqRefs, function(idx, assoc){
+      getSeqRef(assoc[0]).bind("mouseover", function(e){
+        setSequent(assoc[0], assoc[1]);
+      });
+    });
+  });
+
+
+</script>
+</head>
+<body>
+  <div id="proof">
+    Proof loading failed! Check if &quot;theory.js&quot; is in the same directory
+    as this file.
+  </div>
+  </body>
+</html>

@@ -1,0 +1,3 @@
+:set -iinteractive-only-src
+:set -isrc
+:set -Wall

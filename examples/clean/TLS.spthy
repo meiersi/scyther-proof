@@ -1,0 +1,130 @@
+theory TLS 
+begin
+
+section{* TLS Handshake *}
+
+text{*
+  Modeled after Paulson's TLS model in Isabelle/src/HOL/Auth/TLS.thy. Notable
+  differences are:
+
+    1. We use explicit global constants to differentiate between different
+       encryptions instead of implicit typing.
+
+    2. We abstract certificates even further to the trivial form of completely
+       predistributed certificates pk(A) with their private key pk(A) for any
+       agent A. The reason for this abstraction is that we need to generalize
+       weak atomicity further before we can support receiving composed terms in
+       a variable.
+
+       [TODO: Remove this simplification, as weak-atomicity is now generalized.]
+
+    3. We model session keys directly as hashes of the relevant information.
+       Due to our support for composed keys, we do not need any custom
+       axiomatization as Paulson did.
+
+*}
+
+protocol TLS {
+  1. C -> S: C, nc, sid, pc
+  2. C <- S: ns, sid, ps
+
+  3. C -> S: { 'TT0', pms                  }pk(S) ,
+             { 'TT1', h('TT2', ns, S, pms) }sk(C) ,
+             { 'TT3', sid, h('TT4', 'PRF', pms, nc, ns),
+               nc, pc, C, ns, ps, S
+             } 
+             h('clientKey', nc, ns, h('TT4', 'PRF', pms, nc, ns))
+
+  4. C <- S: { 'TT3', sid, h('TT4', 'PRF', pms, nc, ns),
+               nc, pc, C, ns, ps, S
+             } 
+             h('serverKey', nc, ns, h('TT4', 'PRF', pms, nc, ns))
+}
+
+
+subsection{* Secrecy Properties *}
+
+properties (of TLS)
+  auto: msc-typing
+
+  C_pms_sec:  secret(C, -, pms,                          {S}) 
+  C_PRF_sec:  secret(C, -, h('TT4', 'PRF', pms, nc, ns), {S})
+  C_clientKey_sec:  
+    secret(C, -, h('clientKey', nc, ns, h('TT4', 'PRF', pms, nc, ns)), {S})
+  C_serverKey_sec:  
+    secret(C, -, h('serverKey', nc, ns, h('TT4', 'PRF', pms, nc, ns)), {S})
+
+  S_pms_sec:  secret(S, 4, pms,                          {C,S})
+  S_PRF_sec:  secret(S, 4, h('TT4', 'PRF', pms, nc, ns), {C,S})
+
+  S_clientKey_sec:  
+    secret(S, 4, h('clientKey', nc, ns, h('TT4', 'PRF', pms, nc, ns)), {C,S})
+  S_serverKey_sec:  
+    secret(S, 4, h('serverKey', nc, ns, h('TT4', 'PRF', pms, nc, ns)), {C,S})
+
+
+subsection{* Authentication Properties *}
+
+text{*
+  First, we prove two first send properties in order to simplify proof search
+  for the authentication properties.
+*}
+
+property (of TLS) nc_first_send:
+  premises
+    "role(1) = C"
+    "knows(nc#1)"
+  imply
+    "St(1, C_1) < Ln(nc#1)"
+
+property (of TLS) ns_first_send:
+  premises
+    "role(1) = S"
+    "knows(ns#1)"
+  imply
+    "St(1, S_2) < Ln(ns#1)"
+
+property (of TLS) C_ni_synch:
+  premises
+    "role(1) = C"
+    "step(1, C_4)"
+    "uncompromised(C#1,S#1)"
+  imply a thread 2 such that
+    "  role(2) = S
+    &  C#1  = C#2
+    &  S#1  = S#2
+    &  nc#1 = nc#2
+    &  ns#1 = ns#2
+    &  pc#1 = pc#2
+    &  ps#1 = ps#2
+    &  sid#1 = sid#2
+    &  pms#1 = pms#2
+    &    St(1, C_1) < St(2, S_1)
+       < St(2, S_2) < St(1, C_2)
+       < St(1, C_3) < St(2, S_3)
+       < St(2, S_4) < St(1, C_4)
+    "
+
+property (of TLS) S_ni_synch:
+  premises
+    "role(2) = S"
+    "step(2, S_4)"
+    "uncompromised(C#2,S#2)"
+  imply a thread 1 such that
+    "  role(1) = C
+    &  C#1  = C#2
+    &  S#1  = S#2
+    &  nc#1 = nc#2
+    &  ns#1 = ns#2
+    &  pc#1 = pc#2
+    &  ps#1 = ps#2
+    &  sid#1 = sid#2
+    &  pms#1 = pms#2
+    &    St(1, C_1) < St(2, S_1)
+       < St(2, S_2) < St(1, C_2)
+       < St(1, C_3) < St(2, S_3)
+       < St(2, S_4) 
+    "
+
+end
+

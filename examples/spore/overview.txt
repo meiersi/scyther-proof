@@ -1,0 +1,313 @@
+Purpose: Describe Status of Modelling SPORE Protocols
+Author:  Simon Meier <simon.meier@inf.ethz.ch>
+Date:    23.6.2010
+
+
+%% Approach
+%%%%%%%%%%%
+
+Shortcomings of our model:
+
+  - weak support for verifying key freshness: only interactive verification of
+    injective authentication properties
+
+  - no support for timestamps; currently we model timestamps as nonces. This
+    may be too strong!
+
+  - no algebraic properties of functions like 'succ' are modeled.
+
+
+Naming convention:
+
+  - file and theory are named according to title with special chars dropped and
+    spaces and hyphens replaced by an underscore
+  - protocol in a theory is named according to author or standard
+
+Selecting variants of a protocol:
+
+  - For now we select the variant with no claimed attacks if it exists. We may
+    also choose to provide models for more variants to demonstrate our attack
+    finding ability.
+
+
+TODOs for the tool:
+
+  - long-term-key secrecy as primitive rule
+  - switch uncompromised to uncompromised
+  - separate transfer label using '.'
+  - open-source licence
+  - output input file and isabelle certificate
+  - comment out unsound theorems when outputting them to Isabelle,
+    but output message to terminal about them
+
+
+TODOs for explanations:
+
+  - interaction with HTML output
+  - syntax (splitting transfers)
+  - tagging / untyped model
+  - properties not yet verifiable
+
+
+
+%% Protocols
+%%%%%%%%%%%%
+
+1. Andrew Secure RPC
+====================
+
+Andrew Secure RPC
+Exchanged of a fresh shared key. Symmetric key cryptography.
+
+BAN modified Andrew Secure RPC
+Modified version of Andrew Secure RPC correcting a freshness flaw. Exchanged of a fresh shared key, Symmetric key cryptography.
+
+BAN concrete Andrew Secure RPC
+A concrete realization of the Andrew Secure RPC protocol, stronger and with less encryption. Exchanged of a fresh shared key, Symmetric key cryptography.
+
+Lowe modified BAN concrete Andrew Secure RPC
+A modified version of the BAN concrete Andrew Secure RPC protocol, preventing a parallel session attack. Exchanged of a fresh shared key, Symmetric key cryptography.
+
+
+2.  Bull's Authentication Protocol [XOR]
+========================================
+
+Bull's Authentication Protocol
+This protocol, described in [bull97], aims at establishing fresh session keys between a fixed number of participants (for instance 3) and a server: one key for each pair of agents adjacent in the chain.
+
+
+3. CAM
+======
+
+CAM
+A protocol used by mobile computers to inform their peers when their network address has changed.
+
+
+4. CCITT X.509
+==============
+
+CCITT X.509 (1)
+One message protocol from the recommendations of the CCITT for the CCITT.X.509 standard.
+
+CCITT X.509 (1c)
+Correction of the CCITT X.509 (1) one message protocol.
+
+CCITT X.509 (3)
+Three messages protocol in the recommendations of the CCITT for the CCITT.X.509 standard.
+
+BAN modified version of CCITT X.509 (3)
+Modified version of the three messages protocol in the recommendations of the CCITT for the CCITT.X.509 standard (CCITT X.509 (3)).
+
+
+5. Denning-Sacco shared key
+===========================
+
+Denning-Sacco shared key
+Modified version of the Needham Schroeder Symmetric Key with timestamps to fix the freshness flaw. Distribution of a shared symmetric key by a trusted server and mutual authentification. Symmetric key cryptography with server and timestamps.
+
+Lowe modified Denning-Sacco shared key
+Modified version of the Denning-Sacco shared key protocol to correct a freshness flaw. Distribution of a shared symmetric key by a trusted server and mutual authentification. Symmetric key cryptography with server and timestamps.
+
+
+6. Diffie Helman [EXP]
+======================
+
+Diffie Helman
+The Diffie Helman key exchange algorithm.
+
+
+7. GJM [control-flow]
+=====================
+
+GJM
+The goal of this protocol is to achieve distributed contract signing in an abuse-free way, that is no party ever can prove to a third party that he is able of determining the issue of the exchange (validate or invalidate the contract). To achieve this goal, a special construction called private contract signature is introduced. Such a private contract signature has the particular property that it is meaningful only for a given trusted third party. Moreover, this protocol is optimistic in the sense that the trusted third party is required only in case of problem.
+
+
+8. Gong [XOR]
+=============
+
+Gong
+Mutual authentication protocol of two principals with a trusted server, and exchange of a new symmetric key. Uses one-way functions and no encryption.
+
+
+9. Kao Chow Authentication
+==========================
+
+Kao Chow Authentication v.1
+Key distribution and authentication protocol. Symmetric keys cryptography with server.
+
+Kao Chow Authentication v.2
+Key distribution and authentication protocol. Symmetric keys cryptography with server.
+
+Kao Chow Authentication v.3
+Key distribution and authentication protocol. Symmetric keys cryptography with server.
+
+
+10. Kerberos V5
+===============
+
+Kerberos V5
+Distribution of a symmetric key (in a ticket), for communication between a client and a server, with authentication.
+
+KSL
+Nonce based improvement of Kerberos V5 protocol with generalized timestamps. Distribution of a session key and a ticket and repeated mutual authentication. Symmetric key cryptography with server.
+
+Lowe modified KSL
+Lowe modified version of the KSL protocol to prevent authentication attacks. Distribution of a session key and a ticket and repeated mutual authentication. Symmetric key cryptography with server.
+
+
+11. Neumann Stubblebine
+=======================
+
+Neumann Stubblebine
+Session key exchange inspired by the Yahalom protocol with the addition of timestamps, and mutual authentication. Symmetric key cryptography with server.
+
+Hwang modified version of Neumann Stubblebine
+Modified version of the Neumann Stubblebine protocol, to correct attack of the repeated authentification part.
+
+
+12. Needham-Schroeder Public Key
+================================
+
+Needham-Schroeder Public Key
+Mutual authentication, using a trusted key server and public keys.
+
+Lowe's fixed version of Needham-Schroder Public Key
+This protocol is an amended version of the Needham-Schroeder Public Key. Its purpose id mutual authentication, using a trusted keyserver and public keys.
+
+
+13. Needham Schroeder Symmetric Key
+===================================
+
+Needham Schroeder Symmetric Key
+Distribution of a shared symmetric key by a trusted server and mutual authentification. Symmetric key cryptography with server.
+
+Amended Needham Schroeder Symmetric Key
+This is an amended version of Needham Schroeder Symmetric Key, by the same authors. Distribution of a shared symmetric key by a trusted server and mutual authentification. Symmetric key cryptography with server.
+
+
+14. Otway Rees
+==============
+
+Otway Rees
+Distribution of a shared symmetric key by a trusted server. Symmetric key cryptography with server.
+
+
+15. Schnorr's Protocol [EXP]
+============================
+
+Schnorr's Protocol
+The Schnorr protocol is described by R. Cramer, I. Damgård and B. Schoenmakers in [BRICS-EP-94-CDS_PPKS].
+
+
+16. Shamir-Rivest-Adleman Three Pass Protocol [commutative-encryption]
+======================================================================
+
+Shamir-Rivest-Adleman Three Pass Protocol
+The following protocol, described in [ClarkJacob97], allows two principals to exchange a secret message without sharing any initial secret.
+
+
+17. SK3 [XOR?]
+==============
+
+SK3
+Symmetric key distribution using Smart Cards, by Shoup and Rubin.
+
+?? check Bella's abstraction ??
+
+
+18. SmartRight view-only [XOR]
+==============================
+
+SmartRight view-only
+This view-only protocol is part of the SmartRight system designed by Thomson for copy protection for the Digital Video Broadcasting technology. Its purpose is to ensure that the digital content broadcasted can be view only once. It uses symmetric key cryptography with nonces and xor.
+
+
+19. SPLICE/AS
+=============
+
+SPLICE/AS
+Mutual authentication protocol. Public key cryptography with a certification authority signing and distributing public keys.
+
+Hwang and Chen modified SPLICE/AS
+This modified version correct two flaws in SPLICE/AS. Mutual authentication protocol with public key cryptography with a certification authority signing and distributing public keys.
+
+Clark and Jacob modified Hwang and Chen modified SPLICE/AS
+This modified version corrects a flaws in Hwang and Chen modified SPLICE/AS. Mutual authentication protocol with public key cryptography with a certification authority signing and distributing public keys.
+
+
+20. TMN
+=======
+
+Note: We choose to implement encryption with scheme warranting the free algebra.
+
+TMN
+Distribution of a fresh symmetric key and authentication. Symmetric keys, trusted server and public keys (only the public key of the server is used).
+
+
+21. Wired Equivalent Privacy Protocol [XOR]
+===========================================
+
+Wired Equivalent Privacy Protocol
+The Wired Equivalent Privacy (WEP) protocol, described in [802.11], is used to protect data during wireless transmission.
+
+
+22. Wide Mouthed Frog
+=====================
+
+Wide Mouthed Frog
+Distribution of a fresh shared key. Symmetric key cryptography with server and timestamps.
+
+Lowe modified Wide Mouthed Frog
+An modified version of Wide Mouthed Frog. Exchanged of a fresh shared key. Symmetric key cryptography with server and timestamps.
+
+
+23. Woo and Lam Mutual Authentication
+=====================================
+
+Woo and Lam Mutual Authentication
+Key distribution and mutual authentication with trusted server and symmetric keys.
+
+
+24. Woo and Lam Pi
+==================
+
+24.1 Woo and Lam Pi
+  One way authentification protocol with public keys and trusted server, simplification of Woo and Lam Pi 3, Woo and Lam Pi 2, Woo and Lam Pi 1, and Woo and Lam Pi f.
+
+24.2 Woo and Lam Pi 1
+  One way authentification protocol with public keys and trusted server, simplification of Woo and Lam Pi f.
+
+24.3 Woo and Lam Pi 2
+  One way authentification protocol with public keys and trusted server, simplification of Woo and Lam Pi 1 and Woo and Lam Pi f.
+
+24.4 Woo and Lam Pi 3
+  One way authentification protocol with public keys and trusted server, simplification of Woo and Lam Pi 2,  Woo and Lam Pi 1, and Woo and Lam Pi f.
+
+24.5 Woo and Lam Pi f
+  One way authentification protocol with public keys and trusted server.
+
+
+25. Yahalom
+===========
+
+Yahalom
+Distribution of a fresh symmetric shared key by a trusted server and mutual authentication. Symmetric keys and trusted server.
+
+BAN simplified version of Yahalom
+An amended version of the Yahalom protocol, presented in the BAN logic paper. Symmetric keys and trusted server.
+
+Lowe's modified version of Yahalom
+Lowe's modified version of the Yahalom protocol. Symmetric keys and trusted server.
+
+Paulson's strengthened version of Yahalom
+Paulson's modified version of the Yahalom protocol. Symmetric keys and trusted server. 
+
+
+
+%% Fixes to be submitted to the SPORE maintainers
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Woo and Lam Pi 1/2/3/f: Too many dots after label of message transfer in protocol description
+
+

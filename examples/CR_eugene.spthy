@@ -1,0 +1,33 @@
+theory CR_eugene 
+begin
+
+protocol CR {
+
+  1. C -> S: {k}pk(S)
+  2. C <- S: h(k)
+
+}
+
+
+properties (of CR)
+  C_secret_k: secret(C, -, k, {S})
+  weak_atomicity: weakly-atomic
+
+
+property (of CR) C_ni_synch:
+  premises
+    "role(1) = C"
+    "step(1, C_2)"
+    "uncompromised(S#1)"
+  imply a thread 2 such that
+    "role(2) = S &
+     inst(1, C_1_pt) = inst(2, S_1_pt) &
+     inst(1, C_2_pt) = inst(2, S_2_pt) &
+     St(1, C_1) < St(2, S_1) < 
+     St(2, S_2) < St(1, C_2) &
+     St(1, C_1) < St(1, C_2)"
+
+
+
+
+end

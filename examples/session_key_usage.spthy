@@ -1,0 +1,71 @@
+theory repeated_session_key 
+begin
+
+
+
+protocol RSK {
+  1. Alice -> Bob: {'1', key}k(Alice,Bob)
+  2. Alice <- Bob: {'2', m}key
+  // 3. Alice -> Bob: {'3', m2}sessKey
+}
+
+properties (of RSK)
+  Alice_kAliceBob_sec: secret(Alice, -, k(Alice,Bob), {Alice,Bob})
+  Bob_kAliceBob_sec: secret(Bob, -, k(Alice,Bob), {Alice,Bob})
+
+  Alice_key_sec: secret(Alice, -, key, {Alice,Bob})
+  Bob_key_sec: secret(Bob, 1, key, {Alice,Bob})
+  Bob_inv_key_sec: secret(Bob, 1, inv(key), {Alice,Bob})
+
+  Bob_m_sec: secret(Bob, -, m, {Alice,Bob})
+  Alice_m_sec: secret(Alice, 2, m, {Alice,Bob})
+
+  // I_m2_sec: secret(I, -, m2, {I,R})
+  // R_m2_sec: secret(R, 3, m2, {I,R})
+
+
+/* Tried to shortcut authentication property, however this leads to a looping
+ * behavior in the reuse of the non-secrecy property
+   => investigate
+
+property (of RSK) Alice_msg_agreement:
+  premises
+    "role(1) = Alice"
+    "step(1, Alice_2)"
+    "uncompromised(Alice#1, Bob#1)"
+    "role(2) = Bob"
+    "m#1 = m#2"
+  imply
+    "inst(1, Alice_1_pt) = inst(2, Bob_1_pt) &
+     inst(1, Alice_2_pt) = inst(2, Bob_2_pt)"
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end

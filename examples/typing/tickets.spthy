@@ -1,0 +1,195 @@
+theory nsl
+begin
+
+/* Idea for case studies in Journal paper:
+
+     1. prove long-term key secrecy
+     2. prove 'kab' secrecy at S
+     3. prove ni-agree at A; corollary secrecy of 'kab'
+     4. prove ni-agree at B; corollary secrecy of 'kab'
+*/
+
+// minified version of Denning-Sacco
+protocol miniDS
+{
+  // 1. A -> S: A, B
+  // 2. S ->  : {B, kab}k(A,S), {kab, A}k(B,S)
+  //      -> A: {B, kab}k(A,S), Tkt
+  // 3. A ->  : Tkt
+  //      -> B: {kab, A}k(B,S)
+
+  1. A -> S: A, B
+  2. S ->  : {B, kab, {'3', kab, A}k(B,S) }k(A,S)
+       -> A: {B, kab, Tkt                 }k(A,S)
+  3. A ->  : Tkt
+       -> B: {'3', kab, A}k(B,S)
+  4. A <- B: {'4', nb}kab
+  5. A -> B: nb
+}
+
+properties (of miniDS)
+  auto: msc-typing
+
+/*
+property (of miniDS) Tkt_auth:
+  premises
+    "role(1) = A"
+    "uncompromised(A#1, S#1)"
+    "step(1, A_2)"
+  imply
+    "Tkt#1 = {'3', kab#1, A#1}k(B#1,S#1)"
+*/
+
+properties (of miniDS)
+  S_sec_kab: secret(S, -, kab, {A,B,S})
+  A_sec_kab: secret(A, 2, kab, {A,B,S})
+  B_sec_kab: secret(B, 3, kab, {A,B,S})
+
+  // B_sec_nb: secret(B, -, nb, {A,B,S})
+  // A_sec_nb: secret(A, 4, nb, {A,B,S})
+
+property (of miniDS) A_sessionkey_kab:
+  premises
+    "role(1) = A"
+    "uncompromised(A#1, B#1, S#1)"
+    "step(1, A_2)"
+    "role(2) = B"
+    "step(2, B_3)"
+    "kab#1 = kab#2"
+  imply 
+    " (A#1, B#1, S#1, kab#1) = (A#2, B#2, S#2, kab#2) "
+
+
+property (of miniDS) A_short_agree:
+  premises
+    "role(1) = A"
+    "uncompromised(A#1, B#1, S#1)"
+    "step(1, A_2)"
+  imply threads 3 such that
+    " role(3) = S
+    & (A#1, B#1, S#1, kab#1) = (A#3, B#3, S#3, kab#3)
+    & Tkt#1 = {'3', kab#1, A#1}k(B#1,S#1)
+    "
+property (of miniDS) B_short_agree:
+  premises
+    "role(2) = B"
+    "uncompromised(A#2, B#2, S#2)"
+    "step(2, B_3)"
+  imply threads 1,3 such that
+    " role(3) = S
+    & (A#3, B#3, S#3, kab#3) = (A#2, B#2, S#2, kab#2)
+    & role(1) = A
+    & (A#1, B#1, S#1, kab#1) = (A#2, B#2, S#2, kab#2)
+    "
+
+property (of miniDS) B_auth:
+  premises
+    "role(2) = B"
+    "uncompromised(A#2, B#2, S#2)"
+    "step(2, B_5)"
+  imply a thread 1 such that
+    " role(1) = A
+    & (A#1, B#1, S#1, kab#1, nb#1) = (A#2, B#2, S#2, kab#2, nb#2)
+    & St(2, B_3) <
+      St(2, B_4) < St(1, A_4) <
+      St(1, A_5) < St(2, B_5)
+    "
+
+/*
+property (of miniDS) B_sessionkey_kab:
+  premises
+    "role(2) = B"
+    "uncompromised(A#2, B#2, S#2)"
+    "step(2, B_3)"
+    "role(1) = A"
+    "kab#1 = kab#2"
+  imply
+    " (A#1, B#1, S#1, kab#1) = (A#2, B#2, S#2, kab#2) "
+*/
+
+/*
+// minified version of Denning-Sacco
+protocol miniDS
+{
+  1. A -> S: A, B
+  2. S ->  : {B, kab, {kab, A}k(B,S)}k(A,S)
+       -> A: {B, kab, Tkt           }k(A,S)
+  3. A ->  : Tkt
+       -> B: {kab, A}k(B,S)
+}
+
+properties (of miniDS)
+  auto: msc-typing
+  S_sec_kab: secret(S, -, kab, {A,B,S})
+  A_sec_kab: secret(A, 2, kab, {A,B,S})
+  B_sec_kab: secret(B, 3, kab, {A,B,S})
+ */ 
+
+/*
+protocol ticket1
+{
+  1. A ->  : {{na}pk(A),A}pk(B)
+       -> B: {Ticket   ,A}pk(B)
+  2.   <- B: Ticket
+     A <-  : {na}pk(A)
+}
+
+properties (of ticket1) 
+  auto: msc-typing
+
+  A_sec_na: secret(A, -, na, {A, B})
+*/
+
+/*
+protocol fwd_auth
+{
+  1. A ->  : {'1', S, {k}pk(B) }sk(A)
+       -> S: {'1', S, key      }sk(A)
+  2. S ->  : {'2', A, key      }sk(S)
+       -> B: {'2', A, {k}pk(B) }sk(S)
+}
+
+properties (of fwd_auth)
+  auto: msc-typing
+
+  A_sec_k: secret(A, -, k, {A,B})
+  B_sec_k: secret(B, 2, k, {A,B,S})
+
+// B_sec_k could be proven directly
+// from the conclusion of the following
+// lemma and A_sec_k
+property (of fwd_auth) B_nisynch:
+  premises
+    "role(2) = B"
+    "uncompromised(A#2, B#2, S#2)"
+    "step(2, B_2)"
+  imply a thread 1 such that
+    " role(1) = A
+    & (A#1, B#1, S#1, k#1) = (A#2, B#2, S#2, k#2)
+    & St(1, A_1) < St(2, B_2)
+    "
+*/
+/*
+protocol ticket2
+{
+  1. I ->  : {'1',pk(ni),I}pk(R)
+       -> R: {'1',pkI   ,I}pk(R)
+  2.   <- R: {'2', nr}pkI
+     I <-  : {'2', nr}pk(ni)
+}
+
+protocol plain_recv
+{
+  1. I ->  : {'1',pk(ni),I}pk(R)
+       -> R: Ticket
+}
+
+properties (of ticket2) 
+  auto: msc-typing
+
+properties (of plain_recv) 
+  auto: msc-typing
+*/
+
+end
+

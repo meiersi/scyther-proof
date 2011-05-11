@@ -1,0 +1,58 @@
+/* Basic Style
+ *************/
+
+body {
+        font-family: Arial, sans-serif;
+        font-size: 0.85em;
+}
+p {
+        margin: 1em 0;
+}
+
+a { text-decoration: none }
+
+/* Special classes and elements
+ *****************************/
+
+.inner { margin-left: 10px; overflow: auto; }
+.outer { float: left; height: 100% }
+
+.highlighted { color:blue }
+.hidden { display: none }
+.debug  { font-size: x-small }
+.paragraph { font-weight: bold }
+
+#gen-info .file { }
+#gen-info .header { font-weight: bold }
+#gen-info .topic { font-style: italic }
+#gen-info .time { font-style: italic }
+
+.kw-theory { font-weight:bold }
+#proof .kw-fact { color: #770000 }
+#proof .kw-proof { font-weight:bold }
+#proof .kw-property { font-weight:bold }
+
+div.named-image { margin-bottom: 1em }
+div.named-image div { margin-left: 10px }
+
+#help-tab h1 { font-size: 1.1em; margin: 0px; margin-bottom: 0.3em; padding-top: 0.3em; }
+#help-tab h2 { font-size: 1em; margin: 0px; margin-bottom: 0.3em; padding-top: 0.3em; }
+#help-tab p  { margin: 0px; margin-bottom: 0.3em }
+
+/* Basic Layout Theme
+ ********************/
+
+.ui-layout-pane { /* all 'panes' */ 
+        background: #FFF; 
+        border: 1px solid #BBB; 
+        padding: 10px; 
+        overflow: auto;
+} 
+
+.ui-layout-resizer { /* all 'resizer-bars' */ 
+        background: #DDD; 
+} 
+
+.ui-layout-toggler { /* all 'toggler-buttons' */ 
+        background: #AAA; 
+} 

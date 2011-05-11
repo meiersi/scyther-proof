@@ -1,0 +1,46 @@
+  (* This rule is unsafe in general, but OK here, 
+     as we are only reasoning about static compromise. 
+  *)
+  lemma static_longterm_key_reveal[dest!]:
+    "predOrd t (LKR a) e ==> RLKR a : reveals t"
+    by (auto intro: compr_predOrdI)
+
+  lemma longterm_private_key_secrecy:
+    assumes facts:
+      "SK m : knows t"
+      "RLKR m ~: reveals t"
+    shows "False"
+  using facts by (sources "SK m")
+
+  lemma longterm_sym_ud_key_secrecy:
+    assumes facts:
+      "K m1 m2 : knows t"
+      "RLKR m1 ~: reveals t"
+      "RLKR m2 ~: reveals t"
+    shows "False"
+  using facts by (sources "K m1 m2")
+
+  lemma longterm_sym_bd_key_secrecy:
+    assumes facts:
+      "Kbd m1 m2 : knows t"
+      "RLKR m1 ~: reveals t"
+      "RLKR m2 ~: reveals t"
+      "m1 : Agent"
+      "m2 : Agent"
+    shows "False"
+  proof -
+    from facts 
+    have "KShr (agents {m1, m2}) : knows t"
+      by (auto simp: Kbd_def)
+    thus ?thesis using facts
+    proof (sources "KShr (agents {m1, m2})")
+    qed (auto simp: agents_def Agent_def)
+  qed
+
+  lemmas ltk_secrecy =
+    longterm_sym_ud_key_secrecy
+    longterm_sym_ud_key_secrecy[OF in_knows_predOrd1]
+    longterm_sym_bd_key_secrecy
+    longterm_sym_bd_key_secrecy[OF in_knows_predOrd1]
+    longterm_private_key_secrecy
+    longterm_private_key_secrecy[OF in_knows_predOrd1]

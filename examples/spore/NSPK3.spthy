@@ -1,0 +1,76 @@
+theory NSPK3
+begin
+
+section{* The Three-Message Versino of the Needham-Schroeder Public-Key Protocol *}
+
+text{*
+  Modelled after the full version published in SPORE.
+
+  Note that we do identify the otherwise implicit typing explicitely using
+  global constants.
+
+  Not all properties of this protocol are provable because not all of them
+  hold. As you can see in the HTML visualization, the proof states where
+  'scyther-proof' gets stuck directly correspond to the well-known attacks.
+*}
+
+
+protocol nspk3
+{
+  1. I -> R: {'1', ni,  I}pk(R)
+  2. I <- R: {'2', ni, nr}pk(I)
+  3. I -> R: {'3', nr}pk(R)
+}
+
+
+subsection{* Security Properties *}
+
+properties (of nspk3) 
+  auto: msc-typing
+
+properties (of nspk3)
+  I_ni_secrecy: secret(I, -, ni, {I,R})
+  R_nr_secrecy: secret(R, -, nr, {I,R})
+  I_nr_secrecy: secret(I, 2, nr, {I,R})
+  R_ni_secrecy: secret(R, 3, ni, {I,R})
+
+
+property (of nspk3) I_ni_synch:
+  premises
+    "role(1) = I"
+    "step(1, I_2)"
+    "uncompromised(I#1, R#1)"
+  imply a thread 2 such that
+    "  role(2) = R
+     & I#1  = I#2
+     & R#1  = R#2
+     & ni#1 = ni#2
+     & nr#1 = nr#2 
+     
+     & St(1, I_1) < St(2, R_1)
+     & St(2, R_2) < St(1, I_2)
+     & St(1, I_1) < St(1, I_2)
+     & St(2, R_1) < St(2, R_2)
+    "
+
+property (of nspk3) R_ni_synch:
+  premises
+    "role(2) = R"
+    "step(2, R_3)"
+    "uncompromised(I#2, R#2)"
+  imply a thread 1 such that
+    "  role(1) = I
+     & I#1  = I#2
+     & R#1  = R#2
+     & ni#1 = ni#2
+     & nr#1 = nr#2
+
+     & St(1, I_1) < St(2, R_1)
+     & St(2, R_2) < St(1, I_2)
+     & St(1, I_3) < St(2, R_3)
+     & St(1, I_1) < St(1, I_2) < St(1, I_3)
+     & St(2, R_1) < St(2, R_2) < St(2, R_3)
+    "
+
+end
+
