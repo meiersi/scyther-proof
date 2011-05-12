@@ -73,9 +73,9 @@ data-files:
   css/ui-lightness/images/ui-icons_ffffff_256x240.png
 
   examples/README
-  examples/clean/*.spthy
-  examples/typing/*.spthy
+  examples/classic/*.spthy
   examples/experimental/*.spthy
+  examples/artificial/*.spthy
 
 extra-source-files:
   .ghci
@@ -142,6 +142,7 @@ library
         Scyther.Theory.Parser
         Scyther.Theory.Pretty
         Scyther.Theory.Html
+        Scyther.Theory.Dot
     
 
 executable scyther-proof
@@ -202,8 +203,8 @@ executable scyther-proof
         Scyther.Theory.Parser
         Scyther.Theory.Pretty
         Scyther.Theory.Html
+        Scyther.Theory.Dot
 
         Scyther.GoalFlow
-        Scyther.Theory.Dot
 
 
