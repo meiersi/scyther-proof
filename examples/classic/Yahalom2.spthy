@@ -10,7 +10,8 @@ text{*
   steps.
 
   We do not model session key leakage. Once we have incorporated dynamically
-  compromosing adversaries, this will be modeled precisely.
+  compromosing adversaries into the proof generation algorithm, this will be
+  modeled precisely.
 *}
 
 protocol yahalom_paulson

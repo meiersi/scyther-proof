@@ -10,9 +10,6 @@ protocol CR
 }
 
 properties (of CR) 
-  // type invariant inferred from the protocol specification
-  auto: msc-typing
-
   C_k_secrecy:    secret(C, -, k, {S} )
 
 

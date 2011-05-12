@@ -31,9 +31,6 @@ protocol OtwayRees
 subsection{* Secrecy Properties *}
 
 properties (of OtwayRees)
-  // type invariant inferred from the protocol specification
-  auto: msc-typing
-
   S_kIR_sec: secret(S, -, kIR, {I,R,S})
   R_kIR_sec: secret(R, 3, kIR, {I,R,S})
   I_kIR_sec: secret(I, 4, kIR, {I,R,S})

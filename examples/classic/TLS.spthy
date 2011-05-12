@@ -45,8 +45,6 @@ protocol TLS {
 subsection{* Secrecy Properties *}
 
 properties (of TLS)
-  auto: msc-typing
-
   C_pms_sec:  secret(C, -, pms,                          {S}) 
   C_PRF_sec:  secret(C, -, h('TT4', 'PRF', pms, nc, ns), {S})
   C_clientKey_sec:  

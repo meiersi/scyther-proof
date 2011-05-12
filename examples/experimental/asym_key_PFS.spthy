@@ -1,0 +1,26 @@
+theory asym_key_PFS
+begin
+
+text{*
+  A protocol that is intended to achieve perfect forward secrecy using freshly
+  generated asymmetric keys. scyther-proof can only verify secrecy against a
+  statically compromising adversary. However, Martin Schaub verified this
+  protocol against a dynamically compromising adversary. See the
+  'compromising_adversaries/wPFS_acm.thy' Isabelle proof script in the ESPL
+  distribution.
+*}
+
+protocol PFS
+{
+  1. A ->  : {'1', B, pk(na)}sk(A)
+       -> B: {'1', B, pkNa  }sk(A)
+
+  2.   <- B: { {'2', A, k}sk(B) }pkNa
+     A <-  : { {'2', A, k}sk(B) }pk(na)
+}
+
+properties (of PFS)
+  B_sec_k: secret(B, -, k, {A,B} )
+  A_sec_k: secret(A, 2, k, {A,B} )
+
+end
