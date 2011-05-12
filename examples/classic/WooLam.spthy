@@ -38,9 +38,6 @@ protocol WooLam
 subsection{* Secrecy Properties *}
 
 properties (of WooLam)
-  // type invariant inferred from the protocol specification
-  auto: msc-typing
-
   S_sec_kab: secret(S, -, kab, {A,B,S})
   A_sec_kab: secret(A, 6, kab, {A,B,S})
   B_sec_kab: secret(B, 5, kab, {A,B,S})

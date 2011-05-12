@@ -1,6 +1,11 @@
 theory AmendedNS
 begin
 
+text{* 
+  TODO (2011/05/12): Remove SomekIR and Somenr hack. Typing inference fails,
+  because it does not propagate that nr is possibly intruder constructed.
+*}
+
 section{* The Amended Needham Schroeder Symmetric Key Protocol *}
 
 text{*

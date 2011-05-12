@@ -20,32 +20,30 @@ text{*
        arbitrary payload to show that the session key really works as intended.
 
        Note, that we do not require this, as we could also formulate the
-       session-key secrecy property directly. See the our example models in the
-       'examples' directory.
+       session-key secrecy property directly. See the other example models in
+       the 'examples' directory.
 
 *}
 
 protocol DenningSacco
 {
-  1. I -> S: I,R
-  2.   <- S: {'TT1', R, kIR, T, {'TT2', I, kIR, T}k(R,S)}k(I,S)
-     I <-  : {'TT1', R, kIR, T, Ticket                  }k(I,S)
-  3. I ->  : Ticket
-       -> R: {'TT2', I, kIR, T}k(R,S)
-  4. I <- R: {'TT3', Payload}kIR
+  1. I -> S: I, R
+  2.   <- S: S, {'TT1', R, kIR, T, {'TT2', I, kIR, T}k(R,S)}k(I,S)
+     I <-  : S, {'TT1', R, kIR, T, Ticket                  }k(I,S)
+  3. I ->  : S, Ticket
+       -> R: S, {'TT2', I, kIR, T}k(R,S)
+  4. I <- R: R, {'TT3', Payload}kIR
 }
 
 
 subsection{* Security Properties *}
 
 properties (of DenningSacco)
-  auto: msc-typing
 
   // payload secrecy
   R_Payload_secrecy:  secret(R, -, Payload, {I,R,S}) 
   I_Payload_secrecy:  secret(I, 4, Payload, {I,R,S}) 
   
-/*
 
 text{*
   Note that the following authentication properties only ensure the existence
@@ -86,7 +84,6 @@ property (of DenningSacco) R_auth:
      & kIR#1 = kIR#2 & kIR#2 = kIR#3
      & T#1 = T#2     & T#2 = T#3
     "
-*/
 
 end
 
