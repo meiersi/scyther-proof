@@ -1,0 +1,30 @@
+OVERVIEW of the security protocol models deployed with 'scyther-proof'
+----------------------------------------------------------------------
+
+Created: 13/05/11
+
+The examples contained in the same directory as this OVERVIEW file and in its
+subdirectories are part of the distribution of the 'scyther-proof' tool. They
+are intended to serve as a starting for verifying your own protocols.
+
+The meaning of the subdirectories is the following:
+
+  classic
+    
+    These are models of well-known protocols. They serve as documentation and
+    regression tests for the scyther-proof tool.
+
+  iso9798
+
+    These are the models and proofs of our repaired versions of the
+    authentication protocols from the ISO/IEC-9798 standard, as described in
+    Basin, Cremers, Meier. "Provably Repairing the ISO/IEC 9798 Standard for
+    Entity Authentication". 2011. to be published.
+
+    See the 'Makefile' for conventient execution and checking of these proof
+    scripts. If you want to load the proof scripts in Isabelle's interactive
+    ProofGeneral interface, then please consult the
+    '$SCYTHER_PROOF/isabelle/README' file for installing the custom keywords
+    file.
+
+

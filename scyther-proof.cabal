@@ -72,7 +72,8 @@ data-files:
   css/ui-lightness/images/ui-icons_228ef1_256x240.png
   css/ui-lightness/images/ui-icons_ffffff_256x240.png
 
-  examples/README
+  examples/OVERVIEW
+  examples/Makefile
   examples/classic/*.spthy
   examples/iso9798/*.spthy
   examples/iso9798/isabelle-proofs/*.thy
