@@ -59,14 +59,15 @@ waitForProcessTimeout maxTime hProc
 ------------------------------------------------------------------------------
 
 -- | Use Isabelle to check the correctness of a theory file.
-checkTheoryFile :: Maybe Int           -- ^ Number of parallel thread to use while checking.
+checkTheoryFile :: FilePath            -- ^ Path to 'isabelle' binary.
+                -> Maybe Int           -- ^ Number of parallel thread to use while checking.
                 -> Int                 -- ^ Maximal available time in micro-seconds
                 -> String              -- ^ Logic Image to use
                 -> FilePath            -- ^ Path to file to be checked
                 -> IO (IO String, Maybe String)
                    -- ^ If the check went through, log-file content only, otherwise
                    -- also an error message.
-checkTheoryFile threads maxTime logic thyFile = do
+checkTheoryFile isabelleTool threads maxTime logic thyFile = do
   let thyName     = takeBaseName thyFile
       rootName    = "ROOT-" ++ thyName ++ ".ML"
       sessionName = "scyther-proof-" ++ thyName
@@ -78,10 +79,11 @@ checkTheoryFile threads maxTime logic thyFile = do
     )
   -- call "isabelle usedir"
   finally 
-    (do let cmd = "isabelle usedir -f "++rootFile ++ 
-                                 " -s "++sessionName ++ 
-                                 " -M "++maybe "0" show threads++
-                                    " " ++ logic ++ " ."
+    (do let cmd = isabelleTool ++ 
+                     " usedir -f " ++ rootFile ++ 
+                     " -s " ++ sessionName ++ 
+                     " -M " ++ maybe "0" show threads ++
+                        " " ++ logic ++ " ."
         (_,   _,    hErr, hProc) <- runInteractiveCommand cmd
         isaOutVar <- newEmptyMVar
         _ <-forkIO $ redirect hErr isaOutVar

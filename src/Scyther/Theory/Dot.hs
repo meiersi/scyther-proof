@@ -424,12 +424,13 @@ dotProtocol proto = do
 ------------------------------------------------------------------------------
 
 -- | Convert a .dot file to a .png file using the dot tool.
-graphvizDotToPng :: FilePath    -- ^ Dot file to convert
+graphvizDotToPng :: FilePath    -- ^ Path to dot tool.
+                 -> FilePath    -- ^ Dot file to convert
                  -> FilePath    -- ^ Png file to output
                  -> Chan String -- ^ Message channel
                  -> IO ()
-graphvizDotToPng dotFile pngFile msgChan = do
-  let cmd = "dot -Tpng -o " ++ pngFile ++ " " ++ dotFile
+graphvizDotToPng dotTool dotFile pngFile msgChan = do
+  let cmd = dotTool ++ " -Tpng -o " ++ pngFile ++ " " ++ dotFile
   writeChan msgChan cmd
   hProc <- runCommand cmd 
   _ <- waitForProcess hProc

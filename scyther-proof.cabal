@@ -91,6 +91,7 @@ data-files:
 extra-source-files:
   .ghci
   interactive-only-src/Paths_scyther_proof.hs
+  README
 
 
 flag threaded
