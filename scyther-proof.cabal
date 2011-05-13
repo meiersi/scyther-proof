@@ -74,6 +74,9 @@ data-files:
 
   examples/README
   examples/classic/*.spthy
+  examples/iso9798/*.spthy
+  examples/iso9798/isabelle-proofs/*.thy
+  examples/iso9798/isabelle-parallel-proofs/*.thy
 
   isabelle/AUTHORS  
   isabelle/document/root.tex  
