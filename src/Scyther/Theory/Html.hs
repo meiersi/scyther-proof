@@ -71,6 +71,7 @@ data GenerationInput = GenerationInput {
                                --   certificate. The generation time will be
                                --   measured as the time it takes to write
                                --   this string to the output file.
+  , giDotTool     :: String    -- ^ 'dot' tool to use.
   , giCmdLine     :: String    -- ^ The command line that was used in this call to
                                --   scyther-proof.
   , giIsabelle    :: Maybe (FilePath -> IO (IO String, Maybe String))
@@ -201,7 +202,7 @@ theoryToHtml input = do
         dotFile = addExtension outFile "dot"
         pngFile = addExtension outFile "png"
     writeFile dotFile dotStr
-    graphvizDotToPng dotFile pngFile msgChan
+    graphvizDotToPng (giDotTool input) dotFile pngFile msgChan
     removeFile dotFile
 
   -- | Convert a list of dot strings in parallel to png files, using the number of

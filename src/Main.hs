@@ -84,6 +84,10 @@ htmlVersionStr = concat
 lineWidth :: Int
 lineWidth = 110
 
+-- | ESPL Theory directory.
+esplTheoryDir :: IO String
+esplTheoryDir = getDataFileName "isabelle"
+
 
 ------------------------------------------------------------------------------
 -- Argument parsing helpers
@@ -181,7 +185,8 @@ data Command =
 setupMainMode :: IO (Mode [(String,String)])
 setupMainMode = do
     examplePath  <- getDataFileName "examples"
-    isabellePath <- getDataFileName "isabelle"
+    readmePath   <- getDataFileName "isabelle/README"
+    isabellePath <- esplTheoryDir
     return $ 
       ( defaultMode programName
           "Automatic generation of machine-checked proofs for security protocols."
@@ -194,6 +199,8 @@ setupMainMode = do
           , "  "
           , "  The '--isabelle' flag requires the 'Isabelle-2009-1' release of Isabelle/HOL:"
           , "    " ++ "http://isabelle.in.tum.de/website-Isabelle2009-1/download_x86-linux.html"
+          , ""
+          , "  Check the '" ++ readmePath ++ "' file for instructions on how to load the generated theory files in Isabelle's interactive mode."
           ]
       )
       { modeCheck      = upd "mode" "translate"
@@ -230,8 +237,8 @@ setupMainMode = do
               , flagNone ["compose-parallel"] (addEmpty "composeParallel")
                   "Compose all security protocols in the theory in parallel."
 
-              , flagNone ["isabelle","i"] (addEmpty "isabelle")
-                  "Check resulting proof script using Isabelle/HOL."
+              , flagOpt "isabelle" ["isabelle","i"] (upd "isabelle") "PATH"
+                  "Check resulting proof script using the 'isabelle' tool from Isabelle/HOL."
 
               , flagOpt "0" ["isabelle-threads"]   (upd "isabelleThreads") "INT"
                   "Number of parellel threads to be used for proof checking. \
@@ -246,8 +253,8 @@ setupMainMode = do
               , flagOpt "" ["hide-prefix"]   (upd "hidePrefix") "VALUE"
                   "Hide non-referenced properties with this prefix (default=auto)."
 
-              , flagNone ["html"] (addEmpty "html")
-                  "Output Html files visualizing the theory and its proofs."
+              , flagOpt "dot" ["html"] (upd "html") "PATH"
+                  "Output Html files visualizing the theory and its proofs using the 'dot' tool from Graphviz. This flag requires an output directory to be set."
 
               , flagOpt "100" ["chars-per-line"]   (upd "charsPerLine") "INT"
                   "Characters per line (default=100)."
@@ -337,6 +344,10 @@ translateWorker :: Arguments
 translateWorker as templateFile reportVar
   | null inFiles = errHelpExit "no input iles given"
   | otherwise    = do
+      -- check required tools
+      when (not dryRun && html)     (ensureGraphVizDot dotTool)
+      when (not dryRun && isabelle) (ensureIsabelleESPL isabelleTool)
+      
       -- translate all input files and ensure report is written with a special
       -- interrupted marker when an exception like Ctrl-C happened
       unless (n <= 1)  (putInfoLn $ "processing "++show n++" files:")
@@ -346,6 +357,11 @@ translateWorker as templateFile reportVar
           (sequence_ . intersperse reportNewRow $ map translateOneFile inFiles )
       putInfoLn ""
   where
+    -- Tool paths
+    -----------------------
+    isabelleTool = fromMaybe "isabelle" $ findArg "isabelle" as
+    dotTool      = fromMaybe "dot"      $ findArg "html" as
+
     -- Input files
     -----------------------
     inFiles = findArg "inFile" as
@@ -507,9 +523,10 @@ translateWorker as templateFile reportVar
                         thyToDoc (ensureIsabellePrintMode printMode) $
                         adaptTheoryName outPath thy
         , giCmdLine     = cmdLine
+        , giDotTool     = dotTool
         , giIsabelle    = 
             if isabelle  
-              then Just $ checkTheoryFile isabelleThreads 0 "ESPL"
+              then Just $ checkTheoryFile isabelleTool isabelleThreads 0 "ESPL"
               else Nothing
         }
 
@@ -655,7 +672,7 @@ translateWorker as templateFile reportVar
         then do
           -- let isabelleTimeout = maxTime * 10^6 -- in microseconds
           let isabelleTimeout = 0 -- because timeout construction for Isabelle is buggy currently
-          ((_, result), tCheck) <- timed $ checkTheoryFile isabelleThreads isabelleTimeout "ESPL" outPath
+          ((_, result), tCheck) <- timed $ checkTheoryFile isabelleTool isabelleThreads isabelleTimeout "ESPL" outPath
           reportNumber "Checking Time" tCheck
           case result of
             Nothing -> do
@@ -678,7 +695,8 @@ translateWorker as templateFile reportVar
     processThy :: FilePath -> Theory -> IO ()
     processThy inFile thy 
       | dryRun    = putStrLn (thyToString thy)
-      | html      = generateHtml inFile thy
+      | html      = do
+          generateHtml inFile thy
       | otherwise = do
           handle (\(ErrorCall errMsg) -> putInfo $ "error: "++errMsg) $
             handle (\(PatternMatchFail errMsg) -> putInfo $ "error: "++errMsg) $ do
@@ -708,9 +726,11 @@ instance Exception CustomTimeout
 
 -- | Get the string constituting the command line.
 getCommandLine :: IO String
-getCommandLine = do
-  arguments <- getArgs
-  return . concat . intersperse " " $ programName : arguments
+getCommandLine = commandLine programName <$> getArgs
+
+-- | Build the command line corresponding to a program arguments tuple.
+commandLine :: String -> [String] -> String
+commandLine prog args = concat $ intersperse " " $ prog : args
 
 -- | Read the SVN revision of the given file using the SVN command.
 getSvnRevision :: FilePath -> IO String
@@ -738,5 +758,100 @@ getCpuModel =
   handler _ = return errMsg
 
 
+-- | Test if a process is executable and check its response. This is used to
+-- determine the versions and capabilities of tools that we depend on.
+testProcess :: (String -> String -> Either String String) 
+                              -- ^ Analysis of stdout, stderr. Use 'Left' to report error.
+            -> String         -- ^ Test description to display.
+            -> FilePath       -- ^ Process to start
+            -> [String]       -- ^ Arguments
+            -> String         -- ^ Stdin
+            -> IO Bool        -- ^ True, if test was successful
+testProcess check testName prog args inp = do
+    putStr testName
+    hFlush stdout
+    handle handler $ do
+        (exitCode, out, err) <- readProcessWithExitCode prog args inp
+        let errMsg reason = do
+                putStrLn reason
+                putStrLn $ "command: " ++ commandLine prog args
+                putStrLn $ "stdin:   " ++ inp
+                putStrLn $ "stdout:  " ++ out
+                putStrLn $ "stderr:  " ++ err
+                return False
+
+        case exitCode of
+            ExitFailure code -> errMsg $ "failed with exit code " ++ show code
+            ExitSuccess      -> 
+              case check out err of
+                Left msg     -> errMsg msg
+                Right msg    -> do putStrLn msg
+                                   return True
+  where
+    handler :: IOException -> IO Bool
+    handler _ = do putStrLn "caught exception while executing:"
+                   putStrLn $ commandLine prog args
+                   putStrLn $ "with input: " ++ inp
+                   return False
+
+-- | Ensure a suitable version of the Graphviz dot tool is installed.
+ensureGraphVizDot :: FilePath -- ^ Path to the 'dot' tool.
+                  -> IO ()
+ensureGraphVizDot dot = do
+    putStrLn $ "checking suitability of GraphViz tool: '" ++ dot ++ "'"
+    _ <- testProcess check " checking version: " dot ["-V"] ""
+    putStrLn ""
+  where
+    check _ err
+      | "Graphviz" `isInfixOf` err = Right $ init err ++ ". OK."
+      | otherwise                  = Left  $ unlines $
+          [ "WARNING:"
+          , ""
+          , " The dot tool seems not to be provided by Graphviz."
+          , " Graph generation might not work."
+          , " Please download an official version from:"
+          , "         http://www.graphviz.org/"
+          ]
 
 
+-- | Ensure a suitable version of the Isabelle/HOL 'isabelle' tool is installed
+-- and the 'ESPL' head is compiled.
+ensureIsabelleESPL :: FilePath -- ^ Path to the 'isabelle' tool.
+                  -> IO ()
+ensureIsabelleESPL isabelle = do
+    putStrLn $ "checking suitability of Isabelle tool: '" ++ isabelle ++ "'"
+    _ <- testProcess checkVersion " version: " isabelle ["version"] ""
+    success <- testProcess checkLogics " installed logics: " isabelle ["findlogics"] ""
+    unless success buildESPL
+    putStrLn ""
+  where
+    checkVersion out _
+      | "Isabelle2009-1" `isInfixOf` out = Right $ init out ++ ". OK."
+      | otherwise                        = Left  $ unlines $
+          [ "WARNING:"
+          , ""
+          , " " ++ programName ++ " requires Isabelle2009-1."
+          , " Proof checking is likely not to work."
+          , " Please download Isabelle2009-1 from:"
+          , "   http://isabelle.in.tum.de/website-Isabelle2009-1/download_x86-linux.html"
+          ]
+
+    checkLogics out _
+      | "ESPL" `isInfixOf` out = Right $ init out ++ ". OK."
+      | otherwise              = Left  $ init out ++ ". WARNING: ESPL logic not installed."
+
+    buildESPL = do
+      putStrLn "---"
+      putStrLn "Attempting to build ESPL logic (this may take several minutes):"
+      theoryDir <- esplTheoryDir
+      hProc <- runProcess isabelle ["make"] (Just theoryDir) Nothing Nothing Nothing Nothing
+      exitCode <- waitForProcess hProc
+      case exitCode of
+        ExitSuccess -> putStrLn "Sucess! :-)\n---"
+        ExitFailure code -> putStrLn $ unlines 
+            [ "  Logic building failed with code: " ++ show code
+            , "  Proof checking is likely not to work."
+            , "  To investigate the problem try manually loading/building the theories in"
+            , "    '" ++ theoryDir ++ "'"
+            ]
+      
