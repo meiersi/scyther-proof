@@ -178,10 +178,23 @@ data Command =
   deriving( Show )
 
 -- | Main mode.
-mainMode :: Mode [(String,String)]
-mainMode = 
-      ( defaultMode programName 
+setupMainMode :: IO (Mode [(String,String)])
+setupMainMode = do
+    examplePath  <- getDataFileName "examples"
+    isabellePath <- getDataFileName "isabelle"
+    return $ 
+      ( defaultMode programName
           "Automatic generation of machine-checked proofs for security protocols."
+          [ "Additional information:"
+          , "  Path to example protocol models: '" ++ examplePath ++ "'"
+          , "  Path to Isabelle/HOL security protocol theory: '" ++ isabellePath ++ "'"
+          , "  "
+          , "  The --html switch requires the 'dot' tool from GraphViz available at:"
+          , "    " ++ "http://www.graphviz.org/"
+          , "  "
+          , "  The --isabelle switch requires the 'Isabelle-2009-1' release of Isabelle/HOL:"
+          , "    " ++ "http://isabelle.in.tum.de/website-Isabelle2009-1/download_x86-linux.html"
+          ]
       )
       { modeCheck      = upd "mode" "translate"
       , modeArgs       = Just $ flagArg (upd "inFile") "FILES"
@@ -263,14 +276,14 @@ mainMode =
     upd a v = Right . addArg a v
     addEmpty a = addArg a ""
 
-    defaultMode name help = Mode
+    defaultMode name help helpSuffix = Mode
         { modeGroupModes = toGroup []
         , modeNames      = [name] 
         , modeValue      = [] 
         , modeCheck      = upd "mode" name
         , modeReform     = const Nothing-- no reform possibility
         , modeHelp       = help
-        , modeHelpSuffix = []
+        , modeHelpSuffix = helpSuffix
         , modeArgs       = Nothing    -- no positional arguments
         , modeGroupFlags = toGroup [] -- no flags
         }
@@ -284,16 +297,18 @@ mainMode =
 -- | Disply help message and exit.
 errHelpExit :: String -> IO ()
 errHelpExit msg = do
+  mainMode <- setupMainMode
   putStrLn $ "error: " ++ msg
   putStrLn $ ""
-  putStrLn $ showText (Wrap lineWidth) 
+  putStrLn $ showText (Wrap 100) 
            $ helpText HelpFormatDefault mainMode
   exitFailure
 
 
 -- | Main function.
 main :: IO ()
-main = 
+main = do
+    mainMode <- setupMainMode
     withArguments mainMode selectMode
   where
     selectMode as = case findArg "mode" as of
