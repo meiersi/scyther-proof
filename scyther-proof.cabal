@@ -74,8 +74,6 @@ data-files:
 
   examples/README
   examples/classic/*.spthy
-  examples/experimental/*.spthy
-  examples/artificial/*.spthy
 
 extra-source-files:
   .ghci
