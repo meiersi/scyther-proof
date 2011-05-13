@@ -75,6 +75,19 @@ data-files:
   examples/README
   examples/classic/*.spthy
 
+  isabelle/AUTHORS  
+  isabelle/document/root.tex  
+  isabelle/IsaMakefile  
+  isabelle/Makefile  
+  isabelle/README  
+  isabelle/ROOT.ML  
+  isabelle/src/isar-keywords.el
+  isabelle/src/*.thy
+  isabelle/src/ESPLogic/*.thy
+  isabelle/src/ESPLogic/*.ML
+  isabelle/src/compromising_adversaries/*.thy
+
+
 extra-source-files:
   .ghci
   interactive-only-src/Paths_scyther_proof.hs
