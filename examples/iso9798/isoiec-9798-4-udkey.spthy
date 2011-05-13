@@ -1,0 +1,121 @@
+/*
+ * Modeled from ISO/IEC 9798-4
+ * Modeler: Cas Cremers, Dec. 2010, Feb. 2011.
+ * Ported to scyther-proof: Simon Meier, Feb. 2011.
+ *
+ * Modeling notes:
+ *   - Variant of ISO/IEC 9798-4 with unidirectional keys k(A,B) and 
+ *     identities dropped if possible.
+ *   - time-variant-parameters, time-stamps, and sequence numbers are
+ *     modeled by nonces leaked to the adversary at the start of a role.
+ *   - The TextX fields are chosen by the adversary.
+ *   - The keyed CCF (f_kab(x)) is modeled as h(('CCF', k(a,b)), x)
+ */
+theory isoiec_9798_4_udkey begin
+
+
+/******************************************************************************
+ * Protocol 1
+ ******************************************************************************
+ *
+ * ccf
+ * unilateral
+ * one-pass
+ */
+protocol isoiec_9798_4_1_udkey
+{
+  leak_A. A ->  : TNA
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, TNA, Text2, Text1, 
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_1_ccf_1', TNA, Text1))
+}
+
+properties (of isoiec_9798_4_1_udkey)
+  B_non_injective_agreement:
+    niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
+
+
+/******************************************************************************
+ * Protocol 2
+ ******************************************************************************
+ *
+ * ccf
+ * unilateral
+ * two-pass
+ */
+protocol isoiec_9798_4_2_udkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Text3, Rb, Text2, 
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_2_ccf_2', Rb, Text2))
+}
+
+properties (of isoiec_9798_4_2_udkey)
+  B_non_injective_agreement:
+    niagree(B_2[A,B,Rb,Text2] -> A_2[A,B,Rb,Text2], {A, B})
+
+
+/******************************************************************************
+ * Protocol 3
+ ******************************************************************************
+ *
+ * ccf
+ * mutual
+ * two-pass
+ */
+protocol isoiec_9798_4_3_udkey
+{
+  leak_A. A ->  : TNa
+  leak_B. B ->  : TNb
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, TNa, Text2, Text1, 
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_3_ccf_1', TNa, Text1))
+
+  text_2.   -> B: Text3, Text4
+       2. B -> A: B, A, TNb, Text4, Text3, 
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_3_ccf_2', TNb, Text3))
+}
+
+properties (of isoiec_9798_4_3_udkey)
+  A_non_injective_agreement:
+    niagree(A_2[A,B,TNb,Text3] -> B_2[A,B,TNb,Text3], {A, B})
+
+  B_non_injective_agreement:
+    niagree(B_1[A,B,TNa,Text1] -> A_1[A,B,TNa,Text1], {A, B})
+
+
+/******************************************************************************
+ * Protocol 4
+ ******************************************************************************
+ *
+ * ccf
+ * mutual
+ * three-pass
+ */
+protocol isoiec_9798_4_4_udkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Ra, Text3, Text2, 
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_4_ccf_2', Ra, Rb, Text2))
+
+  text_3.   -> B: Text4, Text5
+       3. B -> A: B, A, Text5, Text4,
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_4_ccf_3', Rb, Ra, Text4))
+}
+
+properties (of isoiec_9798_4_4_udkey)
+  A_non_injective_agreement:
+    niagree(A_3[A,B,Ra,Rb,Text2,Text4] -> B_3[A,B,Ra,Rb,Text2,Text4], {A, B})
+
+  B_non_injective_agreement:
+    niagree(B_2[A,B,Ra,Rb,Text2] -> A_2[A,B,Ra,Rb,Text2], {A, B})
+
+end
