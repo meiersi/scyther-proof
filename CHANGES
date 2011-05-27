@@ -1,0 +1,6 @@
+* 0.3.1 Changed lexer to also recognize `!'
+
+* 0.3.0 First public version
+  
+    Aligned with paper submission for CCS'11: Provably repairing the ISO-9798
+    authentication protocols.
