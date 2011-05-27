@@ -59,6 +59,7 @@ tokens :-
   <0>        "<"                { keyword LESS } 
   <0>        ">"                { keyword GREATER } 
   <0>        "?"                { keyword QUESTIONMARK } 
+  <0>        "!"                { keyword BANG } 
   <0>        "&"                { keyword AND } 
   <0>        "|"                { keyword MID } 
   <0>        "."                { keyword DOT } 
@@ -112,6 +113,7 @@ data Keyword =
   | DOT
   | COLON
   | QUESTIONMARK
+  | BANG
   | AND
   | MID
   | DOLLAR
@@ -155,6 +157,7 @@ instance Show Keyword where
       DOT -> symbol "."
       COLON -> symbol ":"
       QUESTIONMARK -> symbol "?"
+      BANG -> symbol "!"
       AND -> symbol "&"
       MID -> symbol "|"
       DOLLAR -> symbol "$"
