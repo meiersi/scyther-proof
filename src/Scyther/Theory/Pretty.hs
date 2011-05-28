@@ -123,6 +123,7 @@ class MarkupMonad m => PrettyMonad m where
   prettySplitEqQed :: PrettyMonad m => m Doc
   -- theory output
   prettyComment  :: String -> m Doc
+  prettyFormalComment  :: String -> String -> m Doc
   prettyProtoDef :: Protocol -> [Theorem] -> m Doc
   prettyTheorem :: Theorem -> m Doc
   prettyTheoryDef :: String -> Doc -> m Doc
@@ -275,7 +276,7 @@ prettyThyItem _ (ThySequent (name, se)) =
   prettyTheorem (name, Missing (uniqueTIDQuantifiers se) ("proof to be done") False)
 prettyThyItem _ (ThyTheorem (name, prf)) = 
   prettyTheorem (name, prf)
-prettyThyItem _ (ThyText txt) = prettyComment txt
+prettyThyItem _ (ThyText header txt) = prettyFormalComment header txt
 
 -- | Pretty print a theory.
 prettyTheory :: PrettyMonad m => Theory -> m Doc
@@ -503,6 +504,8 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
   
   -- theory output
   prettyComment comment = text "(*" <-> text comment <-> text "*)"
+  prettyFormalComment header comment = 
+    text "(*" <-> text header <> colon <-> text comment <-> text "*)"
   prettyProtoDef proto axioms = 
     withGraph (dotProtocol proto) $
       (isar <$> ask <*> pure proto) $-$
@@ -664,6 +667,8 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
   
   -- theory output
   prettyComment comment = text "/*" <-> text comment <-> text "*/"
+  prettyFormalComment header comment = 
+      text (header ++ "{*") <> text comment <> text "*}"
   prettyProtoDef proto _ = withGraph (dotProtocol proto) (pure $ sptProtocol proto)
 
   -- | Pretty print a theorem.

@@ -72,7 +72,7 @@ import Scyther.Facts as F hiding (protocol)
 import Scyther.Sequent
 import Scyther.Proof
 import Scyther.Theory
-import Scyther.Theory.Lexer
+import Scyther.Theory.Lexer (Keyword(..), TextType(..), runAlex, AlexPosn(..), alexGetPos, alexMonadScan)
 
 ------------------------------------------------------------------------------
 -- Specializing Parsec to our needs
@@ -867,7 +867,22 @@ mkPremiseMod mapping rawfacts facts = do
   optFacts <- conjoinAtoms atoms facts 
   maybe (error "mkPremiseMod: contradictory facts") return $ optFacts
 -}
-    
+
+-- | A formal comment.
+formalComment :: Parser s ThyItem
+formalComment =
+    ThyText <$> text begin 
+            <*> (concat <$> many (text content) <* text end)
+  where
+    text f = token (\t -> case t of TEXT ty -> f ty; _ -> mzero)
+    begin (TextBegin str)     = return str
+    begin _                   = mzero
+    content (TextContent str) = return str
+    content _                 = mzero
+    end (TextEnd)             = return ()
+    end _                     = mzero
+
+
  ------------------------------------------------------------------------------ 
  -- Parse a theory
  ------------------------------------------------------------------------------ 
@@ -886,6 +901,9 @@ theory = do
          case lookupProtocol (protoName p) thy of
            Just _  -> fail $ "duplicate protocol '" ++ protoName p ++ "'"
            Nothing -> addItems (insertItem (ThyProtocol p) thy)
+      <|>
+      do item <- formalComment
+         addItems (insertItem item thy)
       <|>
       do cs <- claims (flip lookupProtocol thy)
          addItems (foldl' (flip insertItem) thy cs)

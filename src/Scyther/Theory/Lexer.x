@@ -13,6 +13,7 @@ $others = [\192-\214\216-\246\248-\255]
 @identifierAfter = ($letter | $digit | "_" | $others)
 @identifier = @identifierFirst @identifierAfter*
 @comment     = $printable | $white
+@text        = $printable | $white
 @lineComment = "//".*
 
 tokens :-
@@ -21,17 +22,20 @@ tokens :-
   <0>        @lineComment       ;
   <0>        "(*"               { beginComment "(*" comment }
   <comment>  "(*"               { beginComment "(*" comment }
+  <text>     "(*"               { beginComment "(*" comment }
   <comment>  "*)"               { endComment "(*" }          
   <0>        "/*"               { beginComment "/*" comment }
   <comment>  "/*"               { beginComment "/*" comment }
+  <text>     "/*"               { beginComment "/*" comment }
   <comment>  "*/"               { endComment "/*" }          
   <comment>  @comment           { skip }
 
-  <0>        "text{*"           { beginComment "{*" comment }
-  <0>        "section{*"        { beginComment "{*" comment }
-  <0>        "subsection{*"     { beginComment "{*" comment }
-  <comment>  "{*"               { beginComment "{*" comment }
-  <comment>  "*}"               { endComment "{*" }          
+  <0>        "text{*"           { beginText "text" text }
+  <0>        "section{*"        { beginText "section" text }
+  <0>        "subsection{*"     { beginText "subsection" text }
+  <text>     "*}"               { endText 0}          
+  <text>     @text              { scanString (TEXT . TextContent) }
+
 
   <0>        "∀"                { keyword FORALL }
   <0>        "∃"                { keyword EXISTS }
@@ -70,7 +74,7 @@ tokens :-
   <0>        "<-"               { keyword LEFTARROW } 
   <0>        "-->"              { keyword LONGRIGHTARROW } 
   <0>        "<--"              { keyword LONGLEFTARROW } 
-  <0>        @identifier        { scanIdent }
+  <0>        @identifier        { scanString IDENT}
 
 
 {
@@ -79,9 +83,9 @@ tokens :-
 keyword :: Keyword -> AlexAction Keyword
 keyword kw input len = return kw
 
--- | Lex an identifier
-scanIdent :: AlexAction Keyword
-scanIdent (_,_,input) len = return $ IDENT (take len input)
+-- | Wrap a string into a keyword
+scanString :: (String -> Keyword) -> AlexAction Keyword
+scanString kw (_,_,input) len = return $ kw (take len input)
 
 {-
 -- | Scan a string until EOF is encountered.
@@ -100,9 +104,17 @@ scanFile f = do
    return $ alexScanTokens inp
 -}
 
+-- | Formal text types.
+data TextType = 
+       TextBegin String 
+     | TextContent String 
+     | TextEnd
+     deriving( Eq, Ord, Show )
+
 -- | Lexable Keywords
 data Keyword =
     IDENT String
+  | TEXT TextType 
   | SQUOTE
   | DQUOTE
   | RIGHTARROW
@@ -147,6 +159,7 @@ data Keyword =
 instance Show Keyword where
   show kw = case kw of 
       IDENT i -> identifier i
+      TEXT t -> txt t
       SQUOTE -> symbol "'"
       DQUOTE -> symbol "\""
       RIGHTARROW -> symbol "->"
@@ -186,9 +199,12 @@ instance Show Keyword where
       APPROX -> symbol   "≈"  
       DUMMY_KEYWORD -> "DUMMY_KEYWORD (this should not occur!)"
     where
-      identifier i = "identifier `" ++ i ++ "'"
-      symbol s     = "symbol `" ++ s ++ "'"
-      keyword s    = "keyword `" ++ s ++ "'"
+      identifier i        = "identifier `" ++ i ++ "'"
+      txt (TextBegin t)   = "start of `" ++ t ++ "'"
+      txt (TextContent t) = "text `" ++ t ++ "'"
+      txt (TextEnd)       = "start of text"
+      symbol s            = "symbol `" ++ s ++ "'"
+      keyword s           = "keyword `" ++ s ++ "'"
 
 -- -----------------------------------------------------------------------------
 -- Alex wrapper code.
@@ -332,6 +348,18 @@ skip input len = alexMonadScan
 -- ignore this token, but set the start code to a new value
 begin :: Int -> AlexAction Keyword
 begin code input len = do alexSetStartCode code; alexMonadScan
+
+-- | Begin a text starting of the given type.
+beginText :: String -> Int -> AlexAction Keyword
+beginText ty code _ _ = do
+  alexSetStartCode code
+  return $ TEXT $ TextBegin ty
+
+-- | End a text.
+endText :: Int -> AlexAction Keyword
+endText code _ _ = do
+  alexSetStartCode code
+  return $ TEXT TextEnd
 
 -- | Begin a comment starting with the given sign.
 beginComment :: String -> Int -> AlexAction Keyword
