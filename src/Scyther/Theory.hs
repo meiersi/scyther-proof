@@ -95,7 +95,7 @@ data ThyItem =
     ThyProtocol Protocol
   | ThySequent (Named Sequent)
   | ThyTheorem (Named Proof)
-  | ThyText String
+  | ThyText String String  -- ^ Type of text and content.
   deriving( Eq, Show, Data, Typeable {-! NFData !-} )
 
 
@@ -125,7 +125,7 @@ mapTheorySequents f = mapTheoryItems (map mapThyItemSequents)
     ThySequent (name, se)  -> ThySequent (name, f se)
     ThyTheorem (name, prf) -> ThyTheorem (name, mapProofSequents f prf)
     ThyProtocol _          -> item
-    ThyText _              -> item
+    ThyText _ _            -> item
 
 -- | Insert a theory item into a theory.
 insertItem :: ThyItem -> Theory -> Theory
@@ -214,7 +214,7 @@ ensureUniqueRoleNames thy
     getProtocol (ThyProtocol p) = return p
     getProtocol (ThySequent s)  = return (seProto $ snd s)
     getProtocol (ThyTheorem p)  = return (thmProto p)
-    getProtocol (ThyText _)     = mzero
+    getProtocol (ThyText _ _)   = mzero
 
     addPrefix item = case getProtocol item of
         Just p  -> transformBi (prefixRoleName p) item
@@ -340,7 +340,7 @@ theoryOverview thy@(Theory name items) =
   Theory name $ concat [ protoOverview proto | ThyProtocol proto <- items]
   where
   protoOverview proto = 
-    (ThyText $ "Overview of protocol '"++protoName proto++"'") : 
+    (ThyText "section" $ "Overview of protocol '"++protoName proto++"'") : 
     ThyProtocol proto : typInvs
     where
     typInvs = case lookupTypeInvariants proto thy of
@@ -350,13 +350,13 @@ theoryOverview thy@(Theory name items) =
                Sequent proto (FFacts emptyFacts) (FTyping (Just typing))
           , Just typing )
         Nothing   -> return $
-          ThyText "failed to infer typing from protocol specification\n\
+          ThyText "text" "failed to infer typing from protocol specification\n\
                   \(maybe some message patterns are not unifiable)"
       xs -> concatMap addChainRule xs
 
     addChainRule (item, typ) = 
       [ item
-      , ThyText $ unlines
+      , ThyText "text" $ unlines
           [ "Note that the chain rule below is only an informal representation of the"
           , "actual chain rule, which you can find in the Isabelle theories. In particular,"
           , "it is missing the cases for the initial intruder knowledge and uses a dummy"
