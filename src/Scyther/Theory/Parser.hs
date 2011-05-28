@@ -39,6 +39,7 @@ module Scyther.Theory.Parser (
   , protocol
   , claims
   , theory
+  , formalComment
   , parseTheory
 
   -- * Extended patterns
@@ -868,11 +869,11 @@ mkPremiseMod mapping rawfacts facts = do
   maybe (error "mkPremiseMod: contradictory facts") return $ optFacts
 -}
 
--- | A formal comment.
-formalComment :: Parser s ThyItem
+-- | A formal comment; i.e., (header, body)
+formalComment :: Parser s (String, String)
 formalComment =
-    ThyText <$> text begin 
-            <*> (concat <$> many (text content) <* text end)
+    (,) <$> text begin 
+        <*> (concat <$> many (text content) <* text end)
   where
     text f = token (\t -> case t of TEXT ty -> f ty; _ -> mzero)
     begin (TextBegin str)     = return str
@@ -902,7 +903,7 @@ theory = do
            Just _  -> fail $ "duplicate protocol '" ++ protoName p ++ "'"
            Nothing -> addItems (insertItem (ThyProtocol p) thy)
       <|>
-      do item <- formalComment
+      do item <- uncurry ThyText <$> formalComment
          addItems (insertItem item thy)
       <|>
       do cs <- claims (flip lookupProtocol thy)
