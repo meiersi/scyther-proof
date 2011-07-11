@@ -15,7 +15,7 @@ text{*
 protocol Andrew {
 
   1. I -> R: I, { 'TT1', ni }k(I,R)
-  2. R <- I: { 'TT2', h('TT1', ni), nr }k(I,R)
+  2. I <- R: { 'TT2', h('TT1', ni), nr }k(I,R)
   3. I -> R: { 'TT3', h('TT1', nr) }k(I,R)
   4. I <- R: { 'TT4', kIR, nr2 }k(I,R)
 
@@ -25,8 +25,8 @@ protocol Andrew {
 subsection{* Security Properties *}
 
 properties (of Andrew)
+  R_sec_kIR: secret(R, -, kIR, {I, R})
   I_sec_kIR: secret(I, 4, kIR, {I, R})
-  R_sec_kIR: secret(R, 4, kIR, {I, R})
 
 
 property (of Andrew) I_ni_agree:
