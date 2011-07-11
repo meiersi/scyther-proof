@@ -1,3 +1,12 @@
+* 0.3.2 --- WORK IN PROGRESS ---
+
+    Bugfix: Added missing cases for bidirectional shared keys in Message
+    deconstruction functions.
+
+    Provide more precise warnings for internal certification checks. Improves
+    debugging experience.
+
+
 * 0.3.1 Changed lexer to also recognize `!'
 
 * 0.3.0 First public version
