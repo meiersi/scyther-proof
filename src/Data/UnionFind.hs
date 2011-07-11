@@ -1,6 +1,20 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 -- | A persistent, but not so efficient union-find structure.
-module Data.UnionFind where
+module Data.UnionFind (
+    UnionFind
+  , unionFind
+  , map
+  , empty
+  , size
+  , equate 
+  , fromList 
+  , equateList
+  , toList
+  , union
+  , find 
+  , findWithDefault 
+  , equiv 
+  ) where
 
 import Prelude hiding (map)
 
