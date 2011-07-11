@@ -9,16 +9,22 @@ maintainer:         Simon Meier <simon.meier@inf.ethz.ch>
 copyright:          Simon Meier, ETH Zurich, 2009-2011
 synopsis:           Automatic generation of Isabelle/HOL correctness proofs for security protocols.
 description:
-  scyther-proof is a security protocol verification tool based on a similar
-  algorithm as the Scyther tool developed by Cas Cremers
-  (http://people.inf.ethz.ch/cremersc/scyther/index.html). The theory underlying scyther-proof
-  is described in the paper "Strong Invariants for the Efficient Construction
-  of Machine-Checked Protocol Security Proofs" by Meier, Cremers, and Basin.
-
-  Parts of the infrastructure underlying scyther-proof are reused in other
-  projects by the same author. Therefore, most of its modules are exported in
-  the corresponding scyther-proof library. However, this library is not yet thought for
-  general use. Please contact the author, if you would like to build upon/extend scyther-proof.
+                    scyther-proof is a security protocol verification tool
+                    based on an algorithm similar to the Scyther tool developed
+                    by Cas Cremers
+                    (<http://people.inf.ethz.ch/cremersc/scyther/index.html>).
+                    The theory underlying scyther-proof is described in the
+                    paper \"Strong Invariants for the Efficient Construction of
+                    Machine-Checked Protocol Security Proofs\" by Meier,
+                    Cremers, and Basin available from
+                    <http://people.inf.ethz.ch/meiersi/publications/index.html>
+                    .
+                    Parts of the infrastructure underlying scyther-proof are
+                    reused in other projects by the same author. Therefore,
+                    most of its modules are exported in the corresponding
+                    scyther-proof library. However, this library is not yet
+                    thought for general use. Please contact the author, if you
+                    would like to build upon/extend scyther-proof.
 
 homepage:           http://www.infsec.ethz.ch/people/meiersi/
 stability:          Beta
