@@ -55,12 +55,14 @@ module Scyther.Facts (
 
 ) where
 
+import Debug.Trace
 import Extension.Prelude
 
 import Safe
 import Data.List
 import Data.Maybe
 import Data.Monoid
+import Data.Foldable (foldMap)
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.Data
@@ -76,11 +78,16 @@ import Scyther.Protocol
 import Scyther.Typing
 import Scyther.Message
 import qualified Scyther.Equalities as E
-import           Scyther.Equalities      hiding (solve, substTID, threadRole, substMVar, substAVar, substMsg, substAnyEq, empty)
+import           Scyther.Equalities      hiding (solve, substTID, threadRole, substMVar, substAVar, substMsg, substAnyEq, empty, null)
 import           Scyther.Event           hiding (substEv, substEvOrd)
 import qualified Scyther.Event      as E
 import           Scyther.Formula         hiding (substAtom)
 import qualified Scyther.Formula    as F
+
+
+-- | A convenient abbreviation for `mappend`.
+(><) :: Monoid m => m -> m -> m
+(><) = mappend
 
 
 ------------------------------------------------------------------------------
@@ -181,7 +188,8 @@ eqsToMapping = Mapping . equalities
 -- `fail` is called in the given monad.
 quantifyTID :: Monad m => TID -> Facts -> m Facts
 quantifyTID tid facts
-  | tidQuantified facts tid = fail $ "quantifyTID: " ++ show tid ++ " already quantified."
+  | null (tidQuantified facts tid) = 
+      fail $ "quantifyTID: " ++ show tid ++ " already quantified."
   | otherwise               = 
       return $ facts { tidQuantifiers = S.insert tid $ tidQuantifiers facts }
 
@@ -189,7 +197,7 @@ quantifyTID tid facts
 -- `fail` is called in the given monad.
 quantifyAgentId :: Monad m => AgentId -> Facts -> m Facts
 quantifyAgentId aid facts
-  | agentIdQuantified facts aid = 
+  | null (agentIdQuantified facts aid) = 
       fail $ "quantifyAgentId: " ++ show aid ++ " already quantified."
   | otherwise                   = 
       return $ facts { aidQuantifiers = S.insert aid $ aidQuantifiers facts }
@@ -222,89 +230,112 @@ quantifiedTIDs = S.toList . tidQuantifiers
 newtype Cert a = Cert { certified :: a }
   deriving( Eq, Ord, Show )
 
+-- | The results denotes the list of certification errors. If it is empty, then
+-- certification succeeded.
+type CertResult = [String]
+
+-- | The successful certification result.
+certSuccess :: CertResult
+certSuccess = []
+
+-- | Conditionally return a certification error.
+certErrorIf :: Bool -> String -> CertResult
+certErrorIf True  msg = [msg]
+certErrorIf False _   = certSuccess
+
 -- | Changed the certified value. Note that you have to guarantee that the
 -- required invariants are not violated.
 mapCertified :: (a -> b) -> Cert a -> Cert b
 mapCertified f (Cert x) = Cert (f x)
 
 -- | Check if a TID is quantified in these facts
-tidQuantified :: Facts -> TID -> Bool
-tidQuantified facts = (`S.member` tidQuantifiers facts)
+tidQuantified :: Facts -> TID -> CertResult
+tidQuantified facts tid = 
+    certErrorIf (tid `S.notMember` tidQuantifiers facts) $
+        "unquantified tid: " ++ show tid
 
 -- | Check if a agent id is quantified in these facts
-agentIdQuantified :: Facts -> AgentId -> Bool
-agentIdQuantified facts = (`S.member` aidQuantifiers facts)
+agentIdQuantified :: Facts -> AgentId -> CertResult
+agentIdQuantified facts aid =
+    certErrorIf (aid `S.notMember` aidQuantifiers facts) $
+        "unquantified aid: " ++ show aid
 
 -- | Check if all logical variables in an local id are quantified.
-lidQuantified :: Facts -> LocalId -> Bool
+lidQuantified :: Facts -> LocalId -> CertResult
 lidQuantified facts = tidQuantified facts . lidTID
 
 -- | Check if all logical variables in an agent variable are quantified.
-avarQuantified :: Facts -> AVar -> Bool
+avarQuantified :: Facts -> AVar -> CertResult
 avarQuantified facts = lidQuantified facts . getAVar
 
 -- | Check if all logical variables in an message variable are quantified.
-mvarQuantified :: Facts -> MVar -> Bool
+mvarQuantified :: Facts -> MVar -> CertResult
 mvarQuantified facts = lidQuantified facts . getMVar
 
 -- |Check if all logical variables in an agent eq RHS are quantified.
-agentEqRHSQuantified :: Facts -> E.AgentEqRHS -> Bool
+agentEqRHSQuantified :: Facts -> E.AgentEqRHS -> CertResult
 agentEqRHSQuantified facts = either (agentIdQuantified facts) (avarQuantified facts)
 
 -- | Check if all logical variables in an message are quantified.
-msgQuantified :: Facts -> Message -> Bool
+msgQuantified :: Facts -> Message -> CertResult
 msgQuantified facts m =
-  all (tidQuantified     facts) (msgTIDs m) && 
-  all (agentIdQuantified facts) (msgAgentIds m)
+    foldMap (tidQuantified     facts) (msgTIDs m)     ><
+    foldMap (agentIdQuantified facts) (msgAgentIds m)
 
 -- | Check if all logical variables in an event are quantified.
-evQuantified :: Facts -> Event -> Bool
+evQuantified :: Facts -> Event -> CertResult
 evQuantified facts (Learn m)    = msgQuantified facts m
 evQuantified facts (Step tid _) = tidQuantified facts tid
 
 -- | Check if all logical variables in an event order are quantified.
-evOrdQuantified :: Facts -> (Event, Event) -> Bool
-evOrdQuantified facts (e1, e2) = evQuantified facts e1 && evQuantified facts e2
+evOrdQuantified :: Facts -> (Event, Event) -> CertResult
+evOrdQuantified facts (e1, e2) = evQuantified facts e1 >< evQuantified facts e2
 
 -- | Check if an equality contains only quantified logical variables.
-anyEqQuantified :: Facts -> E.AnyEq -> Bool
+anyEqQuantified :: Facts -> E.AnyEq -> CertResult
 anyEqQuantified facts eq = case eq of
-  E.TIDEq  (tid1, tid2) -> tidQuantified facts tid1 && tidQuantified facts tid2
-  E.TIDRoleEq (tid, _)  -> tidQuantified facts tid
-  E.RoleEq _            -> True
-  E.AgentEq (aid, rhs)  -> agentIdQuantified facts aid && agentEqRHSQuantified facts rhs
-  E.AVarEq (av1, av2)   -> avarQuantified facts av1 && avarQuantified facts av2
-  E.MVarEq (mv, m)      -> mvarQuantified facts mv && msgQuantified facts m
-  E.MsgEq (m1, m2)      -> msgQuantified facts m1 && msgQuantified facts m2
+    E.TIDEq  (tid1, tid2) -> tidQuantified facts tid1 >< tidQuantified facts tid2
+    E.TIDRoleEq (tid, _)  -> tidQuantified facts tid
+    E.RoleEq _            -> certSuccess
+    E.AgentEq (aid, rhs)  -> agentIdQuantified facts aid >< agentEqRHSQuantified facts rhs
+    E.AVarEq (av1, av2)   -> avarQuantified facts av1 >< avarQuantified facts av2
+    E.MVarEq (mv, m)      -> mvarQuantified facts mv >< msgQuantified facts m
+    E.MsgEq (m1, m2)      -> msgQuantified facts m1 >< msgQuantified facts m2
   
 -- | Check if an atom contains only quantified logical variables.
-atomQuantified :: Facts -> Atom -> Bool
+atomQuantified :: Facts -> Atom -> CertResult
 atomQuantified facts atom = case atom of
-  AFalse        -> True
+  AFalse        -> certSuccess
   AEq eq        -> anyEqQuantified facts eq
   AEv ev        -> evQuantified    facts ev
   AEvOrd ord    -> evOrdQuantified facts ord
   ACompr m      -> msgQuantified   facts m
   AUncompr m    -> msgQuantified   facts m
   AHasType mv _ -> mvarQuantified  facts mv
-  ATyping _     -> True
-  AReachable _  -> True
+  ATyping _     -> certSuccess
+  AReachable _  -> certSuccess
 
 
 -- | Certification of a value with respect to a check and a morphism required
 -- to establish the required invariants in the context of a set of facts.
-certify :: Show a => (Facts -> a -> Bool) -> (Facts -> a -> b) -> Facts -> a -> Cert b
-certify check conv facts x
-  | check facts x = Cert $ conv facts x
-  | otherwise     = error $ "certify: check failed for '" ++ show x ++ "'"
-
--- | Certify a thread identifer.
--- certTID :: Facts -> TID -> Cert TID
--- certTID = certify tidQuantified substTID
-
--- | Certify an agent variable.
--- certAVar :: Facts -> AVar -> Cert AVar
--- certAVar = certify avarQuantified substAVar
+certify :: Show a => (Facts -> a -> CertResult) -> (Facts -> a -> b) 
+        -> Facts -> a -> Cert b
+certify check conv facts x = 
+    case check facts x of
+        []   -> x'
+        -- FIXME: Somehow bidirectional shared keys lead in some cases to an
+        -- unquantified thread identifier error. However, all of these cases
+        -- dealt with proofs that failed (i.e., attackable security
+        -- properties). Therfore, we have not yet debugged this to its full
+        -- extent.
+        errs -> trace 
+            (unlines $ 
+                ("warning: internal check failed for '" ++ show x ++ "' because of") :
+                (map ("  "++) $ errs)
+             )
+             x'
+  where
+    x' = Cert $ conv facts x
 
 -- | Certify a message.
 certMsg :: Facts -> Message -> Cert Message
@@ -674,7 +705,8 @@ proveAtom facts = checkAtom . certified . certAtom facts
     -- trace extended by a receive step.
     --
     -- Here, we just assume that the correct step was specified; as our
-    -- automatic inference will do.
+    -- automatic inference will do. In the worst case, Isabelle will catch such a
+    -- mistake.
   checkType m             (SumT ty1 ty2)  = checkType m ty1 || checkType m ty2
   checkType _             _               = False
 

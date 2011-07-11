@@ -478,7 +478,7 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs agnteqs posteqs) =
           (     (MMVar mv1), rhs'            ) -> elimMVar mv1 rhs'
           (lhs'            , rhs'            ) -> newEqs [MsgEq (lhs', rhs')]
             
-    MsgEq eq -> case eq of
+    MsgEq eq -> case (substMsg eqs *** substMsg eqs) eq of
       (MMVar mv1, rhs) -> newEqs [MVarEq (mv1, rhs)]
       (lhs, MMVar mv2) -> newEqs [MVarEq (mv2, lhs)]
 
