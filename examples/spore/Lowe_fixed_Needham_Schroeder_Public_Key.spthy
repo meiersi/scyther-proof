@@ -1,31 +1,38 @@
-theory NSLPK
-begin
+theory Lowe_fixed_Needham_Shroeder_Public_Key begin
 
-section{* The Needham-Schroeder-Lowe Public-Key Protocol *}
+section{* Needham-Schroeder-Lowe Public-Key Protocol *}
 
 text{*
   Modelled after SPORE.
 
-  Note that we do identify the otherwise implicit typing explicitely using
-  global constants.
+  Notable differences:
+    1. We use explicit global constants instead of implicit typing to discern
+       the different messages.
+    
+    2. We model a single certificate-authority (CA) server role, which is used
+       to answer the certificate requests from both A and B.
+
+    2. We prove non-injective synchronization, which is stronger than the
+       entity authentication property stated in SPORE as the requirement on
+       this protocol.
+
 *}
 
 
-protocol nslpk
+protocol NSLPK
 {
-  // We model a single CA server role, which is used to answer both the
-  // requests from A and B.
+  // the certificate-authority server.
   ca1. -> S: A, B 
-  ca2. <- S: sign{'ca2', pk(B), B}pk(S) 
+  ca2. <- S: S, sign{'ca2', pk(B), B}pk(S) 
 
   ca1. I -> : I, R
-  ca2. I <- : sign{'ca2', pkR,    R}pk(S)
+  ca2. I <- : S, sign{'ca2', pkR,    R}pk(S)
 
-  1. I ->  : {'1', ni, I}pkR    // TODO: Update type invariant inference such
-       -> R: {'1', ni, I}pk(R)  // that we can receive agent name into msg. variable
+  1. I ->  : {'1', ni, I}pkR   
+       -> R: {'1', ni, I}pk(R)
 
   ca1. R -> : R, I
-  ca2. R <- : sign{'ca2', pkI,  I}pk(S)
+  ca2. R <- : S, sign{'ca2', pkI,  I}pk(S)
      
   2.   <- R: {'2', ni, nr, R}pkI
      I <-  : {'2', ni, nr, R}pk(I)
@@ -41,12 +48,12 @@ text{*
   Initiators as well as responders talk to an uncompromised server. 
 *}
 
-axiom (of nslpk) I_uncompromised_S:
+axiom (of NSLPK) I_uncompromised_S:
   premises
     "role(1) = I"
   imply "uncompromised(S#1)"
 
-axiom (of nslpk) R_uncompromised_S:
+axiom (of NSLPK) R_uncompromised_S:
   premises
     "role(1) = R"
   imply "uncompromised(S#1)"
@@ -54,30 +61,28 @@ axiom (of nslpk) R_uncompromised_S:
 
 subsection{* Security Properties *}
 
-properties (of nslpk) 
-  auto: msc-typing
-
-property (of nslpk) I_pkR_auth:
+property (of NSLPK) I_pkR_auth:
   premises
     "role(1) = I"
     "step(1, I_ca2)"
   imply
     "pkR#1 = pk(R#1)"
 
-property (of nslpk) R_pkI_auth:
+property (of NSLPK) R_pkI_auth:
   premises
     "role(1) = R"
     "step(1, R_ca2)"
   imply
     "pkI#1 = pk(I#1)"
 
-properties (of nslpk)
+properties (of NSLPK)
   I_ni_secrecy: secret(I, -, ni, {I,R})
   R_nr_secrecy: secret(R, -, nr, {I,R})
   I_nr_secrecy: secret(I, 2, nr, {I,R})
   R_ni_secrecy: secret(R, 3, ni, {I,R})
 
-property (of nslpk) I_ni_synch:
+
+property (of NSLPK) I_noninjective_synch:
   premises
     "role(1) = I"
     "step(1, I_2)"
@@ -95,7 +100,7 @@ property (of nslpk) I_ni_synch:
      & St(2, R_1) < St(2, R_2)
     "
 
-property (of nslpk) R_ni_synch:
+property (of NSLPK) R_noninjective_synch:
   premises
     "role(2) = R"
     "step(2, R_3)"
