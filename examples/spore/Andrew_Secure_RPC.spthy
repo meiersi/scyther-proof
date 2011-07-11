@@ -15,9 +15,10 @@ text{*
     2. Instead of implicit typing, we are using explicit global constants to
        discern messages.
 
-  Note also that when using a bidirectional key k[A,B] instead of the uni-directional
-  key k(A,B) that is different depending on the used direction an additional attack
-  becomes possible, as agreement on the agent identities is partially lost.
+  Note that when using a bidirectional key k[A,B] instead of the
+  uni-directional key k(A,B) that is different depending on the used direction
+  an attack becomes possible, as agreement on the agent identities is partially
+  lost. Adding the A identity in the first message fixes that flaw.
 *}
 
 protocol Andrew {
