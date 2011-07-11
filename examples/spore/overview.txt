@@ -32,14 +32,12 @@ Selecting variants of a protocol:
 
 TODOs for the tool:
 
-  - long-term-key secrecy as primitive rule
   - switch uncompromised to uncompromised
   - separate transfer label using '.'
   - open-source licence
   - output input file and isabelle certificate
   - comment out unsound theorems when outputting them to Isabelle,
     but output message to terminal about them
-
 
 TODOs for explanations:
 
@@ -304,10 +302,29 @@ Paulson's strengthened version of Yahalom
 Paulson's modified version of the Yahalom protocol. Symmetric keys and trusted server. 
 
 
+%% Notes to be discussed with Cas and David
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Andrew Secure RPC:
+  - Lowe's attack on BAN concrete Andrew RPC is based on identity swapping due
+    to the single shared bidirectional key. This attack is also possible on the
+    original protocol and its modified version that fixes the orignal's
+    freshness flaw.
+
+
 
 %% Fixes to be submitted to the SPORE maintainers
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Woo and Lam Pi 1/2/3/f: Too many dots after label of message transfer in protocol description
 
+Andrew Secure RPC: 
+  [..] K’ab in the message has been created by A in the same session.
+   
+  A should be B in the above sentence.
+
+
+  [..] to convinced B to accept an old compromised key.
+
+  Should be: to convince A to accept an old compromised key.
 
