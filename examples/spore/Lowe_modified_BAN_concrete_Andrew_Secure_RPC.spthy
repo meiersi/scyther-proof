@@ -1,0 +1,68 @@
+theory Lowe_modified_BAN_concrete_Andrew_Secure_RPC begin
+
+section{* Lowe modified BAN concrete Andrew Secure RPC *}
+
+text{*
+  Modeled after the model in the SPORE library.
+
+  Notable differences:
+
+    1. 'succ(x)' is invertible. Hence, we just model it as a tuple ('succ',x) of
+       a global constant 'succ' and the variable x.  This means that we only
+       exploit the tagging properties of 'succ', but do not assume any
+       information hiding.
+
+    2. Instead of implicit typing, we are using explicit global constants to
+       discern messages.
+*}
+
+protocol Andrew {
+
+  1. A -> B: A, Na
+  2. A <- B: B, { '2', Na, Kab, B }k[A,B]
+  3. A -> B:    { '3', Na         }Kab
+  4. A <- B: Nb
+
+}
+
+text{* 
+Note the additional B identity in the second message above. It guarantees that
+despite using a bidirectional longterm symmetric key, we have agreement on the
+involved roles.
+*}
+
+
+subsection{* Security Properties *}
+
+properties (of Andrew)
+  B_sec_Kab: secret(B, -, Kab, {A, B})
+  A_sec_Kab: secret(A, 2, Kab, {A, B})
+
+property (of Andrew) A_noninjective_agreement:
+  premises
+    "role(1) = A"
+    "step(1, A_2)"
+    "uncompromised(A#1,B#1)"
+  imply a thread 2 such that
+    "  role(2) = B
+     & A#1  = A#2
+     & B#1  = B#2
+
+     & Na#1  = Na#2
+     & Kab#1 = Kab#2 "
+
+
+property (of Andrew) B_noninjective_agreement:
+  premises
+    "role(1) = B"
+    "step(1, B_3)"
+    "uncompromised(A#1,B#1)"
+  imply a thread 2 such that
+    "  role(2) = A
+     & A#1  = A#2
+     & B#1  = B#2
+
+     & Na#1  = Na#2
+     & Kab#1 = Kab#2 "
+
+end
