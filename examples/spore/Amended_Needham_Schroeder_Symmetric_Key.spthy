@@ -28,6 +28,12 @@ text{*
        automatically. However, based on the resulting Isabelle file it would be
        easy to also derive injective agreement from the proven non-injective
        variants.
+
+    4. We model the invertible function 'dec(x)' as tupling with a fixed public
+       constant 'dec'; i.e., we only exploit 'dec's tagging capabilities.
+
+    TODO: Check that this protocol can also be verified with bidirectional
+    shared keys.
 *}
 
 protocol AmendedNS
@@ -35,35 +41,49 @@ protocol AmendedNS
    1. I -> R: I
 
    2.   <- R: {'1', I, nr}k(R,S)
-      I <-  : TicketR
+      I <-  : RequestR
 
-   3. I ->  : I, R, ni, TicketR
+   3. I ->  : I, R, ni, RequestR
         -> S: I, R, ni, {'1', I, nr}k(R,S)
 
-   4.   <- S: {'2', ni, R, kIR, {'3', kIR,     nr,     I}k(R,S)}k(I,S)
-      I <-  : {'2', ni, R, kIR, {'3', SomekIR, Somenr, I}k(R,S)}k(I,S)
+   4.   <- S: S, {'2', ni, R, kIR, {'3', kIR, nr, I}k(R,S)}k(I,S)
+      I <-  : S, {'2', ni, R, kIR, TicketR                }k(I,S)
 
-   5. I ->  : {'3', SomekIR, Somenr, I}k(R,S)
+   5. I ->  : TicketR
         -> R: {'3', kIR, nr, I}k(R,S)
 
    6. I <- R: {'4', nr}kIR
 
-   7. I -> R: {'5', h(nr)}kIR
+   7. I -> R: {'5', ('dec', nr)}kIR
 }
 
 
 subsection{* Security Properties *}
 
+property (of AmendedNS) AmendedNS_msc_typing:
+  "I@R        :: Known(R_1)
+   I@S        :: Known(S_3)
+   R@S        :: Known(S_3)
+   RequestR@I :: Known(I_2)
+   S@I        :: Known(I_4)
+   kIR@I      :: Known(I_4) | kIR@S
+   kIR@R      :: Known(R_5) | kIR@S
+   ni@S       :: Known(S_3)
+   nr@I       :: Known(I_6) | nr@R
+   nr@S       :: Known(S_3) | nr@R
+   TicketR@I  :: 
+     Known(I_4) | {'3' , kIR@S, (Known(I_4) | nr@R), Agent}k(Agent, Agent)
+ "
+
 properties (of AmendedNS)
-  auto: auto-properties
-  
-  I_kir_sec: secret(I, 7, kIR, {I,R,S})
-  R_kir_sec: secret(R, 7, kIR, {I,R,S})
+  S_kir_sec: secret(S, -, kIR, {I,R,S})
+  I_kir_sec: secret(I, 4, kIR, {I,R,S})
+  R_kir_sec: secret(R, 5, kIR, {I,R,S})
 
 property (of AmendedNS) I_ni_agree:
   premises
     "role(1) = I"
-    "step(1, I_7)"
+    "step(1, I_6)"
     "uncompromised(I#1, R#1, S#1)"
   imply threads 2 ,3 such that
     "  role(2) = R
