@@ -153,8 +153,8 @@ sptType optRole = go
     AsymPKT ty1   -> text "pk" <> parens (go ty1)
     AsymSKT ty1   -> text "sk" <> parens (go ty1)
     SymKT ty1 ty2 -> text "k"  <> parens (go ty1 <> comma <-> go ty2)
-    KnownT step   -> text "Known@" <> sptRoleStep optRole step
-    SumT ty1 ty2  -> sep [parens (go ty1) <-> text "|", parens (go ty2)]
+    KnownT step   -> text "Known" <> parens (sptRoleStep optRole step)
+    SumT ty1 ty2  -> parens (sep [go ty1 <-> text "|", go ty2])
 
 -- | Pretty print a type that may be a weak atomicity type in the security
 -- protocol theory format.
