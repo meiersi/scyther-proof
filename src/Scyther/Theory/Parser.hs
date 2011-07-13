@@ -56,6 +56,7 @@ module Scyther.Theory.Parser (
 import Data.Char
 import Data.List
 import qualified Data.Set as S
+import qualified Data.Map as M
 import Data.DAG.Simple
 import Data.Foldable (asum)
 
@@ -557,7 +558,8 @@ claims protoMap = do
     when ('-' `elem` claimId) (fail $ "hyphen '-' not allowed in property name '"++claimId++"'")
     let mkThySequent (mkClaimId, se) = mkThyItem (mkClaimId claimId, se)
         singleSequents = map (liftM (return . (,) id) . ($ proto))
-          [ niagreeSequent, secrecySequent, parseAtomicitySequent, implicationSequent ]
+          [ niagreeSequent, secrecySequent, implicationSequent
+          , parseAtomicitySequent, parseTypingSequent ]
         multiSequents = map ($ proto)
           [ parseNonceSecrecy, parseFirstSends
           , parseTransferTyping, parseAutoProps ]
@@ -714,14 +716,7 @@ niagreeSequent proto = do
 
     -- parse a step and a local pattern; e.g., 'B_1[A,B,TNA,Text1]'
     roleStepPattern = do
-        stepId <- identifier
-        let (lbl, roleId) = (reverse *** (init . reverse)) (break ('_' ==) $ reverse stepId)
-        role <- liftMaybe' ("could not find role '" ++ roleId ++ 
-                            "' in protocol '" ++ protoName proto ++ "'")
-                           (lookupRole roleId proto)
-
-        step <- liftMaybe' ("unknown label '" ++ lbl ++ "' in role '" ++ roleId ++ "'") 
-                           (lookupRoleStep lbl role)
+        (role, step) <- roleStepById proto
         pat  <- kw LBRACKET *> tuplepattern <* kw RBRACKET
         return (role, step, pat)
 
@@ -733,6 +728,56 @@ parseAtomicitySequent proto =
 
 atomicitySequent :: Protocol -> Sequent
 atomicitySequent proto = Sequent (empty proto) (FAtom (ATyping WeaklyAtomic))
+
+-- | Parse an explicit list of typing assertions.
+parseTypingSequent :: Protocol -> Parser s Sequent
+parseTypingSequent proto = do
+    typ <- M.fromList <$> doubleQuoted (many1 typeAssertion)
+    return $ Sequent (empty proto) (FAtom (ATyping (Typing typ)))
+  where
+    variable = (,) <$> (Id <$> identifier) <*> (kw AT *> roleById proto)
+
+    typeAssertion = (,) <$> (variable <* kw COLON <* kw COLON) <*> msgTypeDisj
+
+    msgTypeTup  = foldr1 TupT <$> sepBy1 msgTypeDisj (kw COMMA)
+    msgTypeDisj = foldr1 SumT <$> sepBy1 msgType     (kw MID)
+
+    msgType = asum
+      [       pure AgentT <* string "Agent"
+      ,       (ConstT . Id) <$> singleQuoted identifier 
+      ,       HashT   <$> funApp "h" msgTypeTup
+      ,       EncT    <$> braced msgTypeTup <*> msgType
+      ,       SymKT   <$> (funOpen "k" *> msgTypeDisj) <*> (kw COMMA *> msgTypeDisj <* kw RPAREN)
+      ,       AsymPKT <$> funApp "pk" msgTypeTup
+      ,       AsymSKT <$> funApp "pk" msgTypeTup
+      ,       KnownT  <$> funApp "Known" (snd <$> roleStepById proto)
+      ,       flip NonceT <$> (Id <$> identifier) <*> (kw AT *> roleById proto)
+      ,       parens msgTypeTup
+      ]
+
+-- | Parser a role given only by its identifier.
+roleById :: Protocol -> Parser s Role
+roleById proto = do
+  roleId <- identifier
+  case lookupRole roleId proto of
+    Just role -> return role
+    Nothing   -> fail $ "role '"++roleId++"' does not occur in protocol '"
+                        ++protoName proto++"'"
+
+-- parse a role step given by its identifier 'B_1'.
+roleStepById :: Protocol -> Parser s (Role, RoleStep)
+roleStepById proto = do
+    stepId <- identifier
+    let (lbl, roleId) = (reverse *** (init . reverse)) (break ('_' ==) $ reverse stepId)
+    role <- liftMaybe' ("could not find role '" ++ roleId ++ 
+                        "' in protocol '" ++ protoName proto ++ "'")
+                       (lookupRole roleId proto)
+
+    step <- liftMaybe' ("unknown label '" ++ lbl ++ "' in role '" ++ roleId ++ "'") 
+                       (lookupRoleStep lbl role)
+    return (role, step)
+
+
 
 -- General premises parsing
 ---------------------------

@@ -58,6 +58,7 @@ tokens :-
   <0>        "="                { keyword EQUAL }
   <0>        ":"                { keyword COLON }
   <0>        "$"                { keyword DOLLAR }
+  <0>        "@"                { keyword AT }
   <0>        "#"                { keyword SHARP }
   <0>        "*"                { keyword STAR }
   <0>        "<"                { keyword LESS } 
@@ -129,6 +130,7 @@ data Keyword =
   | AND
   | MID
   | DOLLAR
+  | AT
   | SHARP
   | LPAREN
   | RPAREN
@@ -174,6 +176,7 @@ instance Show Keyword where
       AND -> symbol "&"
       MID -> symbol "|"
       DOLLAR -> symbol "$"
+      AT -> symbol "@"
       SHARP -> symbol "#"
       LPAREN -> symbol "("
       RPAREN -> symbol ")"

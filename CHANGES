@@ -8,6 +8,11 @@
 
     - Updated documentation: UnionFind and .cabal project description
 
+    - Allow parsing of user-specified type assertions. For protocols with
+      nested encryptions, the inferred type assertions are sometimes not
+      precise enough. We handle these cases using user-specified type
+      assertions.
+
 
 * 0.3.1 Changed lexer to also recognize `!'
 
