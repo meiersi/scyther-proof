@@ -378,6 +378,12 @@ Andrew Secure RPC:
     original protocol and its modified version that fixes the orignal's
     freshness flaw.
 
+Amended Needham-Schroeder-Shared-Key Protocol
+
+  - there's one tiny bit in the output that must be edited for Isabelle to
+    accept it. *grr* these nested encryptions are tough; especially, as they
+    don't give additional guarantees.
+
 
 
 %% Fixes to be submitted to the SPORE maintainers
