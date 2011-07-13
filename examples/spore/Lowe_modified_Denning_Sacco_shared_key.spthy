@@ -1,0 +1,84 @@
+theory Lowe_modified_Denning_Sacco_shared_key
+begin
+
+
+section{* Denning-Sacco Shared Key Protocol *}
+
+text{*
+  Modeled after the description in the SPORE library:
+
+    http://www.lsv.ens-cachan.fr/Software/spore/denningSacco.html
+
+  Notable differences:
+
+    1. We do not yet have support for reasoning about timestamps.
+
+    2. We are using explicit global constants instead of implicit typing to
+       discern the different encryptions.
+
+    3. We model 'dec(x)' as an invertible function using tupling with a fixed
+       global constant; i.e., we only exploit its tagging properties.
+
+*}
+
+protocol DenningSacco
+{
+  1. A -> S: A, B
+  2.   <- S: S, {'2', B, Kab, T, {'3', A, Kab, T}k(B,S)}k(A,S)
+     A <-  : S, {'2', B, Kab, T, Ticket                }k(A,S)
+  3. A ->  : S, Ticket
+       -> B: S, {'3', A, Kab, T}k(B,S)
+  4. A <- B: {'4', Nb}Kab
+  5. A -> B: {'5', ('dec', Nb)}Kab
+}
+
+
+subsection{* Security Properties *}
+
+properties (of DenningSacco)
+  B_Kab_secrecy:  secret(B, 3, Kab, {A,B,S}) 
+  A_Kab_secrecy:  secret(A, 2, Kab, {A,B,S}) 
+  
+
+text{*
+  Note that the following authentication properties only specify the existence
+  of partner threads of a certain structure and not the uniqueness. However,
+  these partner threads agree on the nonces of each other, which implies that
+  we can prove injective authentication. We can do this using Isabelle/HOL
+  and exploiting the automatically proven properties below.
+*}
+
+property (of DenningSacco) A_noninjective_agree:
+  premises
+    "role(1) = A"
+    "step(1, A_4)"
+    "uncompromised(A#1, B#1, S#1)"
+  imply threads 2, 3 such that
+    "  role(2) = B
+     & role(3) = S
+     & A#1   = A#2    & A#2   = A#3
+     & B#1   = B#2    & B#2   = B#3
+     & S#1   = S#2    & S#2   = S#3
+     & Kab#1 = Kab#2  & Kab#2 = Kab#3
+     & T#1   = T#2    & T#2   = T#3
+     & Nb#1  = Nb#2
+    "
+
+property (of DenningSacco) B_noninjective_agree:
+  premises
+    "role(2) = B"
+    "step(2, B_5)"
+    "uncompromised(A#2, B#2, S#2)"
+  imply threads 1, 3 such that
+    "  role(1) = A
+     & role(3) = S
+     & A#1   = A#2    & A#2   = A#3
+     & B#1   = B#2    & B#2   = B#3
+     & S#1   = S#2    & S#2   = S#3
+     & Kab#1 = Kab#2  & Kab#2 = Kab#3
+     & T#1   = T#2    & T#2   = T#3
+     & Nb#1  = Nb#2
+    "
+
+end
+
