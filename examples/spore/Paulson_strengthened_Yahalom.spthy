@@ -1,0 +1,125 @@
+theory Paulson_Yahalom begin
+
+section{* Yahalom strengthened by Paulson *}
+
+text{*
+  Modeled after the model in the SPORE library.
+
+  Notable differences:
+
+    1. Instead of implicit typing, we are using explicit global constants to
+       discern messages.
+
+    2. The third message includes the identity of S in plaintext, as it is
+       required by role A to lookup the corresponding shared key.
+
+    3. We model longterm shared keys such that k[A,B] = k[B,A]. This extension
+       is described in "Provably Repairing the ISO/IEC 9798 Standard for Entity
+       Authentication" by Basin, Cremers, and Meier
+       (http://people.inf.ethz.ch/cremersc/downloads/download.php?file=papers/BCM2011-iso9798.pdf)
+
+*}
+
+protocol Yahalom
+{
+   1. A -> B: A, Na
+   2. B -> S: B, Nb, {'2', A, Na}k[B,S]
+   3. S ->  : S, Nb, {'3_1', B, Kab, Na}k[A,S], {'3_2', A, B, Kab, Nb}k[B,S]
+        -> A: S, Nb, {'3_1', B, Kab, Na}k[A,S], TicketB
+   4. A ->  : TicketB,                      {'4', Nb}Kab
+        -> B: {'3_2', A, B, Kab, Nb}k[B,S], {'4', Nb}Kab
+}
+
+
+
+subsection{* Secrecy Properties *}
+
+properties (of Yahalom)
+  S_Kab_secret: secret(S, -, Kab, {A,B,S})
+  A_Kab_secret: secret(A, 3, Kab, {A,B,S})
+  B_Kab_secret: secret(B, 4, Kab, {A,B,S})
+
+subsection{* Authentication Properties *}
+
+text{* This is what Paulson proves. *}
+
+property (of Yahalom) B_auth:
+  premises
+    "role(2) = B"
+    "step(2, B_4)"
+    "uncompromised(A#2, B#2, S#2)"
+  imply a thread 1 such that
+    "  role(1) = A
+     & B#1  = B#2   
+     & Kab#1 = Kab#2 
+    "
+
+subsection{* Stonger Authentication Properties *}
+
+text{*
+We can prove stronger authentication properties. However, they hold only under
+the additional assumption that agents running the trusted third party do not
+participate in the A or B role of the protocol. This is a reasonable assumption.
+
+Without this assumption, the problem is that due to the swapping of identities
+on the keys, the authentication properties below can be attacked. Note that the
+proofs list exactly the reasoning steps where the axioms are exploited.
+*}
+
+axiom (of Yahalom) different_actors_A_S:
+  premises
+    "role(0) = A"
+    "role(1) = S"
+    "A#0 = S#1"
+  imply
+    "False"
+
+axiom (of Yahalom) different_actors_B_S:
+  premises
+    "role(0) = B"
+    "role(1) = S"
+    "B#0 = S#1"
+  imply
+    "False"
+
+property (of Yahalom) A_strong_auth:
+  premises
+    "role(1) = A"
+    "step(1, A_3)"
+    "uncompromised(A#1, B#1, S#1)"
+  imply threads 2, 3 such that
+    "  role(2) = B
+     & role(3) = S
+     & A#1   = A#2   & A#2   = A#3
+     & B#1   = B#2   & B#2   = B#3
+     & S#1   = S#2   & S#2   = S#3
+     & Na#1  = Na#2  & Na#2  = Na#3
+                     & Kab#1 = Kab#3  // we are not guaranteed that responder received Kab
+     &   St(1,A_1) < St(2,B_1) 
+       < St(2,B_2) < St(3,S_2)
+       < St(3,S_3) < St(1,A_3)"
+
+property (of Yahalom) B_strong_auth:
+  premises
+    "role(2) = B"
+    "step(2, B_4)"
+    "uncompromised(A#2, B#2, S#2)"
+  imply threads 1, 3 such that
+    "  role(1) = A
+     & role(3) = S
+     & A#1   = A#2   & A#2   = A#3
+     & B#1   = B#2   & B#2   = B#3
+     & S#1   = S#2   & S#2   = S#3
+     // no agreement over Na because it is not bound to Nb
+     // & Na#1  = Na#2  & Na#2  = Na#3
+     & Nb#1  = Nb#2  & Nb#2  = Nb#3
+     & Kab#1 = Kab#2 & Kab#2 = Kab#3
+     &               St(2,B_1) 
+       < St(2,B_2) < St(3,S_2)
+       < St(3,S_3) < St(1,A_3)
+       < St(1,A_4) < St(2,B_4)
+    "
+
+end
+
+
