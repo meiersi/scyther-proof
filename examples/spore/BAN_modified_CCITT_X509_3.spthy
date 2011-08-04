@@ -1,0 +1,78 @@
+theory BAN_modified_CCITT_X509_3 begin
+
+section{* BAN modified version of CCITT X.509 (3) *}
+
+text{*
+  Modelled after SPORE.
+
+  Notable differences:
+    1. We use explicit global constants instead of implicit typing to discern
+       the different messages.
+    
+    2. We prove non-injective synchronization, which is stronger than the
+       authentication on Ya and Yb required in the SPORE description.
+
+    3. We equate all timestamps to a single global constant; i.e., we assume
+       no checking of timestamps is done.
+
+*}
+
+
+protocol X509
+{
+  1. A -> B: A, sign{'1_1', 'Time', Na, B,     Xa, {'1_2', Ya}pk(B) }pk(A)
+  2. B -> A: B, sign{'2_1', 'Time', Nb, A, Na, Xb, {'2_2', Yb}pk(A) }pk(B)
+  3. A -> B: A, sign{'3',               B, Nb                       }pk(A)
+}
+
+
+subsection{* Security Properties *}
+
+properties (of X509)
+  A_Ya_secrecy: secret(A, -, Ya, {A,B})
+  B_Yb_secrecy: secret(B, -, Yb, {A,B})
+  B_Ya_secrecy: secret(B, 1, Ya, {A,B})
+  A_Yb_secrecy: secret(A, 2, Yb, {A,B})
+
+property (of X509) A_noninjective_synch:
+  premises "role(1) = A"
+    "step(1, A_3)"
+    "uncompromised(A#1, B#1)"
+  imply a thread 2 such that
+    "  role(2) = B
+     & A#1  = A#2
+     & B#1  = B#2
+     & Na#1 = Na#2
+     & Nb#1 = Nb#2
+     & Ya#1 = Ya#2
+     & Yb#1 = Yb#2 
+     
+     & St(1, A_1) < St(2, B_1)
+     & St(2, B_2) < St(1, A_2)
+     & St(1, A_1) < St(1, A_2) < St(1, A_3)
+     & St(2, B_1) < St(2, B_2)
+    "
+
+property (of X509) B_noninjective_synch:
+  premises 
+    "role(2) = B"
+    "step(2, B_3)"
+    "uncompromised(A#2, B#2)"
+  imply a thread 1 such that
+    "  role(1) = A
+     & A#1  = A#2
+     & B#1  = B#2
+     & Na#1 = Na#2
+     & Nb#1 = Nb#2
+     & Ya#1 = Ya#2
+     & Yb#1 = Yb#2 
+     
+     & St(1, A_1) < St(2, B_1)
+     & St(2, B_2) < St(1, A_2)
+     & St(1, A_3) < St(2, B_3)
+     & St(1, A_1) < St(1, A_2) < St(1, A_3)
+     & St(2, B_1) < St(2, B_2) < St(2, B_3)
+    "
+
+end
+
