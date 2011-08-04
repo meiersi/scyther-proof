@@ -395,10 +395,21 @@ Setup of case-studies:
     3. We check the SPORE library for protocols that make use of nested
        encryptions and verify them.
 
+  Concrete Protocols:
+    Denning-Sacco (regression, nested encryption)
+    Kerberos IV   (according to bella: nested encryption)
+    Kerberos V    (standard, complexity)
+    NSL7          (demonstrates public-key certificates)
+    TLS           (according to Paulson, regression)
+    X.509         (standard)
+    Yahalom       (regression)
+
+
 
 Bidirectional Shared keys:
   - We have them and they would be required by most shared-key protocols. 
     Should we use them?
+    => use it in models and refer to ISO paper.
 
 Andrew Secure RPC:
   - Lowe's attack on BAN concrete Andrew RPC is based on identity swapping due
@@ -416,11 +427,15 @@ Amended Needham-Schroeder-Shared-Key Protocol
 Neumann-Stubblebine, KSL, Kerbers: How to model repeated authentication?
     Several attacks concern the repeated authentication!
     (We could just add it twice..most attacks can be found there)
+    =>
+    don't do it.
 
 Timestamps:
     What do you think about equating all of them? This is equal to 
     ignoring the effect of timestamps. If there's no attack in this way,
     then there's also none with timestamps.
+    =>
+    do it.
 
 
 %% Fixes to be submitted to the SPORE maintainers
