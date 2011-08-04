@@ -11,10 +11,15 @@ Shortcomings of our model:
   - weak support for verifying key freshness: only interactive verification of
     injective authentication properties
 
+    => multiplicity attacks have to be discovered manually: 
+       For every thread that we do not agree on one of its generated nonces,
+       we have a chance that another such thread can receive our communication.
+
+       (Check that.)
+
   - no support for timestamps; currently we model timestamps as nonces. This
     may be too strong!
-
-  - no algebraic properties of functions like 'succ' are modeled.
+    => A better model is to equate all timestamps.
 
 
 Naming convention:
@@ -372,6 +377,29 @@ Paulson's strengthened version of Yahalom
 %% Notes to be discussed with Cas and David
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Setup of case-studies:
+  Goals:
+    1. Compare to Brucker/Moederhseim
+    2. Compare to Goubault-Larrecq
+    3. Demonstrate that more precise typing works.
+ 
+  Means to achieve goals:
+    1. We keep enough protocols from the old case studies to enable the claim
+       that there's no regression with respect to the CSF paper. Then, our
+       comparison in the CSF paper still applies.
+
+    2. We model the 8 protocols that Goubault-Larrecq analyzes. We also model
+       their authentication claims. If the times stay comparable, then we can
+       claim that we are better.
+
+    3. We check the SPORE library for protocols that make use of nested
+       encryptions and verify them.
+
+
+Bidirectional Shared keys:
+  - We have them and they would be required by most shared-key protocols. 
+    Should we use them?
+
 Andrew Secure RPC:
   - Lowe's attack on BAN concrete Andrew RPC is based on identity swapping due
     to the single shared bidirectional key. This attack is also possible on the
@@ -384,6 +412,15 @@ Amended Needham-Schroeder-Shared-Key Protocol
     accept it. *grr* these nested encryptions are tough; especially, as they
     don't give additional guarantees.
 
+
+Neumann-Stubblebine, KSL, Kerbers: How to model repeated authentication?
+    Several attacks concern the repeated authentication!
+    (We could just add it twice..most attacks can be found there)
+
+Timestamps:
+    What do you think about equating all of them? This is equal to 
+    ignoring the effect of timestamps. If there's no attack in this way,
+    then there's also none with timestamps.
 
 
 %% Fixes to be submitted to the SPORE maintainers
@@ -400,6 +437,11 @@ Andrew Secure RPC:
   [..] to convinced B to accept an old compromised key.
 
   Should be: to convince A to accept an old compromised key.
+
+Lowe's fixed version of Needham-Shroder Public Key
+    
+  Its purpose id mutual [..]  ~~> Its purpose is mutual [...]
+
 
 %% Further claimed proofs
 %%%%%%%%%%%%%%%%%%%%%%%%%
