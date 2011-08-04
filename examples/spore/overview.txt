@@ -397,12 +397,13 @@ Setup of case-studies:
 
   Concrete Protocols:
     + Denning-Sacco (regression, nested encryption)
-    Kerberos IV   (according to bella: nested encryption)
-    Kerberos V    (standard, complexity)
-    NSL7          (demonstrates public-key certificates)
-    TLS           (according to Paulson, regression)
-    + X.509         (standard)
-    Yahalom       (regression)
+    Kerberos IV     (according to bella, nested encryption)
+    Kerberos V      (standard, complexity)
+    NSL7            (demonstrates public-key certificates)
+    TLS             (according to Paulson, regression)
+    + X.509           (standard)
+    Yahalom         (regression)
+    + Woo Lam Pi 3  (well-known protocol with nested encryption)
 
 
 
@@ -441,7 +442,13 @@ Timestamps:
 %% Fixes to be submitted to the SPORE maintainers
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Woo and Lam Pi 1/2/3/f: Too many dots after label of message transfer in protocol description
+Woo and Lam Pi 1/2/3/f: 
+  - Too many dots after label of message transfer in protocol description
+  - One way authentification protocol with public keys and trusted server.
+    ~~> [no public keys are used]
+    One way authentication protocol with shared keys and trusted server.
+
+
 
 Andrew Secure RPC: 
   [..] K’ab in the message has been created by A in the same session.
