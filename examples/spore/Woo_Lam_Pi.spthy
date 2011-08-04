@@ -1,0 +1,50 @@
+theory Woo_Lam_Pi_3 begin
+
+section{* Woo and Lam Pi 3 *}
+
+text{*
+  Modelled after SPORE.
+
+  Notable differences:
+    1. We use explicit global constants instead of implicit typing to discern
+       the different messages.
+    
+    2. We prove non-injective synchronization, which is stronger than the
+       authenticatino requirement stated in the description.
+
+    3. We added the identity B to the plaintext of the fourth message, as the
+       server must know it for looking up the key k(B,S).
+
+*}
+
+
+protocol WooLamPi
+{
+  1. A -> B: A
+  2. B -> A: Nb
+  3. A ->  : {'3', Nb}k(A,S)
+       -> B: Ticket
+  4. B ->  : B, {'4', A, Ticket     }k(B,S)
+       -> S: B, {'4', A, {'3', Nb}k(A,S) }k(B,S)
+  5. S -> B: {'5', A, Nb}k(B,S)
+}
+
+
+subsection{* Security Properties *}
+
+property (of WooLamPi) B_noninjective_agreement:
+  premises 
+    "role(2) = B"
+    "step(2, B_5)"
+    "uncompromised(A#2, B#2, S#2)"
+  imply a thread 1 such that
+    "  role(1) = A
+     & A#1  = A#2
+     // & B#1  = B#2  // does not hold, as identity B is never transferred 
+                      // authentically between roles A and B
+     & S#1  = S#2
+     & Nb#1 = Nb#2
+    "
+
+end
+
