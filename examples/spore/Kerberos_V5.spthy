@@ -32,7 +32,7 @@ Schaub in his master thesis [1], but scyther-proof does not (yet).
 
 [1] Schaub, Martin. Efficient Interactive Construction of Machine-Checked
     Protocol Security Proofs in the Context of Dynamically Compromising
-    Adversaries.  Eidgenössische Technische Hochschule Zürich, Departement
+    Adversaries.  Eidgenoessische Technische Hochschule Zuerich, Departement
     Informatik (2011).  doi:10.3929/ethz-a-006450686.
 *}
 

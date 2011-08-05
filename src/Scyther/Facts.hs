@@ -112,7 +112,6 @@ import qualified Scyther.Formula    as F
 data Facts = Facts {
     events         :: S.Set Event    -- ^ Statements about events that must have happened.
   , eventOrd       :: EventOrder     -- ^ Statements about the order of events that happened.
-  -- FIXME: Compromising other values than agent variables should also be possible.
   , compromised    :: S.Set Message  -- ^ Statements about agents being compromised.
   , uncompromised  :: S.Set Message  -- ^ Statements about agents being uncompromised.
   , equalities     :: E.Equalities   -- ^ All equalities that must hold.
@@ -120,8 +119,7 @@ data Facts = Facts {
   , aidQuantifiers :: S.Set AgentId  -- ^ All agent IDs ocurring in the facts.
   , optTyping      :: Maybe Typing   -- ^ The typing if there is any that the
                                      --   current state satisfies.
-   -- NOTE: The outer Maybe is used for facts that don't have a typing. The 
-   -- inner maybe is a cheap construction accomodating legacy weak-atomicity.
+   -- NOTE: The Maybe is used for facts that don't have a typing.
 
   , covered        :: S.Set Message  -- ^ The messages that have already been used in a 
                                      --   case distinction.
@@ -861,8 +859,7 @@ expandType (AsymPKT ty)    = MAsymPK <$> expandType ty
 expandType (AsymSKT ty)    = MAsymSK <$> expandType ty
 expandType (SumT (KnownT _) ty) = expandType ty
   --  ^ ASSUMPTION: The step referenced in KnownT happens earlier than the current step.
-expandType (KnownT _) = mzero
-  --  ^ ASSUMPTION: The step referenced in KnownT happens earlier than the current step.
+expandType (KnownT _) = mzero --  ^ FIXME: This is just plain wrong! Here we have to add the corresponding order fact.
 expandType ty = error $ "expandType: '" ++ ppTy ++ "' not supported"
   where ppTy = show . render $ sptType Nothing ty 
 
