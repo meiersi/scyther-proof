@@ -106,8 +106,8 @@ data Message =
   | MFresh  Fresh       -- ^ A freshly generated message.
   | MAVar   AVar        -- ^ A symbolically instantiated agent variable.
   | MMVar   MVar        -- ^ A symbolically instantiated message variable; 
-  | MAgent  AgentId     -- ^ Some agent name
                         --   @MVar (LocalId (Id \"v\", TID 1))@ corresponds to @s(|MV ''v'' tid1|)@.
+  | MAgent  AgentId     -- ^ Some agent name
   | MHash   Message            -- ^ Hashing
   | MTup    Message Message    -- ^ Pairing
   | MEnc    Message Message    -- ^ Encryption or signing depending on the key (the second argument)
