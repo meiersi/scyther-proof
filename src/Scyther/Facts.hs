@@ -606,24 +606,24 @@ saturateFacts = execState $ do
 --
 -- Is equal to 'mzero' in case the facts don't contain a typing.
 exploitTypingFacts :: MonadPlus m => Facts -> m Facts
-exploitTypingFacts facts0 = do
-  typ <- getTyping facts0
-  return $ case typ of
-    WeaklyAtomic -> foldl' weaklyAtomic facts0 . E.getMVarEqs . equalities $ facts0
-    Typing _     -> facts0 -- TODO: implement this check
+exploitTypingFacts facts0 = return facts0 -- TODO: implement this check. 
+  {- cf. the one for weak atomicity below: 
+  do
+    -- WeaklyAtomic -> foldl' weaklyAtomic facts0 . E.getMVarEqs . equalities $ facts0
   where
-  weaklyAtomic :: Facts -> (MVar, Message) -> Facts
-  weaklyAtomic facts (_,                       MMVar _ ) = facts
-  weaklyAtomic facts (_,                       MFresh _) = facts
-  weaklyAtomic facts (MVar (LocalId (i, tid)), m       ) =
-    case threadRole tid facts of
-      Nothing -> error $ "exploitTypingFacts: no role assigned to '"++show tid++"'"
-      Just role -> 
-        case find (S.member i . stepFMV) (roleSteps role) of
-          Nothing   -> 
-            error $ "exploitTypingFacts: variable '"++show i++"' does not occur in role."
-          Just step -> 
-            insertEvOrdNonTrivial (Cert (Learn m, Step tid step)) facts
+    weaklyAtomic :: Facts -> (MVar, Message) -> Facts
+    weaklyAtomic facts (_,                       MMVar _ ) = facts
+    weaklyAtomic facts (_,                       MFresh _) = facts
+    weaklyAtomic facts (MVar (LocalId (i, tid)), m       ) =
+      case threadRole tid facts of
+        Nothing -> error $ "exploitTypingFacts: no role assigned to '"++show tid++"'"
+        Just role -> 
+          case find (S.member i . stepFMV) (roleSteps role) of
+            Nothing   -> 
+              error $ "exploitTypingFacts: variable '"++show i++"' does not occur in role."
+            Just step -> 
+              insertEvOrdNonTrivial (Cert (Learn m, Step tid step)) facts
+  -}
 
 ------------------------------------------------------------------------------
 -- Queries
@@ -667,24 +667,24 @@ proveAtom facts = checkAtom . certified . certAtom facts
   where
   -- PRE: atom is fully substituted
   checkAtom atom = case atom of
-    AFalse                -> False
-    AEq eq                -> E.reflexive eq
-    AEv (Learn m)         -> all checkLearn (splitNonTrivial m)
-    AEv ev                -> ev `S.member` events facts
-    AEvOrd (Learn m, e2)  -> all (checkLearnBefore e2) (splitNonTrivial m)
-    AEvOrd (e1, e2)       -> before (eventOrd facts) e1 e2
-    ACompr m              -> m `S.member` compromised facts
-    AUncompr m            -> m `S.member` uncompromised facts
-    AHasType mv Nothing   -> weaklyAtomic mv (substMVar facts mv)
-    AHasType mv (Just ty) -> checkType (substMVar facts mv) ty
-    ATyping typ           -> Just typ == optTyping facts
-    AReachable proto      -> proto == protocol facts
+    AFalse               -> False
+    AEq eq               -> E.reflexive eq
+    AEv (Learn m)        -> all checkLearn (splitNonTrivial m)
+    AEv ev               -> ev `S.member` events facts
+    AEvOrd (Learn m, e2) -> all (checkLearnBefore e2) (splitNonTrivial m)
+    AEvOrd (e1, e2)      -> before (eventOrd facts) e1 e2
+    ACompr m             -> m `S.member` compromised facts
+    AUncompr m           -> m `S.member` uncompromised facts
+    AHasType mv  ty      -> checkType (substMVar facts mv) ty
+    ATyping typ          -> Just typ == optTyping facts
+    AReachable proto     -> proto == protocol facts
 
   checkLearn m          = Learn m `S.member` events facts
   checkLearnBefore to m = before (eventOrd facts) (Learn m) to
 
-  weaklyAtomic mv (MMVar mv') = mv /= mv' -- FIXME: This case is missing in checkType below.
-  weaklyAtomic _  m           = checkAtom (AEv (Learn m))
+  
+  -- FIXME: The following case is missing in checkType below.
+  -- weaklyAtomic mv (MMVar mv') = mv /= mv' 
 
   checkType (MAVar _)     (AgentT)        = True
   checkType (MAgent _)    (AgentT)        = True
@@ -968,7 +968,7 @@ chainRuleFacts m      facts0
   
   -- enumerate chainRuleFacts starting from the given role
   roleChains :: Typing -> TID -> Role -> ChainRuleM ()
-  roleChains genTyp tid role = do 
+  roleChains typ tid role = do 
     modifyFacts $ insertRole tid role
     addCaseFragment $ roleName role
     msum . map stepChains $ roleSteps role
@@ -1006,20 +1006,12 @@ chainRuleFacts m      facts0
       msgChains prev v@(MMVar mv) = do
         -- trace ("msgChains: " ++ show m') (return ())
         addCaseFragment $ msgName v
-        case genTyp of
-          WeaklyAtomic -> do -- weak atomicity typing
-            -- apply rule ATOMIC and discarge composite case immediatly
-            -- m must be a message variable or a fresh message in order to unify
-            case m of MMVar _ -> return (); MFresh _ -> return (); _ -> mzero
-            insertPrevious prev (Learn v)
-            setFinalEq (v, m)
-          Typing typ -> -- type invariant
-            case M.lookup (lidId $ getMVar mv, role) typ of
-              Nothing -> error $ "msgChains: no type provided for '"++show mv++"'"
-              Just vty -> do
-                vm <- expandType vty
-                unify v vm
-                msgChains prev vm
+        case M.lookup (lidId $ getMVar mv, role) typ of
+          Nothing -> error $ "msgChains: no type provided for '"++show mv++"'"
+          Just vty -> do
+            vm <- expandType vty
+            unify v vm
+            msgChains prev vm
       
       msgChains prev m'@(MEnc m1 m2) = 
         do insertPrevious prev (Learn m')

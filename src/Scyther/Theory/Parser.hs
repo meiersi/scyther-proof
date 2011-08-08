@@ -558,8 +558,7 @@ claims protoMap = do
     when ('-' `elem` claimId) (fail $ "hyphen '-' not allowed in property name '"++claimId++"'")
     let mkThySequent (mkClaimId, se) = mkThyItem (mkClaimId claimId, se)
         singleSequents = map (liftM (return . (,) id) . ($ proto))
-          [ niagreeSequent, secrecySequent, implicationSequent
-          , parseAtomicitySequent, parseTypingSequent ]
+          [ niagreeSequent, secrecySequent, implicationSequent, parseTypingSequent ]
         multiSequents = map ($ proto)
           [ parseNonceSecrecy, parseFirstSends
           , parseTransferTyping, parseAutoProps ]
@@ -567,7 +566,7 @@ claims protoMap = do
     return $ map mkThySequent sequents
 
 -- | Auto-generated simple properties: first-sends, ltk-secrecy, nonce-secrecy,
--- weak-atomicity, msc-typing
+-- msc-typing
 parseAutoProps :: Protocol -> Parser s [(String -> String,Sequent)]
 parseAutoProps proto =
   string "auto" *> kw MINUS *> string "properties" *> 
@@ -720,20 +719,11 @@ niagreeSequent proto = do
         pat  <- kw LBRACKET *> tuplepattern <* kw RBRACKET
         return (role, step, pat)
 
-
--- | Parse a weak atomicity formula
-parseAtomicitySequent :: Protocol -> Parser s Sequent
-parseAtomicitySequent proto = 
-  string "weakly" *> kw MINUS *> string "atomic" *> pure (atomicitySequent proto)
-
-atomicitySequent :: Protocol -> Sequent
-atomicitySequent proto = Sequent (empty proto) (FAtom (ATyping WeaklyAtomic))
-
 -- | Parse an explicit list of typing assertions.
 parseTypingSequent :: Protocol -> Parser s Sequent
 parseTypingSequent proto = do
     typ <- M.fromList <$> doubleQuoted (many1 typeAssertion)
-    return $ Sequent (empty proto) (FAtom (ATyping (Typing typ)))
+    return $ Sequent (empty proto) (FAtom (ATyping typ))
   where
     variable = (,) <$> (Id <$> identifier) <*> (kw AT *> roleById proto)
 

@@ -580,7 +580,7 @@ translateWorker as templateFile reportVar
       where
       mkReuse thmSel se th
         | isTypingFormula $ seConcl se = 
-            -- we do not support reusing in weak atomicity and typing proofs
+            -- we do not support reusing in typing proofs
             -- because the ISAR pretty printer cannot handle it yet correctly.
             False
         | otherwise                    = 
