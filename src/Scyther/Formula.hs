@@ -54,9 +54,7 @@ data Atom =
   | AEvOrd (Event, Event)   -- ^ An event order.
   | ACompr Message          -- ^ A compromised agent variable.
   | AUncompr Message        -- ^ An uncompromised agent variable.
-  | AHasType MVar (Maybe Type)  
-                            -- ^ A claim that a variable is of the given type;
-                            --   Nothing stands for weakly-atomic.
+  | AHasType MVar Type      -- ^ A claim that a variable is of the given type;
   | ATyping Typing          -- ^ A claim that the current state of a protocol is
                             --   approximated by the given typing.
   | AReachable Protocol     -- ^ A claim that the current state is reachable.
@@ -206,7 +204,7 @@ isaAtom conf mapping atom = case atom of
     AHasType mv ty -> let tid     = mvarTID mv
                           optRole = threadRole tid (getMappingEqs mapping)
                       in ppIsar mv <-> isaIn conf <-> 
-                         isaOptType conf optRole ty <-> ppIsar (mvarTID mv) <-> 
+                         isaType conf optRole ty <-> ppIsar (mvarTID mv) <-> 
                          isaExecutionSystemState conf
     ATyping _      -> text "well-typed"
     AReachable p   -> 
@@ -226,8 +224,7 @@ sptAtom mapping atom = case atom of
     ACompr av      -> sptCompr   av
     AUncompr av    -> sptUncompr av
     AHasType mv ty -> let optRole = threadRole (mvarTID mv) (getMappingEqs mapping)
-                      in  sptMVar mv <-> text "::" <-> sptOptType optRole ty
-    ATyping WeaklyAtomic -> text "weakly-atomic"
+                      in  sptMVar mv <-> text "::" <-> sptType optRole ty
     ATyping typ    -> sptTyping typ
     AReachable p   -> text "reachable" <-> text (protoName p)
 

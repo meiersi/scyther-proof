@@ -106,7 +106,7 @@ class MarkupMonad m => PrettyMonad m where
   -- proof output
   ensureProofMode :: (Bool, Bool) -> m Doc
   withFactsMode   :: (Bool, Bool) -> m Doc -> m Doc
-  prettyTrivial :: Sequent -> TrivReason -> m Doc
+  prettyTrivial :: TrivReason -> m Doc
   prettyMissing :: Sequent -> String -> m Doc
   prettySaturate :: Sequent -> m Doc
   prettyForwardContradiction :: m Doc -> m Doc
@@ -116,8 +116,8 @@ class MarkupMonad m => PrettyMonad m where
   prettyChainRuleApplication :: m Doc -> m Doc
   prettyChainRuleCase :: (String, [Either TID AgentId]) -> m Doc
   prettyChainRuleQED :: Message -> [ChainRuleCase] -> m Doc
-  prettyTypeCheckInduction :: Protocol -> String -> Typing -> (m Doc, m Doc -> m Doc, m Doc)
-  prettyTypingCase :: String -> Typing -> String -> Sequent -> m Doc
+  prettyTypeCheckInduction :: String -> (m Doc, m Doc -> m Doc, m Doc)
+  prettyTypingCase :: String -> String -> m Doc
   prettySplitEqCase :: PrettyMonad m => String -> m Doc
   prettySplitEqApplication :: PrettyMonad m => E.MsgEq -> m Doc
   prettySplitEqQed :: PrettyMonad m => m Doc
@@ -158,17 +158,17 @@ withProofSequent = withSequent . prfSequent
 -- | Split a list of cases that can be converted to a proof into cases being
 -- trivial due to one of the given triviality reasons, non trivial cases, and a
 -- list of the trivial sequents together with the reasons occurring.
-genericChainRuleSplitCases :: (a -> Proof) -> [a] -> (([a],[a]), [(Sequent, TrivReason)])
+genericChainRuleSplitCases :: (a -> Proof) -> [a] -> (([a],[a]), [TrivReason])
 genericChainRuleSplitCases sel cases =
   (partition (isNothing . check) cases, mapMaybe check cases)
   where
   check = extractTrivial . sel
   extractTrivial (Trivial se reason) = case reason of
-    TrivContradictoryPremises   -> Just (se, reason)
+    TrivContradictoryPremises   -> Just reason
     TrivLongTermKeySecrecy _    -> Nothing
     TrivPremisesImplyConclusion -> 
       case seConcl se of 
-        FAtom (AHasType _ _) -> Just (se, reason)
+        FAtom (AHasType _ _) -> Just reason
         _                    -> Nothing
   extractTrivial _ = Nothing
 
@@ -188,8 +188,8 @@ prettyProof :: PrettyMonad m =>
          -> m Doc
 prettyProof _ _ (Axiom _) = emptyDoc
 
-prettyProof _ prfConf (Trivial se reason) = 
-  ensureProofMode prfConf <-> prettyTrivial se reason
+prettyProof _ prfConf (Trivial _ reason) = 
+  ensureProofMode prfConf <-> prettyTrivial reason
 
 prettyProof _ _ (Missing se reason showSequent)
   | showSequent = withSequent se $ prettyMissing se reason
@@ -247,11 +247,9 @@ prettyProof thName _ (RuleApp se (TypingCases names) prfs) = do
       modifier (vcat . intersperse prettyNextCase $ map (nest 2 . pure) ppCases) $-$
       post
   where
-    optTyp = fromMaybe errMsg $ destTypingFormula (seConcl se)
-    errMsg = error "prettyProof: type checking lemma applied to non-typing conclusion."
-    (pre, modifier, post) = prettyTypeCheckInduction (seProto se) thName optTyp
+    (pre, modifier, post) = prettyTypeCheckInduction thName
     ppCase (name, prf) =
-      let caseDoc = prettyTypingCase thName optTyp name (prfSequent prf)
+      let caseDoc = prettyTypingCase thName name 
       in  withProofSequent prf caseDoc $-$ prettyProof thName (True, True) prf
 
 prettyProof thName _ (RuleApp se (SplitEq eq@(MShrK _ _, MShrK _ _) [True,True]) prfs) = do
@@ -327,17 +325,10 @@ instance MarkupMonad m => MarkupMonad (TaggedIdentityT t m) where
 
 -- | Convert a triviality reason to a string representing the corresponding
 -- Isabelle tactic.
-isaTactic :: Sequent -> TrivReason -> String
-isaTactic _  TrivContradictoryPremises   = "((clarsimp, order?) | order)"
-isaTactic _  (TrivLongTermKeySecrecy _)  = "(fastsimp dest!: ltk_secrecy)"
-isaTactic se TrivPremisesImplyConclusion = 
-  case seConcl se of
-    FAtom (AHasType _ Nothing)  -> -- weakly atomic
-        "(fastsimp simp: SumT_def KnownT_def dest!: state.extract_knows_hyps)"
-    FAtom (AHasType _ (Just _)) -> 
-        "(fastsimp intro: event_predOrdI split: if_splits)" 
-    _ -> 
-        "(fastsimp intro: event_predOrdI split: if_splits)" 
+isaTactic :: TrivReason -> String
+isaTactic TrivContradictoryPremises   = "((clarsimp, order?) | order)"
+isaTactic (TrivLongTermKeySecrecy _)  = "(fastsimp dest!: ltk_secrecy)"
+isaTactic TrivPremisesImplyConclusion = "(fastsimp intro: event_predOrdI split: if_splits)" 
 
 -- | Isabelle proof of long-term key secrecy.
 isaLongTermKeySecrecyProof :: Protocol -> Doc
@@ -413,7 +404,7 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     | proofMode = vcat [kwProof <-> text "-", nest 2 doc, kwQED]
     | otherwise = doc
 
-  prettyTrivial se reason = kwBy <-> text (isaTactic se reason)
+  prettyTrivial reason = kwBy <-> text (isaTactic reason)
   prettyMissing se reason =
     nestShort' "(*" "*)" (text reason $-$ prettySequent se) <-> text "oops"
   prettySaturate _ =
@@ -455,9 +446,9 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     | otherwise    = 
         kwQED <-> text "(insert facts, (" <> hsep (intersperse (text "|") tactics) <> text ")+)?"
     where
-      tactics = map (text . uncurry isaTactic) . nub . snd $ genericChainRuleSplitCases snd trivCases
+      tactics = map text . nub . map isaTactic . snd $ genericChainRuleSplitCases snd trivCases
 
-  prettyTypeCheckInduction p typName typ = 
+  prettyTypeCheckInduction typName = 
     ( kwProof <-> text "-" $$
       ( nest 2 $ vcat
           [ text "have" <-> doubleQuotes 
@@ -469,25 +460,20 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     , nest 2
     , (nest 2 $ vcat
         [ kwQED
-        , text "thus" <-> doubleQuotes (text typLocale <-> text "t r s") <->
+        , text "thus" <-> doubleQuotes (text (typingLocale typName) <-> text "t r s") <->
             text "by unfold_locales auto" 
         ]
       ) $$ kwQED
     )
     where
-    (wellTypedStates, monoTyp, typLocale) = case typ of
-      WeaklyAtomic -> ("approx weakly_atomic", "monoTyp_weakly_atomic", weakAtomicityLocale p)
-      Typing _     -> ("approx " ++ typName,    typName ++ ".monoTyp",   typingLocale typName)
+      wellTypedStates = "approx " ++ typName
+      monoTyp         = typName ++ ".monoTyp"
 
-  prettyTypingCase typName typ name se = 
-    do kwCase <-> text ("("++ name ++" t r s") <-> prettyTID 0 <> text") note facts = this" $-$
-         text ("then interpret state: "++ typLocale ++" t r s") $-$
-         nest 2 (text "by unfold_locales auto") $-$
-         text "show ?case using facts" 
-    where
-    typLocale = case typ of
-      WeaklyAtomic -> weakAtomicityLocale (seProto se)
-      Typing _     -> typingLocale typName
+  prettyTypingCase typName name =
+      kwCase <-> text ("("++ name ++" t r s") <-> prettyTID 0 <> text") note facts = this" $-$
+          text ("then interpret state: "++ typingLocale typName ++" t r s") $-$
+          nest 2 (text "by unfold_locales auto") $-$
+          text "show ?case using facts" 
 
   -- equality splitting
   prettySplitEqCase name = 
@@ -540,34 +526,19 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     -- pretty print a typing locale definition 
     ppTypingLocale typ = do
       conf <- ask
-      let (inv_name, inv_locale, inv_def) = case typ of 
-            WeaklyAtomic -> weakAtomicityInfo
-            Typing _     -> typingInfo conf
       vcat 
         [ keyword "property" (text "type_invariant") <-> 
-            text inv_name <->
+            text name <->
             text "for" <-> text (protoName p)
-        , inv_def
+        , text "where \"" <> text name <-> text "= mk_typing" $$
+            nest 2 (pure $ isar conf typ) <> char '"'
         , text ""
         , keyword "property" (text "sublocale") <-> 
-            text (stateLocale p) <-> isaSublocale conf <-> text inv_locale
+            text (stateLocale p) <-> isaSublocale conf <-> text (typingLocale name)
         , ppPrf
         , text ""
         , pure $ isaLongTermKeySecrecyProof p
         ]
-      where
-      weakAtomicityInfo = 
-        ( weakAtomicityInvariant p
-        , weakAtomicityLocale p
-        , text "where" <-> doubleQuotes (text (weakAtomicityLocale p) <-> 
-            text "= weakly_atomic")
-        )
-      typingInfo conf =
-        ( name
-        , typingLocale name
-        , text "where \"" <> text name <-> text "= mk_typing" $$
-            nest 2 (pure $ isar conf typ) <> char '"'
-        ) 
 
   prettyTheoryDef name body =
     text "theory" <-> doubleQuotes (text name) $-$
@@ -620,7 +591,7 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
   -- proof output
   ensureProofMode _ = emptyDoc
   withFactsMode _   = id
-  prettyTrivial _ reason = case reason of
+  prettyTrivial reason = case reason of
     TrivPremisesImplyConclusion -> text "tautology"
     TrivLongTermKeySecrecy key  -> 
       text "contradicts secrecy of" <-> pure (sptMessage key)
@@ -653,8 +624,8 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
     []  -> kwQED
     _   -> kwQED <-> parens (int (length trivCases) <-> text "trivial")
 
-  prettyTypeCheckInduction _ _ _ = (kwProof, id, kwQED)
-  prettyTypingCase _ _ name _ = kwCase <-> text name
+  prettyTypeCheckInduction _ = (kwProof, id, kwQED)
+  prettyTypingCase _ name = kwCase <-> text name
 
   -- equality splitting
   prettySplitEqCase name = text "case" <-> text name

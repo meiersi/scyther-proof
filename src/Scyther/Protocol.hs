@@ -38,8 +38,6 @@ module Scyther.Protocol (
   , lookupRole
   , stateLocale
   , restrictedStateLocale
-  , weakAtomicityLocale
-  , weakAtomicityInvariant
   , labelOrd
   , protoOrd
 
@@ -306,14 +304,6 @@ stateLocale proto = protoName proto ++ "_state"
 -- the theory.
 restrictedStateLocale :: Protocol -> String
 restrictedStateLocale proto = "restricted_" ++ protoName proto ++ "_state"
-
--- | The name of the weak atomicity type invariant of the given protocol.
-weakAtomicityInvariant :: Protocol -> String
-weakAtomicityInvariant proto = "atomic_" ++ protoName proto
-
--- | The name of the locale assuming weak atomicity of the given protocol.
-weakAtomicityLocale :: Protocol -> String
-weakAtomicityLocale proto = "atomic_" ++ stateLocale proto
 
 -- | Pretty print a rolestep in ISAR format. If a role is given, then the label
 -- of the role step in this role is used to abbreviate the step name.

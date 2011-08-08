@@ -67,18 +67,18 @@ changePrem f se = do
 
 
 -- | The named list of sequents which need to be proven in order to prove that
--- the given protocol is well typed or weakly-atomic
+-- the given protocol is well typed
 --
 -- PRE: The conclusion of the sequent must be typing atom.
 --
 -- Uses 'fail' for error reporting.
 wellTypedCases :: MonadPlus m => Sequent -> m [(String, Sequent)]
 wellTypedCases se = case seConcl se of
-  FAtom (ATyping someTyp) -> 
-      return $ protoRoles (seProto se) >>= roleProofs someTyp
+  FAtom (ATyping typ) -> 
+      return $ protoRoles (seProto se) >>= roleProofs typ
   _ -> mzero
   where
-  roleProofs someTyp role = proveRecvs S.empty (roleSteps role)
+  roleProofs typ role = proveRecvs S.empty (roleSteps role)
     where
     proveRecvs _ [] = []
     proveRecvs recv (      Send _ _       : steps) = proveRecvs recv steps
@@ -102,12 +102,10 @@ wellTypedCases se = case seConcl se of
         premErr = error $ "wellTypedCases: could not add thread " ++ show tid ++ ". This should not happen."
         prem1 = maybe premErr saturateFacts . join $ 
           conjoinAtoms [AEv (Step tid step), AEq (E.TIDRoleEq (tid, role))] prem0
-        prem = fromMaybe (error "failed to set typing") $ setTyping someTyp prem1
+        prem = fromMaybe (error "failed to set typing") $ setTyping typ prem1
         concl = FAtom $ 
-          case someTyp of
-            WeaklyAtomic  -> AHasType mv Nothing
-            Typing typ -> case M.lookup (v, role) typ of
-              Just ty -> AHasType mv (Just ty)
+            case M.lookup (v, role) typ of
+              Just ty -> AHasType mv ty
               Nothing -> error $ 
                 "wellTypedCases: no type given for '"++show v++"' in role '"++roleName role++"'"
 

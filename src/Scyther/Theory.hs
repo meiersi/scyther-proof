@@ -236,7 +236,7 @@ composeParallel thy
     (typs, items2) = partitionEithers $ do
         item <- items1 
         case item of
-            ThySequent (_, Sequent _ (FAtom (ATyping (Typing typ))))
+            ThySequent (_, Sequent _ (FAtom (ATyping typ)))
               -> return $ Left typ
             ThySequent x -> return $ Right $ ThySequent $ prefixProtoName (seProto $ snd x) x
             ThyTheorem x -> return $ Right $ ThyTheorem $ prefixProtoName (thmProto x) x
@@ -251,7 +251,7 @@ composeParallel thy
     namec = thyName thy
     pc    = Protocol namec (concatMap protoRoles ps)
     sec   = ( namec ++ "_composed_typing"
-            , Sequent (empty pc) (FAtom (ATyping (Typing (M.unions typs))))
+            , Sequent (empty pc) (FAtom (ATyping (M.unions typs)))
             )
 
     replaceProtocol :: Protocol -> Protocol

@@ -4,16 +4,14 @@
 module Scyther.Typing (
   -- * Data types
     Type(..)
-  , Typing(..)
+  , Typing
 
   -- ** Construction typings
   , mscTyping
 
   -- ** Pretty Printing
   , isaType
-  , isaOptType
   , sptType
-  , sptOptType
   , sptTyping
 ) where
 
@@ -46,10 +44,7 @@ data Type =
   deriving( Eq, Ord, Show, Data, Typeable )
 
 -- | A type assignment for variables of several roles.
-data Typing = 
-    WeaklyAtomic
-  | Typing (M.Map (Id, Role) Type)
-  deriving( Eq, Ord, Show, Data, Typeable )
+type Typing = M.Map (Id, Role) Type
 
 -- | Compute a typing from the message sequence chart of the protocol
 -- implicitly given by the corresponding labels.
@@ -57,7 +52,7 @@ data Typing =
 -- FIXME: This is quite a hack and could be done much better: do it!
 mscTyping :: Protocol -> Maybe Typing
 mscTyping proto = 
-    fmap Typing $ (`execStateT` M.empty) $ foldM typeStep E.empty steps
+    (`execStateT` M.empty) $ foldM typeStep E.empty steps
   where
     roleeqs = M.fromList $ zip [1..] (protoRoles proto)
     rolemap = M.fromList $ zip (protoRoles proto) [1..]
@@ -132,11 +127,6 @@ isaType conf optRole = go
     KnownT step   -> parens $ text "KnownT" <-> isaRoleStep conf optRole step
     SumT ty1 ty2  -> parens $ text "SumT" <-> go ty1 <-> go ty2
 
--- | Pretty print a type that may be a weak atomicity type.
-isaOptType :: IsarConf -> Maybe Role -> Maybe Type -> Doc
-isaOptType _    _       Nothing   = text "weakly_atomic"
-isaOptType conf optRole (Just ty) = isaType conf optRole ty
-
 -- | Pretty print a type in security protocol theory format. If the role is
 -- given then the type describes a variable of this role. The steps of this
 -- role are abbreviated accordingly.
@@ -156,16 +146,8 @@ sptType optRole = go
     KnownT step   -> text "Known" <> parens (sptRoleStep optRole step)
     SumT ty1 ty2  -> parens (sep [go ty1 <-> text "|", go ty2])
 
--- | Pretty print a type that may be a weak atomicity type in the security
--- protocol theory format.
-sptOptType :: Maybe Role -> Maybe Type -> Doc
-sptOptType _       Nothing   = text "weakly-atomic"
-sptOptType optRole (Just ty) = sptType optRole ty
-
-
 sptTyping :: Typing -> Doc
-sptTyping WeaklyAtomic = text "weakly-atomic"
-sptTyping (Typing typ) = vcat . map ppTyEq . M.toList $ typ
+sptTyping = vcat . map ppTyEq . M.toList 
   where
     ppTyEq ((v,role),ty) = 
       sep [ text $ getId v ++ "@" ++ roleName role
@@ -175,12 +157,11 @@ instance Isar Type where
   isar conf = isaType conf Nothing
 
 instance Isar Typing where
-  isar _    WeaklyAtomic = text "weakly-atomic"
-  isar conf (Typing typ) = 
-    ($$ rbrack) . vcat . zipWith (<->) seps . map ppTyEq . M.toList $ typ
+  isar conf = 
+      ($$ rbrack) . vcat . zipWith (<->) seps . map ppTyEq . M.toList
     where
-    seps = map char $ '[' : repeat ','
-    ppTyEq ((v,role),ty) = parens $
-      sep [ parens (text (roleName role) <> comma <-> isar conf v) <> comma
-          , isaType conf (Just role) ty ]
+      seps = map char $ '[' : repeat ','
+      ppTyEq ((v,role),ty) = parens $
+        sep [ parens (text (roleName role) <> comma <-> isar conf v) <> comma
+            , isaType conf (Just role) ty ]
 
