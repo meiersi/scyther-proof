@@ -468,7 +468,7 @@ proof -
                s(MV ''Text1'' tid0)
             |}
             ( K ( s(MV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_1_udkey_B_1_Text1 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -479,7 +479,7 @@ proof -
                s(MV ''Text1'' tid0)
             |}
             ( K ( s(MV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_1_udkey_B_1_Text2 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -525,7 +525,7 @@ proof -
         Enc {| LC ''isoiec_9798_2_2_enc_2'', LN ''RB'' tid0, s(MV ''Text2'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_2_udkey_B_2_Text3 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -554,7 +554,7 @@ proof -
                s(MV ''Text3'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(AV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_3_udkey_A_2_Text3 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -565,7 +565,7 @@ proof -
                s(MV ''Text3'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(AV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_3_udkey_A_2_Text4 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -588,7 +588,7 @@ proof -
                s(MV ''Text1'' tid0)
             |}
             ( K ( s(MV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_3_udkey_B_1_Text1 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -599,7 +599,7 @@ proof -
                s(MV ''Text1'' tid0)
             |}
             ( K ( s(MV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_3_udkey_B_1_Text2 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -658,7 +658,7 @@ proof -
                s(MV ''Text4'' tid0)
             |}
             ( K ( s(MV ''B'' tid0) ) ( s(AV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_4_udkey_A_3_Text5 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -675,7 +675,7 @@ proof -
                s(MV ''Text2'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_4_udkey_B_2_Text2 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -686,7 +686,7 @@ proof -
                s(MV ''Text2'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_4_udkey_B_2_Text3 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -715,7 +715,7 @@ proof -
                s(MV ''Kab'' tid0), s(AV ''B'' tid0), s(MV ''Text3'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_5_udkey_A_2_Text3 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -726,7 +726,7 @@ proof -
                s(MV ''Kab'' tid0), s(AV ''B'' tid0), s(MV ''Text3'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_5_udkey_A_2_Text4 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -761,7 +761,7 @@ proof -
                s(AV ''A'' tid0), s(MV ''Text7'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_5_udkey_A_4_Text7 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -772,7 +772,7 @@ proof -
                s(AV ''A'' tid0), s(MV ''Text7'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_5_udkey_A_4_Text8 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -795,7 +795,7 @@ proof -
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_5_udkey_B_3_P t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -812,7 +812,7 @@ proof -
                s(AV ''B'' tid0), s(MV ''Text5'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_5_udkey_B_3_TNp t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -823,7 +823,7 @@ proof -
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_5_udkey_B_3_Text2 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -834,7 +834,7 @@ proof -
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_5_udkey_B_3_Text5 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -845,7 +845,7 @@ proof -
                s(AV ''B'' tid0), s(MV ''Text5'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_5_udkey_B_3_Text6 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -934,7 +934,7 @@ proof -
                s(MV ''Kab'' tid0), s(MV ''B'' tid0), s(MV ''Text4'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_6_udkey_A_3_Text4 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -945,7 +945,7 @@ proof -
                s(MV ''Kab'' tid0), s(MV ''B'' tid0), s(MV ''Text4'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_6_udkey_A_3_Text5 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -980,7 +980,7 @@ proof -
                s(MV ''Text8'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_6_udkey_A_5_Text9 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -997,7 +997,7 @@ proof -
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''Text3'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_6_udkey_B_4_P t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -1014,7 +1014,7 @@ proof -
                s(MV ''Text6'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_6_udkey_B_4_Text3 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -1025,7 +1025,7 @@ proof -
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''Text3'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_6_udkey_B_4_Text6 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
@@ -1036,7 +1036,7 @@ proof -
                s(MV ''Text6'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_2_6_udkey_B_4_Text7 t r s tid0) note facts = this
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s

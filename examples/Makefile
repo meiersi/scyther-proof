@@ -1,3 +1,13 @@
+# Checking standard examples.
+
+check-all: check-classic check-spore iso9798-generate-and-check-proofs iso9798-generate-and-check-parallel-proofs
+
+check-classic:
+	scyther-proof classic/*.spthy --shortest -Oclassic/isabelle-proofs --ASCII --isabelle
+
+check-spore:
+	scyther-proof spore/*.spthy --shortest -Ospore/isabelle-proofs --ASCII --isabelle
+
 
 # Generation, checking, and visualization of security proofs for the
 # authentication protocols from the ISO/IEC-9798 standard, as described in

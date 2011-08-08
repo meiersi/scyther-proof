@@ -507,7 +507,16 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_4_1_bdkey_A_1_hash tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    hence "Kbd ( s(AV ''B'' tid0) )
+               ( s(MV ''A'' tid0) ) = Kbd ( s(AV ''A'' tid1) ) ( s(AV ''B'' tid0) )"
+      by simp note facts = this facts
+    thus ?thesis proof(cases rule: Kbd_cases)
+      case noswap note_unified facts = this facts
+      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    next
+      case swapped note_unified facts = this facts
+      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    qed (fastsimp+)?
   qed (insert facts, fastsimp+)?
 qed
 
@@ -537,7 +546,16 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_4_2_bdkey_A_2_hash tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    hence "Kbd ( s(AV ''A'' tid1) )
+               ( s(AV ''B'' tid0) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) )"
+      by simp note facts = this facts
+    thus ?thesis proof(cases rule: Kbd_cases)
+      case noswap note_unified facts = this facts
+      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    next
+      case swapped note_unified facts = this facts
+      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    qed (fastsimp+)?
   qed (insert facts, fastsimp+)?
 qed
 
@@ -567,7 +585,16 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_4_3_bdkey_B_2_hash tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    hence "Kbd ( s(AV ''A'' tid0) )
+               ( s(AV ''B'' tid1) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) )"
+      by simp note facts = this facts
+    thus ?thesis proof(cases rule: Kbd_cases)
+      case noswap note_unified facts = this facts
+      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    next
+      case swapped note_unified facts = this facts
+      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    qed (fastsimp+)?
   qed (insert facts, fastsimp+)?
 qed
 
@@ -597,7 +624,16 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_4_3_bdkey_A_1_hash tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    hence "Kbd ( s(AV ''B'' tid0) )
+               ( s(MV ''A'' tid0) ) = Kbd ( s(AV ''A'' tid1) ) ( s(AV ''B'' tid0) )"
+      by simp note facts = this facts
+    thus ?thesis proof(cases rule: Kbd_cases)
+      case noswap note_unified facts = this facts
+      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    next
+      case swapped note_unified facts = this facts
+      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    qed (fastsimp+)?
   qed (insert facts, fastsimp+)?
 qed
 
@@ -686,7 +722,16 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_4_4_bdkey_A_2_hash tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    hence "Kbd ( s(AV ''A'' tid1) )
+               ( s(AV ''B'' tid0) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) )"
+      by simp note facts = this facts
+    thus ?thesis proof(cases rule: Kbd_cases)
+      case noswap note_unified facts = this facts
+      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    next
+      case swapped note_unified facts = this facts
+      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+    qed (fastsimp+)?
   qed (insert facts, fastsimp+)?
 qed
 

@@ -1302,7 +1302,7 @@ proof -
                    ( inv(s(MV ''pkB'' tid0)) )
             |}
             ( LN ''check_nonce_4'' tid0 ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_3_6_1_A_text_5_Text8 t r s tid0) note facts = this
     then interpret state: isoiec_9798_3_6_1_msc_typing_state t r s
@@ -1834,7 +1834,7 @@ proof -
                    ( inv(s(MV ''pkB'' tid0)) )
             |}
             ( LN ''check_nonce_4'' tid0 ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_3_6_2_A_check_4_in_Text5 t r s tid0) note facts = this
     then interpret state: isoiec_9798_3_6_2_msc_typing_state t r s
@@ -1861,7 +1861,7 @@ proof -
                    ( inv(s(MV ''pkB'' tid0)) )
             |}
             ( LN ''check_nonce_4'' tid0 ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_3_6_2_A_check_4_in_pkA t r s tid0) note facts = this
     then interpret state: isoiec_9798_3_6_2_msc_typing_state t r s
@@ -1888,7 +1888,7 @@ proof -
                    ( inv(s(MV ''pkB'' tid0)) )
             |}
             ( LN ''check_nonce_4'' tid0 ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_3_6_2_A_text_5_Text8 t r s tid0) note facts = this
     then interpret state: isoiec_9798_3_6_2_msc_typing_state t r s
@@ -2935,7 +2935,7 @@ proof -
                    ( SK ( s(AV ''T'' tid0) ) )
             |}
             ( LN ''check_nonce_4'' tid0 ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_3_7_2_A_check_3_in_pkA t r s tid0) note facts = this
     then interpret state: isoiec_9798_3_7_2_msc_typing_state t r s
@@ -2954,7 +2954,7 @@ proof -
                    ( SK ( s(AV ''T'' tid0) ) )
             |}
             ( LN ''check_nonce_4'' tid0 ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (isoiec_9798_3_7_2_A_text_4_Text6 t r s tid0) note facts = this
     then interpret state: isoiec_9798_3_7_2_msc_typing_state t r s
