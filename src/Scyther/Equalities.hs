@@ -385,13 +385,12 @@ solve ueqs eqs =
 solveRepeated :: Monad m => [AnyEq] -> Equalities -> Bool -> m (Equalities, Bool)
 solveRepeated [] eqs False = return (eqs, False)
 solveRepeated [] eqs True  = 
-    solveRepeated (map MsgEq $ getPostEqs eqs) eqs False
+    solveRepeated (map MsgEq $ getPostEqs eqs) (eqs { postEqs = U.empty }) False
 solveRepeated (ueq:ueqs) eqs improved = do
     (ueqs', eqs', improved') <- solve1 ueq eqs
     solveRepeated (ueqs ++ ueqs') (normPostEqs eqs') (improved || improved')
 
--- | Solve a single unification equation. Equalities are only return when
--- changed.
+-- | Solve a single unification equation.
 solve1 :: Monad m => AnyEq -> Equalities -> m ([AnyEq], Equalities, Bool)
 solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) = 
  -- trace ("solve1: " ++ show (sptAnyEq ueq)) $
@@ -480,7 +479,6 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
       (MArbMsg aid1, rhs) -> newEqs [ArbMsgEq (aid1, rhs)]
       (lhs, MArbMsg aid2) -> newEqs [ArbMsgEq (aid2, lhs)]
 
-      -- TODO: Also exploit typing assumptions, if required.
       (MInvKey x,  MInvKey y ) -> newEqs [MsgEq (x, y)]
       (MInvKey x,  MAsymPK m1) -> newEqs [MsgEq (x, MAsymSK m1)]
       (MAsymPK m1, MInvKey x ) -> newEqs [MsgEq (x, MAsymSK m1)]
