@@ -178,16 +178,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_1_bdkey_A_1_enc tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''B'' tid0) )
-               ( s(MV ''A'' tid0) ) = Kbd ( s(AV ''A'' tid1) ) ( s(AV ''B'' tid0) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -371,16 +362,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_2_bdkey_A_2_enc tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''A'' tid1) )
-               ( s(AV ''B'' tid0) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -623,16 +605,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_3_bdkey_B_2_enc tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''A'' tid0) )
-               ( s(AV ''B'' tid1) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -662,16 +635,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_3_bdkey_A_1_enc tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''B'' tid0) )
-               ( s(MV ''A'' tid0) ) = Kbd ( s(AV ''A'' tid1) ) ( s(AV ''B'' tid0) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -978,16 +942,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_4_bdkey_A_2_enc tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''A'' tid1) )
-               ( s(AV ''B'' tid0) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -1427,16 +1382,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_5_bdkey_P_2_enc tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''A'' tid0) )
-               ( s(AV ''P'' tid1) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -1461,16 +1407,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_5_bdkey_P_2_enc_1 tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''B'' tid0) )
-               ( s(MV ''P'' tid0) ) = Kbd ( s(AV ''B'' tid0) ) ( s(AV ''P'' tid1) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -1495,83 +1432,54 @@ lemma (in restricted_isoiec_9798_2_5_bdkey_state) A_non_injective_agreement_B:
 proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_2_5_enc_4'', s(MV ''TNb'' tid0),
-                          s(AV ''A'' tid0), s(MV ''Text7'' tid0)
+                   Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid0,
+                          s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(AV ''B'' tid0),
+                          s(MV ''Text3'' tid0)
                        |}
-                       ( s(MV ''Kab'' tid0) ) ")
+                       ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: A_secret_Kab intro: event_predOrdI)
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
-    case (isoiec_9798_2_5_bdkey_B_4_enc tid1) note_unified facts = this facts
+    case (isoiec_9798_2_5_bdkey_P_2_enc tid1) note_unified facts = this facts
     thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_2_5_enc_3'', s(MV ''TNa'' tid1),
-                            s(AV ''B'' tid1), s(MV ''Text5'' tid1)
+                     Enc {| LC ''isoiec_9798_2_5_enc_4'', s(MV ''TNb'' tid0),
+                            s(AV ''A'' tid0), s(MV ''Text7'' tid0)
                          |}
-                         ( s(MV ''Kab'' tid0) ) ")
+                         ( LN ''Kab'' tid1 ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: A_secret_Kab intro: event_predOrdI)
+      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
     next
-      case (isoiec_9798_2_5_bdkey_A_3_enc tid2) note_unified facts = this facts
+      case (isoiec_9798_2_5_bdkey_B_4_enc tid2) note_unified facts = this facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid0,
-                              s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(AV ''B'' tid0),
-                              s(MV ''Text3'' tid0)
+                       Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid2),
+                              LN ''Kab'' tid1, s(AV ''A'' tid0), s(AV ''B'' tid2), s(MV ''Text2'' tid2)
                            |}
-                           ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
+                           ( Kbd ( s(AV ''B'' tid2) ) ( s(MV ''P'' tid2) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
       next
-        case (isoiec_9798_2_5_bdkey_P_2_enc tid3) note_unified facts = this facts
-        hence "Kbd ( s(AV ''A'' tid0) )
-                   ( s(AV ''P'' tid3) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) )"
-          by simp note facts = this facts
-        thus ?thesis proof(cases rule: Kbd_cases)
-          case noswap note_unified facts = this facts
-          thus ?thesis proof(sources! "
-                           Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid2, LN ''Kab'' tid3,
-                                  s(AV ''A'' tid2), s(AV ''B'' tid1), s(MV ''Text3'' tid2)
-                               |}
-                               ( Kbd ( s(AV ''A'' tid2) ) ( s(AV ''P'' tid2) ) ) ")
-            case fake note_unified facts = this facts
-            thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-          next
-            case (isoiec_9798_2_5_bdkey_P_2_enc tid4) note_unified facts = this facts
-            thus ?thesis proof(sources! "
-                             Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid1),
-                                    LN ''Kab'' tid3, s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Text2'' tid1)
-                                 |}
-                                 ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid1) ) ) ")
-              case fake note_unified facts = this facts
-              thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-            next
-              case (isoiec_9798_2_5_bdkey_P_2_enc_1 tid4) note_unified facts = this facts
-              thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-            qed (insert facts, fastsimp+)?
-          qed (insert facts, fastsimp+)?
+        case (isoiec_9798_2_5_bdkey_P_2_enc_1 tid3) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_2_5_enc_3'', s(MV ''TNa'' tid2),
+                                s(AV ''B'' tid0), s(MV ''Text5'' tid2)
+                             |}
+                             ( LN ''Kab'' tid1 ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
         next
-          case swapped note_unified facts = this facts
+          case (isoiec_9798_2_5_bdkey_A_3_enc tid3) note_unified facts = this facts
           thus ?thesis proof(sources! "
-                           Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid2, LN ''Kab'' tid3,
-                                  s(AV ''A'' tid2), s(AV ''B'' tid1), s(MV ''Text3'' tid2)
+                           Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid3, LN ''Kab'' tid1,
+                                  s(AV ''A'' tid3), s(AV ''B'' tid0), s(MV ''Text3'' tid3)
                                |}
-                               ( Kbd ( s(AV ''A'' tid2) ) ( s(AV ''P'' tid2) ) ) ")
+                               ( Kbd ( s(AV ''A'' tid3) ) ( s(AV ''P'' tid3) ) ) ")
             case fake note_unified facts = this facts
             thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
           next
             case (isoiec_9798_2_5_bdkey_P_2_enc tid4) note_unified facts = this facts
-            thus ?thesis proof(sources! "
-                             Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid1),
-                                    LN ''Kab'' tid3, s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Text2'' tid1)
-                                 |}
-                                 ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid1) ) ) ")
-              case fake note_unified facts = this facts
-              thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-            next
-              case (isoiec_9798_2_5_bdkey_P_2_enc_1 tid4) note_unified facts = this facts
-              thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-            qed (insert facts, fastsimp+)?
+            thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
           qed (insert facts, fastsimp+)?
-        qed (fastsimp+)?
+        qed (insert facts, fastsimp+)?
       qed (insert facts, fastsimp+)?
     qed (insert facts, fastsimp+)?
   qed (insert facts, fastsimp+)?
@@ -1596,72 +1504,35 @@ lemma (in restricted_isoiec_9798_2_5_bdkey_state) B_non_injective_agreement_A:
 proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_2_5_enc_3'', s(MV ''TNa'' tid0),
-                          s(AV ''B'' tid0), s(MV ''Text5'' tid0)
+                   Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid0),
+                          s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(AV ''B'' tid0),
+                          s(MV ''Text2'' tid0)
                        |}
-                       ( s(MV ''Kab'' tid0) ) ")
+                       ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: B_secret_Kab intro: event_predOrdI)
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
-    case (isoiec_9798_2_5_bdkey_A_3_enc tid1) note_unified facts = this facts
+    case (isoiec_9798_2_5_bdkey_P_2_enc_1 tid1) note_unified facts = this facts
     thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid0),
-                            s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(AV ''B'' tid0),
-                            s(MV ''Text2'' tid0)
+                     Enc {| LC ''isoiec_9798_2_5_enc_3'', s(MV ''TNa'' tid0),
+                            s(AV ''B'' tid0), s(MV ''Text5'' tid0)
                          |}
-                         ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
+                         ( LN ''Kab'' tid1 ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
     next
-      case (isoiec_9798_2_5_bdkey_P_2_enc_1 tid2) note_unified facts = this facts
-      hence "Kbd ( s(AV ''B'' tid0) )
-                 ( s(MV ''P'' tid0) ) = Kbd ( s(AV ''B'' tid0) ) ( s(AV ''P'' tid2) )"
-        by simp note facts = this facts
-      thus ?thesis proof(cases rule: Kbd_cases)
-        case noswap note_unified facts = this facts
-        thus ?thesis proof(sources! "
-                         Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid1, LN ''Kab'' tid2,
-                                s(AV ''A'' tid1), s(AV ''B'' tid0), s(MV ''Text3'' tid1)
-                             |}
-                             ( Kbd ( s(AV ''A'' tid1) ) ( s(AV ''P'' tid1) ) ) ")
-          case fake note_unified facts = this facts
-          thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-        next
-          case (isoiec_9798_2_5_bdkey_P_2_enc tid3) note_unified facts = this facts
-          hence "Kbd ( s(AV ''A'' tid1) )
-                     ( s(AV ''P'' tid2) ) = Kbd ( s(AV ''A'' tid1) ) ( s(AV ''P'' tid1) )"
-            by simp note facts = this facts
-          thus ?thesis proof(cases rule: Kbd_cases)
-            case noswap note_unified facts = this facts
-            thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-          next
-            case swapped note_unified facts = this facts
-            thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-          qed (fastsimp+)?
-        qed (insert facts, fastsimp+)?
+      case (isoiec_9798_2_5_bdkey_A_3_enc tid2) note_unified facts = this facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid2, LN ''Kab'' tid1,
+                              s(AV ''A'' tid2), s(AV ''B'' tid0), s(MV ''Text3'' tid2)
+                           |}
+                           ( Kbd ( s(AV ''A'' tid2) ) ( s(AV ''P'' tid2) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
       next
-        case swapped note_unified facts = this facts
-        thus ?thesis proof(sources! "
-                         Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid1, LN ''Kab'' tid2,
-                                s(AV ''A'' tid1), s(AV ''B'' tid0), s(MV ''Text3'' tid1)
-                             |}
-                             ( Kbd ( s(AV ''A'' tid1) ) ( s(AV ''P'' tid1) ) ) ")
-          case fake note_unified facts = this facts
-          thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-        next
-          case (isoiec_9798_2_5_bdkey_P_2_enc tid3) note_unified facts = this facts
-          hence "Kbd ( s(AV ''A'' tid1) )
-                     ( s(AV ''P'' tid1) ) = Kbd ( s(AV ''A'' tid1) ) ( s(AV ''B'' tid0) )"
-            by simp note facts = this facts
-          thus ?thesis proof(cases rule: Kbd_cases)
-            case noswap note_unified facts = this facts
-            thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-          next
-            case swapped note_unified facts = this facts
-            thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-          qed (fastsimp+)?
-        qed (insert facts, fastsimp+)?
-      qed (fastsimp+)?
+        case (isoiec_9798_2_5_bdkey_P_2_enc tid3) note_unified facts = this facts
+        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastsimp+)?
     qed (insert facts, fastsimp+)?
   qed (insert facts, fastsimp+)?
 qed
@@ -1694,16 +1565,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_5_bdkey_P_2_enc tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''A'' tid0) )
-               ( s(AV ''P'' tid1) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -1735,16 +1597,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_5_bdkey_P_2_enc_1 tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''B'' tid0) )
-               ( s(MV ''P'' tid0) ) = Kbd ( s(AV ''B'' tid0) ) ( s(AV ''P'' tid1) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -2180,16 +2033,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_6_bdkey_P_3_enc tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''A'' tid0) )
-               ( s(AV ''P'' tid1) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -2214,16 +2058,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_6_bdkey_P_3_enc_1 tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''B'' tid0) )
-               ( s(MV ''P'' tid0) ) = Kbd ( s(AV ''B'' tid0) ) ( s(AV ''P'' tid1) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -2248,81 +2083,44 @@ lemma (in restricted_isoiec_9798_2_6_bdkey_state) A_non_injective_agreement_B:
 proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_2_6_enc_5'', s(MV ''Rb'' tid0), LN ''Rpa'' tid0,
-                          s(MV ''Text8'' tid0)
+                   Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid0,
+                          s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''B'' tid0),
+                          s(MV ''Text4'' tid0)
                        |}
-                       ( s(MV ''Kab'' tid0) ) ")
+                       ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: A_secret_Kab intro: event_predOrdI)
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
-    case (isoiec_9798_2_6_bdkey_B_5_enc tid1) note_unified facts = this facts
+    case (isoiec_9798_2_6_bdkey_P_3_enc tid1) note_unified facts = this facts
     thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_2_6_enc_4'', LN ''Rpa'' tid0, LN ''Rb'' tid1,
-                            s(MV ''Text6'' tid1)
+                     Enc {| LC ''isoiec_9798_2_6_enc_5'', s(MV ''Rb'' tid0), LN ''Rpa'' tid0,
+                            s(MV ''Text8'' tid0)
                          |}
-                         ( s(MV ''Kab'' tid0) ) ")
+                         ( LN ''Kab'' tid1 ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: A_secret_Kab intro: event_predOrdI)
+      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
     next
-      case (isoiec_9798_2_6_bdkey_A_4_enc tid2) note_unified facts = this facts
+      case (isoiec_9798_2_6_bdkey_B_5_enc tid2) note_unified facts = this facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid0,
-                              s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''B'' tid0),
-                              s(MV ''Text4'' tid0)
+                       Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid2, LN ''Kab'' tid1,
+                              s(AV ''A'' tid2), s(AV ''B'' tid2), s(MV ''Text3'' tid2)
                            |}
-                           ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
+                           ( Kbd ( s(AV ''B'' tid2) ) ( s(MV ''P'' tid2) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
       next
-        case (isoiec_9798_2_6_bdkey_P_3_enc tid2) note_unified facts = this facts
-        hence "Kbd ( s(AV ''A'' tid0) )
-                   ( s(AV ''P'' tid2) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) )"
-          by simp note facts = this facts
-        thus ?thesis proof(cases rule: Kbd_cases)
-          case noswap note_unified facts = this facts
-          thus ?thesis proof(sources! "
-                           Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid1, LN ''Kab'' tid2,
-                                  s(AV ''A'' tid1), s(AV ''B'' tid1), s(MV ''Text3'' tid1)
-                               |}
-                               ( Kbd ( s(AV ''B'' tid1) ) ( s(MV ''P'' tid1) ) ) ")
-            case fake note_unified facts = this facts
-            thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-          next
-            case (isoiec_9798_2_6_bdkey_P_3_enc_1 tid3) note_unified facts = this facts
-            hence "Kbd ( s(AV ''B'' tid1) )
-                       ( s(MV ''P'' tid1) ) = Kbd ( s(AV ''B'' tid1) ) ( s(AV ''P'' tid0) )"
-              by simp note facts = this facts
-            thus ?thesis proof(cases rule: Kbd_cases)
-              case noswap note_unified facts = this facts
-              thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-            next
-              case swapped note_unified facts = this facts
-              thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-            qed (fastsimp+)?
-          qed (insert facts, fastsimp+)?
+        case (isoiec_9798_2_6_bdkey_P_3_enc_1 tid3) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_2_6_enc_4'', LN ''Rpa'' tid0, LN ''Rb'' tid2,
+                                s(MV ''Text6'' tid2)
+                             |}
+                             ( LN ''Kab'' tid1 ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
         next
-          case swapped note_unified facts = this facts
-          thus ?thesis proof(sources! "
-                           Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid1, LN ''Kab'' tid2,
-                                  s(AV ''A'' tid1), s(AV ''B'' tid1), s(MV ''Text3'' tid1)
-                               |}
-                               ( Kbd ( s(AV ''B'' tid1) ) ( s(MV ''P'' tid1) ) ) ")
-            case fake note_unified facts = this facts
-            thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-          next
-            case (isoiec_9798_2_6_bdkey_P_3_enc_1 tid3) note_unified facts = this facts
-            hence "Kbd ( s(AV ''B'' tid1) )
-                       ( s(MV ''P'' tid1) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid1) )"
-              by simp note facts = this facts
-            thus ?thesis proof(cases rule: Kbd_cases)
-              case noswap note_unified facts = this facts
-              thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-            next
-              case swapped note_unified facts = this facts
-              thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-            qed (fastsimp+)?
-          qed (insert facts, fastsimp+)?
-        qed (fastsimp+)?
+          case (isoiec_9798_2_6_bdkey_A_4_enc tid3) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
       qed (insert facts, fastsimp+)?
     qed (insert facts, fastsimp+)?
   qed (insert facts, fastsimp+)?
@@ -2349,72 +2147,35 @@ lemma (in restricted_isoiec_9798_2_6_bdkey_state) B_non_injective_agreement_A:
 proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_2_6_enc_4'', s(MV ''Rpa'' tid0), LN ''Rb'' tid0,
-                          s(MV ''Text6'' tid0)
+                   Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid0,
+                          s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(AV ''B'' tid0),
+                          s(MV ''Text3'' tid0)
                        |}
-                       ( s(MV ''Kab'' tid0) ) ")
+                       ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: B_secret_Kab intro: event_predOrdI)
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
-    case (isoiec_9798_2_6_bdkey_A_4_enc tid1) note_unified facts = this facts
+    case (isoiec_9798_2_6_bdkey_P_3_enc_1 tid1) note_unified facts = this facts
     thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid0,
-                            s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(AV ''B'' tid0),
-                            s(MV ''Text3'' tid0)
+                     Enc {| LC ''isoiec_9798_2_6_enc_4'', s(MV ''Rpa'' tid0), LN ''Rb'' tid0,
+                            s(MV ''Text6'' tid0)
                          |}
-                         ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
+                         ( LN ''Kab'' tid1 ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
     next
-      case (isoiec_9798_2_6_bdkey_P_3_enc_1 tid2) note_unified facts = this facts
-      hence "Kbd ( s(AV ''B'' tid0) )
-                 ( s(MV ''P'' tid0) ) = Kbd ( s(AV ''B'' tid0) ) ( s(AV ''P'' tid2) )"
-        by simp note facts = this facts
-      thus ?thesis proof(cases rule: Kbd_cases)
-        case noswap note_unified facts = this facts
-        thus ?thesis proof(sources! "
-                         Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid1, LN ''Kab'' tid2,
-                                s(AV ''A'' tid1), s(MV ''B'' tid1), s(MV ''Text4'' tid1)
-                             |}
-                             ( Kbd ( s(AV ''A'' tid1) ) ( s(AV ''P'' tid1) ) ) ")
-          case fake note_unified facts = this facts
-          thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-        next
-          case (isoiec_9798_2_6_bdkey_P_3_enc tid3) note_unified facts = this facts
-          hence "Kbd ( s(AV ''A'' tid0) )
-                     ( s(AV ''P'' tid2) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid1) )"
-            by simp note facts = this facts
-          thus ?thesis proof(cases rule: Kbd_cases)
-            case noswap note_unified facts = this facts
-            thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-          next
-            case swapped note_unified facts = this facts
-            thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-          qed (fastsimp+)?
-        qed (insert facts, fastsimp+)?
+      case (isoiec_9798_2_6_bdkey_A_4_enc tid2) note_unified facts = this facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid2, LN ''Kab'' tid1,
+                              s(AV ''A'' tid2), s(MV ''B'' tid2), s(MV ''Text4'' tid2)
+                           |}
+                           ( Kbd ( s(AV ''A'' tid2) ) ( s(AV ''P'' tid2) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
       next
-        case swapped note_unified facts = this facts
-        thus ?thesis proof(sources! "
-                         Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid1, LN ''Kab'' tid2,
-                                s(AV ''A'' tid1), s(MV ''B'' tid1), s(MV ''Text4'' tid1)
-                             |}
-                             ( Kbd ( s(AV ''A'' tid1) ) ( s(AV ''P'' tid1) ) ) ")
-          case fake note_unified facts = this facts
-          thus ?thesis by (fastsimp dest: P_secret_Kab intro: event_predOrdI)
-        next
-          case (isoiec_9798_2_6_bdkey_P_3_enc tid3) note_unified facts = this facts
-          hence "Kbd ( s(AV ''A'' tid0) )
-                     ( s(AV ''P'' tid1) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) )"
-            by simp note facts = this facts
-          thus ?thesis proof(cases rule: Kbd_cases)
-            case noswap note_unified facts = this facts
-            thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-          next
-            case swapped note_unified facts = this facts
-            thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-          qed (fastsimp+)?
-        qed (insert facts, fastsimp+)?
-      qed (fastsimp+)?
+        case (isoiec_9798_2_6_bdkey_P_3_enc tid3) note_unified facts = this facts
+        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastsimp+)?
     qed (insert facts, fastsimp+)?
   qed (insert facts, fastsimp+)?
 qed
@@ -2447,16 +2208,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_6_bdkey_P_3_enc tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''A'' tid0) )
-               ( s(AV ''P'' tid1) ) = Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
   qed (insert facts, fastsimp+)?
 qed
 
@@ -2488,16 +2240,7 @@ proof -
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_6_bdkey_P_3_enc_1 tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''B'' tid0) )
-               ( s(MV ''P'' tid0) ) = Kbd ( s(AV ''B'' tid0) ) ( s(AV ''P'' tid1) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (fastsimp+)?
+    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
   qed (insert facts, fastsimp+)?
 qed
 
