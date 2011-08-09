@@ -96,11 +96,6 @@ property (of Kerberos) Kerberos_typing:
 
 subsection{* Secrecy Properties *}
 
-/*
-/* FIXME: scyther-proof exhibits a bug on this example: it discards types that contain
-          KnownT without alternative immediatly. This is wrong and part of the cause of
-          the problem with Amended NS.
-
 properties (of Kerberos)
   A_AuthKey_secret: secret(A, -, AuthKey, {C,A,G})
   C_AuthKey_secret: secret(C, 2, AuthKey, {C,A,G})
@@ -175,7 +170,7 @@ property (of Kerberos) G_auth:
      G#1 = G#2 &
      AuthKey#1 = AuthKey#2
     "
-*/
+
 /*
 text{*
   Here we can only formulate a weaker authentication property because the
@@ -228,7 +223,6 @@ property (of Kerberos) S_auth:
     "
 */
 
-*/
 
 end
 
