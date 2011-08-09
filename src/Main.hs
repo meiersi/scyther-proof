@@ -193,6 +193,9 @@ setupMainMode = do
                   "Number of parellel threads to be used for proof checking. \
                   \(The default is to use as many threads as there are cores.)"
 
+              , flagNone ["rebuild-logic"] (addEmpty "rebuildLogic")
+                  "Rebuild the ESPL logic image (required after updating its source)"
+
               , flagNone ["no-generation"] (addEmpty "noGeneration")
                   "Do not generate the theory files, but check the results using Isabelle."
 
@@ -291,11 +294,12 @@ translateWorker :: Arguments
                 -> MVar (T.Table String) -- ^ Empty MVar for building the report.
                 -> IO ()
 translateWorker as templateFile reportVar
-  | null inFiles = errHelpExit "no input iles given"
-  | otherwise    = do
+  | null inFiles && not rebuildLogic = errHelpExit "no input iles given"
+  | otherwise                        = do
       -- check required tools
       when (not dryRun && html)     (ensureGraphVizDot dotTool)
-      when (not dryRun && isabelle) (ensureIsabelleESPL isabelleTool)
+      when (rebuildLogic || (not dryRun && isabelle)) 
+          (ensureIsabelleESPL rebuildLogic isabelleTool)
       
       -- translate all input files and ensure report is written with a special
       -- interrupted marker when an exception like Ctrl-C happened
@@ -306,8 +310,9 @@ translateWorker as templateFile reportVar
           (sequence_ . intersperse reportNewRow $ map translateOneFile inFiles )
       putInfoLn ""
   where
-    -- Tool paths
+    -- Tool paths and flags
     -----------------------
+    rebuildLogic = argExists "rebuildLogic" as
     isabelleTool = fromMaybe "isabelle" $ findArg "isabelle" as
     dotTool      = fromMaybe "dot"      $ findArg "html" as
 
@@ -765,13 +770,16 @@ ensureGraphVizDot dot = do
 
 -- | Ensure a suitable version of the Isabelle/HOL 'isabelle' tool is installed
 -- and the 'ESPL' head is compiled.
-ensureIsabelleESPL :: FilePath -- ^ Path to the 'isabelle' tool.
-                  -> IO ()
-ensureIsabelleESPL isabelle = do
+ensureIsabelleESPL :: Bool     -- ^ True if logic must rebuilt anyways.
+                   -> FilePath -- ^ Path to the 'isabelle' tool.
+                   -> IO ()
+ensureIsabelleESPL rebuild isabelle = do
     putStrLn $ "checking suitability of Isabelle tool: '" ++ isabelle ++ "'"
     _ <- testProcess checkVersion " version: " isabelle ["version"] ""
     success <- testProcess checkLogics " installed logics: " isabelle ["findlogics"] ""
-    unless success buildESPL
+    if success && not rebuild
+      then putStrLn " (use the flag --rebuild-logic if your image of ESPL is outdated)"
+      else buildESPL
     putStrLn ""
   where
     checkVersion out _
@@ -789,12 +797,15 @@ ensureIsabelleESPL isabelle = do
       | "ESPL" `isInfixOf` out = Right $ init out ++ ". OK."
       | otherwise              = Left  $ init out ++ ". WARNING: ESPL logic not installed."
 
+
     buildESPL = do
       putStrLn "---"
       putStrLn "Attempting to build ESPL logic (this may take several minutes):"
       theoryDir <- esplTheoryDir
-      hProc <- runProcess isabelle ["make"] (Just theoryDir) Nothing Nothing Nothing Nothing
-      exitCode <- waitForProcess hProc
+      let isamake args = 
+            runProcess isabelle ("make" :args) (Just theoryDir) Nothing Nothing Nothing Nothing
+              >>= waitForProcess
+      exitCode <- isamake ["clean"] >> isamake []
       case exitCode of
         ExitSuccess -> putStrLn "Sucess! :-)\n---"
         ExitFailure code -> putStrLn $ unlines 
