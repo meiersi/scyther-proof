@@ -4,6 +4,7 @@
 module Scyther.Typing (
   -- * Type
     Type(..)
+  , normType
 
   -- ** Type annotations
   , TypeAnn
@@ -49,6 +50,21 @@ data Type =
   | KnownT RoleStep
   | SumT Type Type
   deriving( Eq, Ord, Show, Data, Typeable )
+
+-- | Partial normalization: rewrites with 
+--
+-- > SumT ty (KnownT _) = SumT (KnownT _) ty
+--
+normType :: Type -> Type
+normType (SumT ty1 ty2@(KnownT _)) = SumT ty2 (normType ty1)
+normType (SumT ty1 ty2)            = SumT (normType ty1) (normType ty2)
+normType (EncT ty1 ty2)            = EncT (normType ty1) (normType ty2)
+normType (TupT ty1 ty2)            = TupT (normType ty1) (normType ty2)
+normType (SymKT ty1 ty2)           = SymKT (normType ty1) (normType ty2)
+normType (HashT ty)                = HashT ty
+normType (AsymPKT ty)              = AsymPKT ty
+normType (AsymSKT ty)              = AsymSKT ty
+normType ty                        = ty
 
 
 ------------------------------------------------------------------------------

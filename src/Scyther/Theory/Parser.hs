@@ -727,7 +727,8 @@ parseTypingSequent proto = do
   where
     variable = (,) <$> (Id <$> identifier) <*> (kw AT *> roleById proto)
 
-    typeAssertion = (,) <$> (variable <* kw COLON <* kw COLON) <*> msgTypeDisj
+    typeAssertion = (,) <$> (variable <* kw COLON <* kw COLON) 
+                        <*> (normType <$> msgTypeDisj)
 
     msgTypeTup  = foldr1 TupT <$> sepBy1 msgTypeDisj (kw COMMA)
     msgTypeDisj = foldr1 SumT <$> sepBy1 msgType     (kw MID)
