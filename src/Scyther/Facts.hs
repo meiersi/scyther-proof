@@ -15,9 +15,9 @@ module Scyther.Facts (
   -- ** Construction
   , empty
   , freshTID
-  , freshAgentId
+  , freshArbMsgId
   , quantifyTID
-  , quantifyAgentId
+  , quantifyArbMsgId
   , conjoinAtoms
   , setTyping
 
@@ -30,7 +30,7 @@ module Scyther.Facts (
   , proveFormula
   , toAtoms
   , nextTID
-  , nextAgentId
+  , nextArbMsgId
   , quantifiedTIDs
 
   -- ** Substitution under the equalities of the facts
@@ -75,10 +75,11 @@ import Control.Monad.State
 import Text.Isar
 
 import Scyther.Protocol
-import Scyther.Typing
 import Scyther.Message
+import qualified Scyther.Typing     as T
+import           Scyther.Typing          hiding (substTypeAnn)
 import qualified Scyther.Equalities as E
-import           Scyther.Equalities      hiding (solve, substTID, threadRole, substMVar, substAVar, substMsg, substAnyEq, empty, null)
+import           Scyther.Equalities      hiding (solve, substTID, threadRole, substMVar, substAVar, substMsg, substAnyEq, substAMID, empty, null)
 import           Scyther.Event           hiding (substEv, substEvOrd)
 import qualified Scyther.Event      as E
 import           Scyther.Formula         hiding (substAtom)
@@ -103,6 +104,8 @@ import qualified Scyther.Formula    as F
 --
 --   2. All trivial learn events are removed (or split in case of a pair).
 --
+--   3. All arbitrary messages are annotated with a type.
+--
 -- We assume that all thread identifiers that are assigned to a role are
 -- locally quantified. The kind of quantification depends on the context. If
 -- the set of facts models the premises of a proof state then this would be
@@ -116,10 +119,11 @@ data Facts = Facts {
   , uncompromised  :: S.Set Message  -- ^ Statements about agents being uncompromised.
   , equalities     :: E.Equalities   -- ^ All equalities that must hold.
   , tidQuantifiers :: S.Set TID      -- ^ All thread IDs occurring in the facts.
-  , aidQuantifiers :: S.Set AgentId  -- ^ All agent IDs ocurring in the facts.
+  , amQuantifiers  :: S.Set ArbMsgId  -- ^ All arbitrary-message IDs ocurring in the facts.
   , optTyping      :: Maybe Typing   -- ^ The typing if there is any that the
                                      --   current state satisfies.
    -- NOTE: The Maybe is used for facts that don't have a typing.
+  , typeAnns       :: S.Set TypeAnn  -- ^ Type annotations on messages.
 
   , covered        :: S.Set Message  -- ^ The messages that have already been used in a 
                                      --   case distinction.
@@ -141,6 +145,7 @@ nullFacts facts =
   S.null (eventOrd facts) &&
   S.null (compromised facts) &&
   S.null (uncompromised facts) &&
+  S.null (typeAnns facts) &&
   E.null (equalities facts)
 
 ------------------------------------------------------------------------------
@@ -149,7 +154,7 @@ nullFacts facts =
 
 -- | Empty set of facts; logically equivalent to true.
 empty :: Protocol -> Facts
-empty = Facts S.empty S.empty S.empty S.empty E.empty S.empty S.empty Nothing S.empty
+empty = Facts S.empty S.empty S.empty S.empty E.empty S.empty S.empty Nothing S.empty S.empty
 
 -- | Set the protocol.
 --
@@ -193,12 +198,12 @@ quantifyTID tid facts
 
 -- | Tries to quantify the given agent identifier. If it is already quantified
 -- `fail` is called in the given monad.
-quantifyAgentId :: Monad m => AgentId -> Facts -> m Facts
-quantifyAgentId aid facts
-  | null (agentIdQuantified facts aid) = 
-      fail $ "quantifyAgentId: " ++ show aid ++ " already quantified."
+quantifyArbMsgId :: Monad m => ArbMsgId -> Facts -> m Facts
+quantifyArbMsgId aid facts
+  | null (arbMsgIdQuantified facts aid) = 
+      fail $ "quantifyArbMsgId: " ++ show aid ++ " already quantified."
   | otherwise                   = 
-      return $ facts { aidQuantifiers = S.insert aid $ aidQuantifiers facts }
+      return $ facts { amQuantifiers = S.insert aid $ amQuantifiers facts }
 
 -- | Get a fresh TID and the updated set of facts.
 freshTID ::  Facts -> (TID, Facts)
@@ -206,11 +211,11 @@ freshTID facts =
   (tid, facts { tidQuantifiers = S.insert tid $ tidQuantifiers facts })
   where tid = nextTID facts
 
--- | Get a fresh AgentId and the updated set of facts.
-freshAgentId :: Facts -> (AgentId, Facts)
-freshAgentId facts =
-  (aid, facts { aidQuantifiers = S.insert aid $ aidQuantifiers facts })
-  where aid = nextAgentId facts
+-- | Get a fresh ArbMsgId and the updated set of facts.
+freshArbMsgId :: Facts -> (ArbMsgId, Facts)
+freshArbMsgId facts =
+  (aid, facts { amQuantifiers = S.insert aid $ amQuantifiers facts })
+  where aid = nextArbMsgId facts
 
 -- | The list of thread ids that are quantified.
 quantifiedTIDs :: Facts -> [TID]
@@ -253,9 +258,9 @@ tidQuantified facts tid =
         "unquantified tid: " ++ show tid
 
 -- | Check if a agent id is quantified in these facts
-agentIdQuantified :: Facts -> AgentId -> CertResult
-agentIdQuantified facts aid =
-    certErrorIf (aid `S.notMember` aidQuantifiers facts) $
+arbMsgIdQuantified :: Facts -> ArbMsgId -> CertResult
+arbMsgIdQuantified facts aid =
+    certErrorIf (aid `S.notMember` amQuantifiers facts) $
         "unquantified aid: " ++ show aid
 
 -- | Check if all logical variables in an local id are quantified.
@@ -270,15 +275,11 @@ avarQuantified facts = lidQuantified facts . getAVar
 mvarQuantified :: Facts -> MVar -> CertResult
 mvarQuantified facts = lidQuantified facts . getMVar
 
--- |Check if all logical variables in an agent eq RHS are quantified.
-agentEqRHSQuantified :: Facts -> E.AgentEqRHS -> CertResult
-agentEqRHSQuantified facts = either (agentIdQuantified facts) (avarQuantified facts)
-
 -- | Check if all logical variables in an message are quantified.
 msgQuantified :: Facts -> Message -> CertResult
 msgQuantified facts m =
     foldMap (tidQuantified     facts) (msgTIDs m)     ><
-    foldMap (agentIdQuantified facts) (msgAgentIds m)
+    foldMap (arbMsgIdQuantified facts) (msgAMIDs m)
 
 -- | Check if all logical variables in an event are quantified.
 evQuantified :: Facts -> Event -> CertResult
@@ -289,13 +290,18 @@ evQuantified facts (Step tid _) = tidQuantified facts tid
 evOrdQuantified :: Facts -> (Event, Event) -> CertResult
 evOrdQuantified facts (e1, e2) = evQuantified facts e1 >< evQuantified facts e2
 
+-- | Check if all logical variables in a type annotation are quantified.
+typeAnnQuantified :: Facts -> TypeAnn -> CertResult
+typeAnnQuantified facts (m, _, tid) = 
+    msgQuantified facts m >< tidQuantified facts tid
+
 -- | Check if an equality contains only quantified logical variables.
 anyEqQuantified :: Facts -> E.AnyEq -> CertResult
 anyEqQuantified facts eq = case eq of
     E.TIDEq  (tid1, tid2) -> tidQuantified facts tid1 >< tidQuantified facts tid2
     E.TIDRoleEq (tid, _)  -> tidQuantified facts tid
     E.RoleEq _            -> certSuccess
-    E.AgentEq (aid, rhs)  -> agentIdQuantified facts aid >< agentEqRHSQuantified facts rhs
+    E.ArbMsgEq (aid, rhs) -> arbMsgIdQuantified facts aid >< msgQuantified facts rhs
     E.AVarEq (av1, av2)   -> avarQuantified facts av1 >< avarQuantified facts av2
     E.MVarEq (mv, m)      -> mvarQuantified facts mv >< msgQuantified facts m
     E.MsgEq (m1, m2)      -> msgQuantified facts m1 >< msgQuantified facts m2
@@ -303,15 +309,15 @@ anyEqQuantified facts eq = case eq of
 -- | Check if an atom contains only quantified logical variables.
 atomQuantified :: Facts -> Atom -> CertResult
 atomQuantified facts atom = case atom of
-  AFalse        -> certSuccess
-  AEq eq        -> anyEqQuantified facts eq
-  AEv ev        -> evQuantified    facts ev
-  AEvOrd ord    -> evOrdQuantified facts ord
-  ACompr m      -> msgQuantified   facts m
-  AUncompr m    -> msgQuantified   facts m
-  AHasType mv _ -> mvarQuantified  facts mv
-  ATyping _     -> certSuccess
-  AReachable _  -> certSuccess
+  AFalse       -> certSuccess
+  AEq eq       -> anyEqQuantified facts eq
+  AEv ev       -> evQuantified    facts ev
+  AEvOrd ord   -> evOrdQuantified facts ord
+  ACompr m     -> msgQuantified   facts m
+  AUncompr m   -> msgQuantified   facts m
+  AHasType tya -> typeAnnQuantified facts tya
+  ATyping _    -> certSuccess
+  AReachable _ -> certSuccess
 
 
 -- | Certification of a value with respect to a check and a morphism required
@@ -357,6 +363,10 @@ certAnyEq = certify anyEqQuantified substAnyEq
 certAtom :: Facts -> Atom -> Cert Atom
 certAtom = certify atomQuantified substAtom
 
+-- | Certify an a type annotation.
+certTypeAnn :: Facts -> TypeAnn -> Cert TypeAnn
+certTypeAnn = certify typeAnnQuantified substTypeAnn
+
 
 -- Equalities
 -------------
@@ -369,21 +379,23 @@ liftSubst subst facts = subst (equalities facts)
 substTID :: Facts -> TID -> TID
 substTID = liftSubst E.substTID
 
+-- TODO: Remove if not used anymore.
+
 -- | Substitute an agent variale.
 -- substAVar :: Facts -> AVar -> AVar
 -- substAVar = liftSubst E.substAVar
 
 -- | Substitute an message variale.
-substMVar :: Facts -> MVar -> Message
-substMVar = liftSubst E.substMVar
+-- substMVar :: Facts -> MVar -> Message
+-- substMVar = liftSubst E.substMVar
 
 -- | Substitute an message variale.
--- substAgentId :: Facts -> AgentId -> E.AgentEqRHS
--- substAgentId = liftSubst E.substAgentId
+substAMID :: Facts -> ArbMsgId -> Message
+substAMID = liftSubst E.substAMID
 
 -- | Substitute an message variale.
--- substAgentEqRHS :: Facts -> E.AgentEqRHS -> E.AgentEqRHS
--- substAgentEqRHS = liftSubst E.substAgentEqRHS
+-- substArbMsgEqRHS :: Facts -> E.ArbMsgEqRHS -> E.ArbMsgEqRHS
+-- substArbMsgEqRHS = liftSubst E.substArbMsgEqRHS
 
 -- | Substitute a message.
 substMsg :: Facts -> Message -> Message
@@ -405,6 +417,10 @@ substEv = liftSubst E.substEv
 substEvOrd :: Facts -> (Event, Event) -> (Event, Event)
 substEvOrd = liftSubst E.substEvOrd
 
+-- | Substitute a type annotation.
+substTypeAnn :: Facts -> TypeAnn -> TypeAnn
+substTypeAnn = liftSubst T.substTypeAnn
+
 -- | The role assigned to a thread.
 threadRole :: TID -> Facts -> Maybe Role
 threadRole tid = E.threadRole tid . equalities
@@ -418,10 +434,10 @@ trimQuantifiers :: Facts -> Facts
 trimQuantifiers facts = facts { 
     equalities = eqs'  
   , tidQuantifiers = S.filter (`notElem` tids) $ tidQuantifiers facts
-  , aidQuantifiers = S.filter (`notElem` aids) $ aidQuantifiers facts
+  , amQuantifiers = S.filter (`notElem` aids) $ amQuantifiers facts
   }
   where
-  (tids, (aids, eqs')) = second E.trimAgentEqs . E.trimTIDEqs $ equalities facts
+  (tids, (aids, eqs')) = second E.trimArbMsgEqs . E.trimTIDEqs $ equalities facts
 
 -- | Solve the equations in the context of the given facts and update all facts
 -- accordingly.
@@ -435,8 +451,9 @@ solve ueqs facts = do
     , uncompromised  = S.map (E.substMsg eqs)   (uncompromised facts)
     , equalities     = eqs
     , tidQuantifiers = tidQuantifiers facts
-    , aidQuantifiers = aidQuantifiers facts
-    , covered        = S.map (E.substMsg eqs)   (covered facts)
+    , amQuantifiers  = amQuantifiers facts
+    , typeAnns       = S.map (T.substTypeAnn eqs) (typeAnns facts)
+    , covered        = S.map (E.substMsg eqs)     (covered facts)
     }
 
     
@@ -490,6 +507,11 @@ insertRole tid role facts = maybe err id $
   where
   err = error $ "insertRole: failed to insert role"
 
+-- | Annotate a message with a type interpreted with respect to a specific
+-- thread.
+insertTypeAnn:: Cert TypeAnn -> Facts -> Facts
+insertTypeAnn tya prems =
+  prems { typeAnns = S.insert (certified tya) (typeAnns prems) }
 
 -- | Build the conjunction of the atoms and the facts; a result of 'Nothing'
 -- means that the conjunction is logically equivalent to False. This will occur
@@ -514,9 +536,7 @@ conjoinAtoms atoms facts0 = foldM conjoinAtom (Just facts0) atoms
     AUncompr m   -> return . Just $ uncompromise m facts
     AReachable p -> Just `liftM` setProtocol p facts
     ATyping typ  -> Just `liftM` setTyping typ facts
-    _            -> error $ "conjoinAtoms: atom '" ++ show atom ++ "' not supported."
-
-
+    AHasType tya -> return . Just $ insertTypeAnn (Cert tya) facts
 
 
 -- Combined construction and application of inference rules
@@ -634,8 +654,8 @@ nextTID :: Facts -> TID
 nextTID = maybe 0 (succ . fst) . S.maxView . tidQuantifiers
 
 -- | The next free agent identifier
-nextAgentId :: Facts -> AgentId
-nextAgentId = maybe 0 (succ . fst) . S.maxView . aidQuantifiers
+nextArbMsgId :: Facts -> ArbMsgId
+nextArbMsgId = maybe 0 (succ . fst) . S.maxView . amQuantifiers
 
 -- | Try to retrieve the typing; equal to 'mzero' if there is none.
 getTyping :: MonadPlus m => Facts -> m Typing
@@ -653,7 +673,7 @@ proveFalse prems =
   where
     noAgent (MMVar _)  = False
     noAgent (MAVar _)  = False
-    noAgent (MAgent _) = False
+    noAgent (MArbMsg _) = False
     noAgent _          = True
 
 -- | True iff the facts imply the validity of the given atom. Note that this check
@@ -675,38 +695,51 @@ proveAtom facts = checkAtom . certified . certAtom facts
     AEvOrd (e1, e2)      -> before (eventOrd facts) e1 e2
     ACompr m             -> m `S.member` compromised facts
     AUncompr m           -> m `S.member` uncompromised facts
-    AHasType mv  ty      -> checkType (substMVar facts mv) ty
+    AHasType tya         -> hasType tya
     ATyping typ          -> Just typ == optTyping facts
     AReachable proto     -> proto == protocol facts
 
   checkLearn m          = Learn m `S.member` events facts
   checkLearnBefore to m = before (eventOrd facts) (Learn m) to
 
-  
-  -- FIXME: The following case is missing in checkType below.
-  -- weaklyAtomic mv (MMVar mv') = mv /= mv' 
-
-  checkType (MAVar _)     (AgentT)        = True
-  checkType (MAgent _)    (AgentT)        = True
-  checkType (MConst i)    (ConstT i')     = i == i'
-  checkType (MFresh (Fresh (LocalId (i, tid)))) (NonceT role i') =
-    i == i' && threadRole tid facts == Just role
-  checkType (MHash m)     (HashT ty)      = checkType m ty
-  checkType (MEnc m1 m2)  (EncT ty1 ty2)  = checkType m1 ty1 && checkType m2 ty2
-  checkType (MTup m1 m2)  (TupT ty1 ty2)  = checkType m1 ty1 && checkType m2 ty2
-  checkType (MSymK m1 m2) (SymKT ty1 ty2) = checkType m1 ty1 && checkType m2 ty2
-  checkType (MAsymPK m)   (AsymPKT ty)    = checkType m ty
-  checkType (MAsymSK m)   (AsymSKT ty)    = checkType m ty
-  checkType m             (KnownT step)   = checkAtom (AEv (Learn m))
-    -- FIXME: Really check that m was learned before step. Needs a change in the
-    -- signature, because the conclusion of a type induction theorem features a
-    -- trace extended by a receive step.
-    --
-    -- Here, we just assume that the correct step was specified; as our
-    -- automatic inference will do. In the worst case, Isabelle will catch such a
-    -- mistake.
-  checkType m             (SumT ty1 ty2)  = checkType m ty1 || checkType m ty2
-  checkType _             _               = False
+  hasType (m0, ty0, tid0) = 
+      go m0 ty0
+    where
+      go (MAVar _)     (AgentT)        = True
+      go (MConst i)    (ConstT i')     = i == i'
+      go (MFresh (Fresh (LocalId (i, tid)))) (NonceT role i') = 
+          i == i' && threadRole tid facts == Just role
+      go (MHash m)     (HashT ty)      = go m ty
+      go (MEnc m1 m2)  (EncT ty1 ty2)  = go m1 ty1 && go m2 ty2
+      go (MTup m1 m2)  (TupT ty1 ty2)  = go m1 ty1 && go m2 ty2
+      go (MSymK m1 m2) (SymKT ty1 ty2) = go m1 ty1 && go m2 ty2
+      go (MAsymPK m)   (AsymPKT ty)    = go m ty
+      go (MAsymSK m)   (AsymSKT ty)    = go m ty
+      go  m            (KnownT step)   = checkAtom (AEvOrd (Learn m, Step tid0 step))
+      go  m            (SumT ty1 ty2)  = go m ty1 || go m ty2
+      go  m            ty              = or $ do
+          (m', ty', tid') <- S.toList $ typeAnns facts
+          guard (m == m')
+          return $ (ty', tid') `subType` (ty, tid0)
+      
+  -- ty `subType` ty' holds iff every instance of ty is also an instance of ty'.
+  subType (ty0, tid) (ty'0, tid') =
+      go ty0 ty'0
+    where
+      go (EncT ty1 ty2)  (EncT ty'1 ty'2)  = go ty1 ty'1 && go ty2 ty'2
+      go (TupT ty1 ty2)  (TupT ty'1 ty'2)  = go ty1 ty'1 && go ty2 ty'2
+      go (SymKT ty1 ty2) (SymKT ty'1 ty'2) = go ty1 ty'1 && go ty2 ty'2
+      go (AsymPKT ty)    (AsymPKT ty')     = go ty ty'
+      go (AsymSKT ty)    (AsymSKT ty')     = go ty ty'
+      -- NOTE: SumT handling results in an under-approximation for nested
+      -- SumTs. The left-hand SumTs should be pushed outwards first; such
+      -- that they are taken apart before the right-hand SumTs.
+      go (SumT ty1 ty2)  ty'               = go ty1 ty' && go ty2 ty'
+      go ty              (SumT ty'1 ty'2)  = go ty ty'1 || go ty ty'2
+      go (KnownT step)   (KnownT step')    =
+          -- every message before step is also before step'
+          checkAtom (AEvOrd (Step tid step, Step tid' step'))
+      go ty              ty'               = ty == ty'
 
 
 -- | Try to prove that the formula holds under these facts.
@@ -718,7 +751,7 @@ proveFormula facts = prove (Mapping E.empty)
   prove mapping (FExists v f) = any (\mk -> prove (mk mapping) f) (mkMappings v)
   -- the mappings assign witnesses to the existentially quantified variables.
   mkMappings (Left  tid) = map (E.addTIDMapping tid)     (S.toList $ tidQuantifiers facts)
-  mkMappings (Right aid) = map (E.addAgentIdMapping aid) (S.toList $ aidQuantifiers facts)
+  mkMappings (Right aid) = map (E.addArbMsgIdMapping aid) (S.toList $ amQuantifiers facts)
 
 -- | Try to find a long-term-key that must be secret due to the
 -- uncompromisedness assumptions, but is claimed to be known to the intruder;
@@ -749,6 +782,7 @@ toAtoms facts = mconcat [
   , ACompr   <$> S.toList   (compromised   facts)
   , AEv      <$> S.toList   (events        facts)
   , AEvOrd   <$> S.toList   (eventOrd      facts)
+  , AHasType <$> S.toList   (typeAnns      facts)
   ]
 
 ------------------------------------------------------------------------------
@@ -765,7 +799,7 @@ openMessages prems = nub $ filter okGoal $ catMaybes
   | e <- S.toList $ events prems `S.difference` S.map snd (eventOrd prems) ]
   where 
   okGoal (MMVar _)   = False
-  okGoal (MAgent _)  = False
+  okGoal (MArbMsg _) = False
   okGoal (MAsymPK _) = False
   okGoal (MInvKey _) = False
   okGoal m           = not (trivial m) && (m `S.notMember` covered prems)
@@ -795,7 +829,7 @@ oldestOpenMessages prems =
 -- | A data type to represent the state of the chain rule computation.
 data ChainRuleState = ChainRuleState
   { crsCaseName :: [String]
-  , crsNewVars  :: [Either TID AgentId]
+  , crsNewVars  :: [Either TID ArbMsgId]
   , crsFacts    :: Facts
   , crsFinalEq  :: Maybe E.MsgEq
   }
@@ -807,7 +841,7 @@ addCaseFragment :: String -> ChainRuleM ()
 addCaseFragment name = modify $ \crs -> crs { crsCaseName = crsCaseName crs ++ [name] }
 
 -- | Add a newly quantified variable.
-addNewVar :: Either TID AgentId -> ChainRuleM ()
+addNewVar :: Either TID ArbMsgId -> ChainRuleM ()
 addNewVar v = modify $ \crs -> crs { crsNewVars = crsNewVars crs ++ [v] }
 
 -- | Change the facts of the chain rule computation state.
@@ -830,38 +864,85 @@ unify m m' = do
   maybe mzero (modifyFacts . const) $ 
     solve [certAnyEq (crsFacts crs) $ E.MsgEq (m', m)] (crsFacts crs)
   
--- get a fresh thread identifier and update the facts accordingly
+-- | Get a fresh thread identifier and update the facts accordingly
 getFreshTID :: ChainRuleM TID
 getFreshTID = do
   (tid, facts) <- getsFacts freshTID
   modifyFacts (const facts)
   addNewVar (Left tid)
   return tid
-
--- | Expand the a type into a message with fresh logical variables for the
--- unknowns.
-expandType :: Type -> ChainRuleM Message
-expandType (AgentT) = do
-  (aid, facts) <- getsFacts freshAgentId
+  
+-- | Get a fresh thread arbitrary-message id and update the facts accordingly
+getFreshAMID :: ChainRuleM ArbMsgId
+getFreshAMID = do
+  (aid, facts) <- getsFacts freshArbMsgId
   modifyFacts (const facts)
   addNewVar (Right aid)
-  return $ MAgent aid
-expandType (ConstT c) = return $ MConst c
-expandType (NonceT role n) = do
-  nTid <- getFreshTID
-  modifyFacts (insertRole nTid role)
-  return $ MFresh (Fresh (LocalId (n, nTid)))
-expandType (HashT ty)      = MHash   <$> expandType ty
-expandType (EncT ty1 ty2)  = MEnc    <$> expandType ty1 <*> expandType ty2
-expandType (TupT ty1 ty2)  = MTup    <$> expandType ty1 <*> expandType ty2
-expandType (SymKT ty1 ty2) = MSymK   <$> expandType ty1 <*> expandType ty2
-expandType (AsymPKT ty)    = MAsymPK <$> expandType ty
-expandType (AsymSKT ty)    = MAsymSK <$> expandType ty
-expandType (SumT (KnownT _) ty) = expandType ty
-  --  ^ ASSUMPTION: The step referenced in KnownT happens earlier than the current step.
-expandType (KnownT _) = mzero --  ^ FIXME: This is just plain wrong! Here we have to add the corresponding order fact.
-expandType ty = error $ "expandType: '" ++ ppTy ++ "' not supported"
-  where ppTy = show . render $ sptType Nothing ty 
+  return aid
+
+-- | Add a type annotation.
+addTypeAnn :: TypeAnn -> ChainRuleM ()
+addTypeAnn tya = modifyFacts $ 
+    \facts -> insertTypeAnn (certTypeAnn facts tya) facts
+
+-- | Delete the given type annotation. Logically, this means forgetting
+-- the corresponding assumption.
+deleteTypeAnn :: TypeAnn -> ChainRuleM ()
+deleteTypeAnn tya = modifyFacts $ 
+    \facts -> facts { typeAnns = S.delete tya (typeAnns facts) }
+
+-- | Add a type annotation in expanded form. Expansion stops at SumT types
+-- to avoid introducing unnecessary case distionctions.
+addExpandedTypeAnn :: TypeAnn -> ChainRuleM ()
+addExpandedTypeAnn (m, ty0, tid) = do
+    m' <- expand (return m) ty0
+    unify m m'
+  where
+    -- The first argument allows us to be lazy for creating new
+    -- message-variables
+    expand :: ChainRuleM Message -> Type -> ChainRuleM Message
+    expand mkV AgentT          = do
+        v <- mkV
+        addTypeAnn (v, AgentT, tid) 
+        return v
+    expand _ (NonceT role n) = do
+        nTid <- getFreshTID
+        modifyFacts $ insertRole nTid role
+        return $ MFresh (Fresh (LocalId (n, nTid)))
+    
+    expand mkV ty@(SumT _ _) = do
+        v <- mkV
+        addTypeAnn (v, ty, tid)
+        return v
+
+    expand mkV (KnownT step) = do
+        v <- mkV
+        modifyFacts $ \facts -> 
+            insertEvOrd (certEvOrd facts (Learn v, Step tid step)) facts
+        return v
+
+    expand _ (ConstT c)      = return (MConst c)
+    expand _ (HashT ty)      = MHash   <$> expand arb ty
+    expand _ (EncT ty1 ty2)  = MEnc    <$> expand arb ty1 <*> expand arb ty2
+    expand _ (TupT ty1 ty2)  = MTup    <$> expand arb ty1 <*> expand arb ty2
+    expand _ (SymKT ty1 ty2) = MSymK   <$> expand arb ty1 <*> expand arb ty2
+    expand _ (AsymPKT ty)    = MAsymPK <$> expand arb ty
+    expand _ (AsymSKT ty)    = MAsymSK <$> expand arb ty
+
+    arb :: ChainRuleM Message
+    arb = MArbMsg <$> getFreshAMID
+      
+    -- expand ty = error $ "expand: '" ++ ppTy ++ "' not supported"
+      -- where ppTy = show . render $ sptType Nothing ty 
+--
+-- | Get the type annotation of a message.
+--
+-- PRE: The message must be normalized with respect to the current facts.
+getTypeAnn :: Message -> ChainRuleM (Maybe TypeAnn)
+getTypeAnn m = do
+  tyas <- gets (typeAnns . crsFacts)
+  return $ headMay [ tya | tya@(m', _, _) <- S.toList tyas, m == m' ]
+
 
 -- number cases such that duplicates get numbered individually
 numberCases :: [ChainRuleState] -> [ChainRuleState]
@@ -873,16 +954,19 @@ numberCases cases = (`evalState` M.empty) . forM cases $ \ crs -> do
   return $ crs {crsCaseName = return $ if i == 0 then name else name ++ "_" ++ show i}
   -- TODO: Remove this magic number (0) hack
 
-
 -- | Extract the actual cases that result in new facts the other cases were
 -- just there to compute the name
-extractCase :: [E.AnyEq] -> ChainRuleState -> Maybe ((String, [Either TID AgentId]), Facts)
+extractCase :: [E.AnyEq] -> ChainRuleState -> Maybe ((String, [Either TID ArbMsgId]), Facts)
 extractCase delayedEqs0 crs = do
   let facts0 = crsFacts crs
       unmappedTID tid 
         | substTID facts0 tid == tid = return (Left tid)
         | otherwise                  = mzero
-      newVars = concatMap (either unmappedTID (return . Right)) $ crsNewVars crs
+      unmappedAMID aid 
+        | substAMID facts0 aid == MArbMsg aid = return (Right aid)
+        | otherwise                           = mzero
+
+      newVars = concatMap (either unmappedTID unmappedAMID) $ crsNewVars crs
       delayedEqs = maybe [] (return . E.MsgEq) (crsFinalEq crs) ++ delayedEqs0
   -- NOTE we are careful here to certify the equalities again. This should be a
   -- no-op, but we'll leave it in for debugging purposes.
@@ -929,7 +1013,7 @@ initialIntruderKnowledge m = do
 -- of established facts. Returns the list of facts corresponding to the
 -- disjunctions in the conclusion of the chain rule, which are not trivially
 -- false due to syntactic inequality.
-chainRuleFacts :: MonadPlus m => Message -> Facts -> m [((String, [Either TID AgentId]), Facts)]
+chainRuleFacts :: MonadPlus m => Message -> Facts -> m [((String, [Either TID ArbMsgId]), Facts)]
 chainRuleFacts (MAVar _ )  _ = error $ "chainRuleFacts: application to agent variables not supported."
 chainRuleFacts (MConst _)  _ = error $ "chainRuleFacts: application to global constants not supported."
 chainRuleFacts (MInvKey _) _ = error $ "chainRuleFacts: application to symbolically inverted keys not supported."
@@ -940,118 +1024,136 @@ chainRuleFacts m      facts0
   | otherwise = error $ "chainRuleFacts: could not prove that '" ++ show m ++ "' is known to the intruder."
   where
   assembleCases typ = 
-    mapMaybe (extractCase delayedEqs) . numberCases . 
-    flip execStateT (ChainRuleState [] [] facts1 Nothing) $ (
-      initialIntruderKnowledge m
-      `mplus`
-      -- send steps
-      do tid <- getFreshTID
-         proto <- getsFacts protocol
-         msum $ map (roleChains typ tid) $ protoRoles proto
-         -- don't output cases where the facts are already contradictory without
-         -- the context. This caters for messages that are received and sent in
-         -- exactly the same form.
-         finalFacts <- gets crsFacts
-         guard (not $ proveFalse finalFacts)
-    )
+      mapMaybe (extractCase delayedEqs) . numberCases . 
+      flip execStateT (ChainRuleState [] [] facts1 Nothing) $ (
+        initialIntruderKnowledge m
+        `mplus`
+        -- send steps
+        do tid <- getFreshTID
+           proto <- getsFacts protocol
+           msum $ map (roleChains typ tid) $ protoRoles proto
+           -- don't output cases where the facts are already contradictory without
+           -- the context. This caters for messages that are received and sent in
+           -- exactly the same form.
+           finalFacts <- gets crsFacts
+           guard (not $ proveFalse finalFacts)
+      )
     where
-    facts1     = facts0 { equalities = E.empty
-                        , covered = S.insert m $ covered facts0 }
-    delayedEqs = E.toAnyEqs $ equalities facts0
+      facts1     = facts0 { equalities = E.empty
+                          , covered = S.insert m $ covered facts0 }
+      delayedEqs = E.toAnyEqs $ equalities facts0
 
   -- insert a list of previous events
   insertPrevious :: [Event] -> Event -> ChainRuleM ()
   insertPrevious prev ev = modifyFacts $
-    \facts -> foldl' insertSingle facts prev
+      \facts -> foldl' insertSingle facts prev
     where
-    insertSingle p prevEv = insertEvOrdNonTrivial (certEvOrd p (prevEv, ev)) p
+      insertSingle p prevEv = insertEvOrdNonTrivial (certEvOrd p (prevEv, ev)) p
   
   -- enumerate chainRuleFacts starting from the given role
   roleChains :: Typing -> TID -> Role -> ChainRuleM ()
   roleChains typ tid role = do 
-    modifyFacts $ insertRole tid role
-    addCaseFragment $ roleName role
-    msum . map stepChains $ roleSteps role
+      modifyFacts $ insertRole tid role
+      addCaseFragment $ roleName role
+      msum . map stepChains $ roleSteps role
     where
-    stepChains :: RoleStep -> ChainRuleM ()
-    stepChains (Recv _ _) = mzero
-    stepChains step@(Send _ pt) = do
-      -- trace ("stepChains: " ++ roleName role ++"_"++getLabel l) (return ())
-      modifyFacts $ insertStepPrefixClosed (Cert (tid, step))
-      addCaseFragment $ stepLabel step
-      msgChains [(Step tid step)] (inst tid pt)
-      where
-      -- case naming
-      msgName (MConst i)   = getId i
-      msgName (MFresh fr)  = lidName . getFresh $ fr
-      msgName (MAVar av)   = lidName . getAVar  $ av
-      msgName (MMVar mv)   = lidName . getMVar  $ mv
-      msgName (MHash _)    = "hash"
-      msgName (MEnc _ _)   = "enc"
-      msgName (MTup _ _)   = "tup"
-      msgName (MSymK _ _)  = "K_ud"
-      msgName (MShrK _ _)  = "K_bd"
-      msgName (MAsymPK _)  = "pk"
-      msgName (MAsymSK _)  = "sk"
-      msgName (MAgent _)   = "someAgent"
-      msgName (MInvKey _)  = "invKey"
+      stepChains :: RoleStep -> ChainRuleM ()
+      stepChains (Recv _ _) = mzero
+      stepChains step@(Send _ pt) = do
+          -- trace ("stepChains: " ++ roleName role ++"_"++getLabel l) (return ())
+          modifyFacts $ insertStepPrefixClosed (Cert (tid, step))
+          addCaseFragment $ stepLabel step
+          mapM_ annotateMVarType $ S.toList $ patFMV pt
+          msgChains [(Step tid step)] (inst tid pt)
+        where
+          -- annotating message variables with their type 
+          annotateMVarType mv =
+              case M.lookup (mv, role) typ of
+                Nothing -> error $ "stepChains: no type provided for '"++show v++"'"
+                Just ty -> addExpandedTypeAnn (v, ty, tid)
+            where
+              v = MMVar (MVar (LocalId (mv, tid)))
 
-      lidName = getId . fst . getLocalId
+          -- case naming
+          msgName (MConst i)   = getId i
+          msgName (MFresh fr)  = lidName . getFresh $ fr
+          msgName (MAVar av)   = lidName . getAVar  $ av
+          msgName (MMVar mv)   = lidName . getMVar  $ mv
+          msgName (MHash _)    = "hash"
+          msgName (MEnc _ _)   = "enc"
+          msgName (MTup _ _)   = "tup"
+          msgName (MSymK _ _)  = "K_ud"
+          msgName (MShrK _ _)  = "K_bd"
+          msgName (MAsymPK _)  = "pk"
+          msgName (MAsymSK _)  = "sk"
+          msgName (MArbMsg _)   = "someAgent"
+          msgName (MInvKey _)  = "invKey"
 
-      -- chain enumeration
-      msgChains :: [Event] -> Message -> ChainRuleM ()
-      msgChains _ (MAVar _)  = mzero
-      msgChains _ (MAgent _) = mzero
-      msgChains _ (MConst _) = mzero
-      msgChains prev v@(MMVar mv) = do
-        -- trace ("msgChains: " ++ show m') (return ())
-        addCaseFragment $ msgName v
-        case M.lookup (lidId $ getMVar mv, role) typ of
-          Nothing -> error $ "msgChains: no type provided for '"++show mv++"'"
-          Just vty -> do
-            vm <- expandType vty
-            unify v vm
-            msgChains prev vm
-      
-      msgChains prev m'@(MEnc m1 m2) = 
-        do insertPrevious prev (Learn m')
-           ( do -- trace ("msgChains: unify " ++ show m' ++ " =?= " ++ show m) (return ())
-                addCaseFragment $ msgName m'
-                setFinalEq (m', m)
-             `mplus`
-             msgChains [Learn m', Learn (MInvKey m2)] m1 )
-      msgChains prev (MTup m1 m2) = msgChains prev m1 `mplus` msgChains prev m2
-      msgChains prev m'@(MFresh _) = do
-        insertPrevious prev (Learn m')
-        addCaseFragment $ msgName m'
-        unify m' m          -- here we have to unify, as Isabelle is also doing it early
-      msgChains prev m' = do
-        insertPrevious prev (Learn m')
-        addCaseFragment $ msgName m'
-        setFinalEq (m', m)
+          lidName = getId . fst . getLocalId
+
+          -- chain enumeration
+          msgChains :: [Event] -> Message -> ChainRuleM ()
+          msgChains _ (MAVar _)        = mzero
+          msgChains _ (MConst _)       = mzero
+          msgChains prev v@(MArbMsg _) = typChains prev v
+          msgChains prev v@(MMVar _)   = do
+            addCaseFragment (msgName v)
+            typChains prev v
+          
+          msgChains prev m'@(MEnc m1 m2) = 
+            do insertPrevious prev (Learn m')
+               ( do -- trace ("msgChains: unify " ++ show m' ++ " =?= " ++ show m) (return ())
+                    addCaseFragment $ msgName m'
+                    setFinalEq (m', m)
+                 `mplus`
+                 msgChains [Learn m', Learn (MInvKey m2)] m1 )
+
+          msgChains prev (MTup m1 m2) = msgChains prev m1 `mplus` msgChains prev m2
+
+          msgChains prev m'@(MFresh _) = do
+            insertPrevious prev (Learn m')
+            addCaseFragment $ msgName m'
+            -- here we have to unify, as Isabelle is also doing it early
+            unify m' m          
+
+          -- the m' is an atomic message: just unify and be done with it.
+          msgChains prev m' = do
+            insertPrevious prev (Learn m')
+            addCaseFragment $ msgName m'
+            setFinalEq (m', m)
+
+          -- exploiting type annotations.
+          typChains :: [Event] -> Message -> ChainRuleM ()
+          typChains prev v = do
+            v' <- getsFacts (`substMsg` v)
+            if v /= v'
+              then msgChains prev v'
+              else do
+                optTya <- getTypeAnn v
+                case optTya of 
+                  -- if it is not annotated, then it is a KnownT type => prove cyclicity
+                  Nothing -> do
+                    insertPrevious prev (Learn v)
+                    facts <- getsFacts id
+                    if cyclic (eventOrd facts)
+                      then mzero
+                      else error $ "failed to prove cyclicity for unannotated '" ++ show v++ "' in\n" ++
+                                   render (nest 2 $ sptSimpleFacts facts)
+                    
+                  Just (tya@(_,tyaTy,tyaTid)) -> case tyaTy of
+                    AgentT       -> mzero -- we already know the agent names
+                    SumT ty1 ty2 -> do
+                        deleteTypeAnn tya
+                        (addExpandedTypeAnn (v, ty1, tyaTid) <|>
+                         addExpandedTypeAnn (v, ty2, tyaTid))
+                        msgChains prev v
+                    -- all other type annotations should have been expanded already.
+                    _ -> error $ "msgChains: unexpanded type annotation: " ++ show tya
+
 
 ------------------------------------------------------------------------------
 -- Message Equality Splitting to deal with 'MShrK a b = MShrK x y' eqs
 ------------------------------------------------------------------------------
-
-{-
-data Goal = MsgGoal Message  -- ^ A message that the intruder must know.
-          | SplitGoal MsgEq  -- ^ Case splitting from an equality over
-                             --   bi-directional keys.
-          deriving( Eq, Ord, Show, Data, Typeable )
-          
--- | Goals that could be solved in the given sequent.
-openGoals :: Facts -> [Goal]
-openGoals facts = 
-    do eq@(MShrK _ _, MShrK _ _) <- getPostEqs $ equalities facts
-       guard (not $ uncurry (==) eq)
-       return $ SplitGoal eq
-    ++ 
-    map MsgGoal (oldestOpenMessages facts)
-
--- | Solve a goal.
--- solveGoal :: 
--}
 
 -- | Equalities that can be splitted.
 splittableEqs :: Facts -> [MsgEq]
@@ -1098,15 +1200,15 @@ freeVariableMappings from to = do
   where
   quantifierMappings = do
     tideqs  <- foldM mkTIDMapping     M.empty . S.toList $ tidQuantifiers from
-    agnteqs <- foldM mkAgentIdMapping M.empty . S.toList $ aidQuantifiers from
+    agnteqs <- foldM mkArbMsgIdMapping M.empty . S.toList $ amQuantifiers from
     return $ E.mkMapping tideqs agnteqs
 
   mkTIDMapping eqs tidF = do
     tidT <- msum . map return . S.toList $ tidQuantifiers to
     return $ M.insert tidF tidT eqs
 
-  mkAgentIdMapping eqs aidF = do
-    aidT <- msum . map return . S.toList $ aidQuantifiers to
+  mkArbMsgIdMapping eqs aidF = do
+    aidT <- msum . map return . S.toList $ amQuantifiers to
     return $ M.insert aidF aidT eqs
 
 
@@ -1125,13 +1227,16 @@ applyMapping mapping facts0 = case newFacts of
 
      eqs = getMappingEqs mapping
      qTID = flip (quantifyTID     . E.substTID eqs)
-     qAID = flip (quantifyAgentId . either id err . E.substAgentId eqs)
-     err = error "applyMapping: mapping does not map agent ids to agent ids"
+     qAID = flip (quantifyArbMsgId . extractArbMsgId . E.substAMID eqs)
      quantifyTIDs facts = foldM qTID facts $ S.toList $ tidQuantifiers facts0
-     quantifyAIDs facts = foldM qAID facts $ S.toList $ aidQuantifiers facts0
+     quantifyAIDs facts = foldM qAID facts $ S.toList $ amQuantifiers facts0
 
      addAtoms = conjoinAtoms atoms 
      atoms = map (F.substAtom (getMappingEqs mapping)) . toAtoms $ facts0
+
+     extractArbMsgId (MArbMsg aid) = aid
+     extractArbMsgId m             = error $ 
+        "applyMapping: arbitrary-message id mapped to '" ++ show m ++ "'"
 
 
 ------------------------------------------------------------------------------
@@ -1143,7 +1248,7 @@ applyMapping mapping facts0 = case newFacts of
 
 isReprEq :: E.AnyEq -> Bool
 isReprEq (TIDEq _)   = False
-isReprEq (AgentEq _) = False
+isReprEq (ArbMsgEq _) = False
 isReprEq _           = True
 
 ppSet :: (a -> b) -> S.Set a -> [b]
@@ -1158,7 +1263,7 @@ isaFacts :: IsarConf -> Facts
          -> ([Doc],[Doc],[Doc]) -- ^ Quantified variables, representable facts, and non-representable facts
 isaFacts conf facts =
     ( ppSet (isar conf) (tidQuantifiers facts) ++
-      ppSet (isar conf) (aidQuantifiers facts)
+      ppSet (isar conf) (amQuantifiers facts)
     , map (isar conf) reprEqs ++
       ppSet (isaUncompr conf) (uncompromised facts) ++
       ppSet (isaCompr   conf) (compromised facts) ++
@@ -1180,13 +1285,14 @@ sptFacts :: Facts
          -> ([Doc],[Doc],[Doc]) -- ^ Quantified variables, representable facts, and non-representable facts
 sptFacts facts =
     ( ppSet sptTID     (tidQuantifiers facts) ++
-      ppSet sptAgentId (aidQuantifiers facts)
+      ppSet sptArbMsgId (amQuantifiers facts)
     , map sptAnyEq reprEqs ++
       ppComprInfo "uncompromised" (uncompromised facts) ++
       ppComprInfo "compromised"   (compromised facts) ++
       (map (sptEventOrd (Mapping eqs)) $ transitiveChains $ S.toList $ eventOrd facts) ++
       ppSet (sptEvent (Mapping eqs)) (events facts)
-    , map sptAnyEq nonReprEqs ++
+    , (map (sptTypeAnn (`threadRole` facts)) $ S.toList $ typeAnns facts) ++
+      map sptAnyEq nonReprEqs ++
       (map ppCovered $ S.toList $ covered facts)
     ) 
     where
@@ -1200,6 +1306,9 @@ sptFacts facts =
           (text setName <> lparen : (map (nest 2) . punctuate comma) 
             (ppSet sptMessage set)) ++ [rparen]
 
+sptSimpleFacts :: Facts -> Doc
+sptSimpleFacts facts = case sptFacts facts of 
+    (ds1, ds2, ds3) -> vcat $ map vcat [ds1, [text ""], ds2, [text ""], ds3]
 
 -- | Compute a list of transitive chains representing an abbreviated version of
 -- the given binary relation.

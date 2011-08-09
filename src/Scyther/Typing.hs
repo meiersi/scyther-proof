@@ -2,16 +2,23 @@
 -- | Building typing invariants for security protocol in order to enable
 -- verification in an untyped model.
 module Scyther.Typing (
-  -- * Data types
+  -- * Type
     Type(..)
-  , Typing
 
-  -- ** Construction typings
+  -- ** Type annotations
+  , TypeAnn
+  , typeAnnTIDs
+  , typeAnnAMIDs
+  , substTypeAnn
+
+  -- ** Type assertions
+  , Typing
   , mscTyping
 
   -- ** Pretty Printing
   , isaType
   , sptType
+  , sptTypeAnn
   , sptTyping
 ) where
 
@@ -42,6 +49,32 @@ data Type =
   | KnownT RoleStep
   | SumT Type Type
   deriving( Eq, Ord, Show, Data, Typeable )
+
+
+------------------------------------------------------------------------------
+-- Type annotations on messages
+------------------------------------------------------------------------------
+
+-- | A type annotation states that a message is a member of a type interpreted
+-- with respect to a specific thread.
+type TypeAnn = (Message, Type, TID)
+
+-- | The TIDs of a type annotation.
+typeAnnTIDs :: TypeAnn -> [TID]
+typeAnnTIDs (m, _, tid) = tid : msgTIDs m 
+
+-- | The AMIDs of a type annotation.
+typeAnnAMIDs :: TypeAnn -> [ArbMsgId]
+typeAnnAMIDs (m, _, _) = msgAMIDs m 
+
+-- | Substitute a type annotation.
+substTypeAnn :: E.Equalities -> TypeAnn -> TypeAnn
+substTypeAnn eqs (m, ty, tid) = (E.substMsg eqs m, ty, E.substTID eqs tid)
+
+
+------------------------------------------------------------------------------
+-- Typings
+------------------------------------------------------------------------------
 
 -- | A type assignment for variables of several roles.
 type Typing = M.Map (Id, Role) Type
@@ -104,9 +137,14 @@ mscTyping proto =
         typeMsg (MSymK m1 m2) = SymKT   <$> typeMsg m1 <*> typeMsg m2
         typeMsg (MAsymPK m)   = AsymPKT <$> typeMsg m
         typeMsg (MAsymSK m)   = AsymSKT <$> typeMsg m
-        typeMsg (MAgent _)    = error $ "mscTyping: agent variable encountered"
+        typeMsg (MArbMsg _)    = error $ "mscTyping: agent variable encountered"
         typeMsg (MInvKey _)   = error $ "mscTyping: key inversion encountered"
         typeMsg (MShrK _ _)   = error $ "mscTyping: bi-directional shared key encountered"
+
+
+------------------------------------------------------------------------------
+-- Pretty printing
+------------------------------------------------------------------------------
 
 -- | Pretty print a type in Isar syntax; paramatrized over the role of the
 -- variable that this type describes. This role is used for abbreviating role
@@ -145,6 +183,10 @@ sptType optRole = go
     SymKT ty1 ty2 -> text "k"  <> parens (go ty1 <> comma <-> go ty2)
     KnownT step   -> text "Known" <> parens (sptRoleStep optRole step)
     SumT ty1 ty2  -> parens (sep [go ty1 <-> text "|", go ty2])
+
+sptTypeAnn :: (TID -> Maybe Role) -> TypeAnn -> Doc
+sptTypeAnn tidToRole (m,ty,i) = hsep 
+    [sptMessage m, text "::", parens (sptType (tidToRole i) ty) <> sptTID i]
 
 sptTyping :: Typing -> Doc
 sptTyping = vcat . map ppTyEq . M.toList 

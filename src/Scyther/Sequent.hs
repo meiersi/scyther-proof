@@ -105,7 +105,7 @@ wellTypedCases se = case seConcl se of
         prem = fromMaybe (error "failed to set typing") $ setTyping typ prem1
         concl = FAtom $ 
             case M.lookup (v, role) typ of
-              Just ty -> AHasType mv ty
+              Just ty -> AHasType (MMVar mv, ty, tid)
               Nothing -> error $ 
                 "wellTypedCases: no type given for '"++show v++"' in role '"++roleName role++"'"
 
@@ -190,7 +190,7 @@ saturate = changePrem (return . saturateFacts)
 --
 chainRule :: MonadPlus m 
           => Sequent -> Message 
-          -> m [((String, [Either TID AgentId]), Sequent)]
+          -> m [((String, [Either TID ArbMsgId]), Sequent)]
 chainRule se m = 
     map (second mkSequent) `liftM` chainRuleFacts m (sePrem se)
   where 
