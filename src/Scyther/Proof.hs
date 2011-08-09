@@ -80,7 +80,7 @@ data TrivReason =
 data Rule =
     Saturate
   | ForwardResolution (Named Sequent) E.Mapping
-  | ChainRule Message [(String, [Either TID AgentId])]
+  | ChainRule Message [(String, [Either TID ArbMsgId])]
   | SplitEq  E.MsgEq [Bool]  -- True, if sub-proof for this case is present.
   | TypingCases [String]
   deriving( Eq, Show, Data, Typeable {-! NFData !-} )

@@ -54,7 +54,7 @@ data Atom =
   | AEvOrd (Event, Event)   -- ^ An event order.
   | ACompr Message          -- ^ A compromised agent variable.
   | AUncompr Message        -- ^ An uncompromised agent variable.
-  | AHasType MVar Type      -- ^ A claim that a variable is of the given type;
+  | AHasType TypeAnn        -- ^ A type annotation on a message.
   | ATyping Typing          -- ^ A claim that the current state of a protocol is
                             --   approximated by the given typing.
   | AReachable Protocol     -- ^ A claim that the current state is reachable.
@@ -64,7 +64,7 @@ data Atom =
 data Formula = 
     FAtom Atom
   | FConj Formula Formula
-  | FExists (Either TID AgentId) Formula
+  | FExists (Either TID ArbMsgId) Formula
   deriving( Eq, Show, Ord, Data, Typeable )
 
 -- Queries on the structure of the formula
@@ -105,7 +105,7 @@ atomTIDs (AEv    e)     = evTIDs e
 atomTIDs (AEvOrd ord)   = evOrdTIDs ord
 atomTIDs (ACompr m)     = msgTIDs m
 atomTIDs (AUncompr m)   = msgTIDs m
-atomTIDs (AHasType v _) = return $ mvarTID v
+atomTIDs (AHasType tya) = typeAnnTIDs tya
 atomTIDs (AEq eq)       = anyEqTIDs eq
     
 
@@ -118,26 +118,19 @@ atomTIDs (AEq eq)       = anyEqTIDs eq
 -- not the whole message variable.
 substAtom :: Equalities -> Atom -> Atom
 substAtom eqs atom = case atom of
-  AFalse         -> atom
-  AEq eq         -> AEq      $ substAnyEq   eqs eq
-  AEv ev         -> AEv      $ substEv      eqs ev
-  AEvOrd ord     -> AEvOrd   $ substEvOrd   eqs ord
-  ACompr m       -> ACompr   $ substMsg     eqs m
-  AUncompr m     -> AUncompr $ substMsg     eqs m
-  AHasType mv ty -> AHasType (mapMVar (substLocalId eqs) mv) ty
-  ATyping _      -> atom
-  AReachable _   -> atom
+  AFalse       -> atom
+  AEq eq       -> AEq      $ substAnyEq   eqs eq
+  AEv ev       -> AEv      $ substEv      eqs ev
+  AEvOrd ord   -> AEvOrd   $ substEvOrd   eqs ord
+  ACompr m     -> ACompr   $ substMsg     eqs m
+  AUncompr m   -> AUncompr $ substMsg     eqs m
+  AHasType tya -> AHasType $ substTypeAnn eqs tya
+  ATyping _    -> atom
+  AReachable _ -> atom
 
 
 -- Queries
 ----------
-
-{-
--- | True iff the atom is a well-typedness atom.
-isTypeInvariant :: Atom -> Bool
-isTypeInvariant (ATyping _) = True
-isTypeInvariant _           = False
--}
 
 -- | True iff the formula does contain an existential quantifier.
 hasQuantifiers :: Formula -> Bool
@@ -195,19 +188,17 @@ sptUncompr m = text "uncompromised" <> parens (sptMessage m)
 -- | Pretty print an atom in Isar format.
 isaAtom :: IsarConf -> Mapping -> Atom -> Doc
 isaAtom conf mapping atom = case atom of
-    AFalse         -> text "False"
-    AEq eq         -> ppIsar eq
-    AEv ev         -> isaEvent    conf mapping ev
-    AEvOrd ord     -> isaEventOrd conf mapping ord
-    ACompr av      -> isaCompr   conf av
-    AUncompr av    -> isaUncompr conf av
-    AHasType mv ty -> let tid     = mvarTID mv
-                          optRole = threadRole tid (getMappingEqs mapping)
-                      in ppIsar mv <-> isaIn conf <-> 
-                         isaType conf optRole ty <-> ppIsar (mvarTID mv) <-> 
+    AFalse            -> text "False"
+    AEq eq            -> ppIsar eq
+    AEv ev            -> isaEvent    conf mapping ev
+    AEvOrd ord        -> isaEventOrd conf mapping ord
+    ACompr av         -> isaCompr   conf av
+    AUncompr av       -> isaUncompr conf av
+    AHasType (m,ty,i) -> ppIsar m <-> isaIn conf <-> 
+                         isar conf ty <-> ppIsar i <-> 
                          isaExecutionSystemState conf
-    ATyping _      -> text "well-typed"
-    AReachable p   -> 
+    ATyping _         -> text "well-typed"
+    AReachable p      -> 
       text "(t,r,s)" <-> isaIn conf <-> text "reachable" <-> text (protoName p)
   where
     ppIsar :: Isar a => a -> Doc
@@ -223,8 +214,7 @@ sptAtom mapping atom = case atom of
     AEvOrd (e1,e2) -> sptEventOrd mapping [e1,e2]
     ACompr av      -> sptCompr   av
     AUncompr av    -> sptUncompr av
-    AHasType mv ty -> let optRole = threadRole (mvarTID mv) (getMappingEqs mapping)
-                      in  sptMVar mv <-> text "::" <-> sptType optRole ty
+    AHasType tya   -> sptTypeAnn (const Nothing) tya 
     ATyping typ    -> sptTyping typ
     AReachable p   -> text "reachable" <-> text (protoName p)
 
@@ -254,7 +244,7 @@ sptFormula = pp
     pp m (FAtom atom)  = sptAtom m atom
     pp m (FConj f1 f2) = sep [pp m f1 <-> char '&', pp m f2]
     pp m (FExists v f) = parens $
-        sep [ char '?' <-> (either sptTID sptAgentId v) <> char '.'
+        sep [ char '?' <-> (either sptTID sptArbMsgId v) <> char '.'
             , nest 2 $ pp m' f
             ]
       where

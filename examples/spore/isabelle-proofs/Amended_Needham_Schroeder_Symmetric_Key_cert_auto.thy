@@ -252,14 +252,13 @@ lemma (in restricted_AmendedNS_state) S_kir_sec:
     "LN ''kIR'' tid0 : knows t"
   shows "False"
 using facts proof(sources! " LN ''kIR'' tid0 ")
-  case (I_5_TicketR_kIR tid1 tid3 a0 a1 a2) note_unified facts = this facts
+  case (I_5_TicketR_kIR tid1 a0 a1 a2 a3) note_unified facts = this facts
   thus ?thesis proof(sources! "
                    Enc {| LC ''2'', LN ''ni'' tid1, s(AV ''R'' tid1), s(MV ''kIR'' tid1),
-                          Enc {| LC ''3'', LN ''kIR'' tid0, LN ''nr'' tid3, a0 |}
-                              ( K ( a1 ) ( a2 ) )
+                          Enc {| LC ''3'', LN ''kIR'' tid0, a0, a1 |} ( K ( a2 ) ( a3 ) )
                        |}
                        ( K ( s(AV ''I'' tid1) ) ( s(MV ''S'' tid1) ) ) ")
-    case (S_4_enc tid4) note_unified facts = this facts
+    case (S_4_enc tid2) note_unified facts = this facts
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   qed (insert facts, (((clarsimp, order?) | order))+)?
 next
@@ -311,10 +310,10 @@ proof -
     case fake note_unified facts = this facts
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
-    case (I_5_TicketR_enc tid1 tid2 tid3 a0 a1 a2) note_unified facts = this facts
+    case (I_5_TicketR_enc tid1 tid2 a0 a1 a2 a3) note_unified facts = this facts
     thus ?thesis proof(sources! "
                      Enc {| LC ''2'', LN ''ni'' tid1, s(AV ''R'' tid1), s(MV ''kIR'' tid1),
-                            Enc {| LC ''3'', LN ''kIR'' tid2, LN ''nr'' tid0, a0 |}
+                            Enc {| LC ''3'', LN ''kIR'' tid2, LN ''nr'' tid0, a1 |}
                                 ( K ( s(AV ''R'' tid0) ) ( s(AV ''S'' tid0) ) )
                          |}
                          ( K ( s(AV ''I'' tid1) ) ( s(MV ''S'' tid1) ) ) ")
@@ -373,10 +372,10 @@ proof -
         case fake note_unified facts = this facts
         thus ?thesis by (fastsimp dest: S_kir_sec intro: event_predOrdI)
       next
-        case (I_5_TicketR_enc tid4 tid5 tid6 a0 a1 a2) note_unified facts = this facts
+        case (I_5_TicketR_enc tid4 tid5 a0 a1 a2 a3) note_unified facts = this facts
         thus ?thesis proof(sources! "
                          Enc {| LC ''2'', LN ''ni'' tid4, s(AV ''R'' tid4), s(MV ''kIR'' tid4),
-                                Enc {| LC ''3'', LN ''kIR'' tid2, LN ''nr'' tid3, a0 |}
+                                Enc {| LC ''3'', LN ''kIR'' tid2, LN ''nr'' tid3, a1 |}
                                     ( K ( s(AV ''R'' tid3) ) ( s(AV ''S'' tid3) ) )
                              |}
                              ( K ( s(AV ''I'' tid4) ) ( s(MV ''S'' tid4) ) ) ")
@@ -422,10 +421,10 @@ proof -
     case fake note_unified facts = this facts
     thus ?thesis by (fastsimp dest!: ltk_secrecy)
   next
-    case (I_5_TicketR_enc tid3 tid4 tid5 a0 a1 a2) note_unified facts = this facts
+    case (I_5_TicketR_enc tid3 tid4 a0 a1 a2 a3) note_unified facts = this facts
     thus ?thesis proof(sources! "
                      Enc {| LC ''2'', LN ''ni'' tid3, s(AV ''R'' tid3), s(MV ''kIR'' tid3),
-                            Enc {| LC ''3'', LN ''kIR'' tid4, LN ''nr'' tid2, a0 |}
+                            Enc {| LC ''3'', LN ''kIR'' tid4, LN ''nr'' tid2, a1 |}
                                 ( K ( s(AV ''R'' tid2) ) ( s(AV ''S'' tid2) ) )
                          |}
                          ( K ( s(AV ''I'' tid3) ) ( s(MV ''S'' tid3) ) ) ")

@@ -10,7 +10,7 @@ module Scyther.Message (
   , Fresh(..)
   , AVar(..)
   , MVar(..)
-  , AgentId(..)
+  , ArbMsgId(..)
   , Message(..)
   -- ** Queries
   , lidId
@@ -19,7 +19,7 @@ module Scyther.Message (
   , mvarTID
   , msgFMV
   , msgFresh
-  , msgAgentIds
+  , msgAMIDs
   , msgTIDs
   , trivial
   , submessages
@@ -34,7 +34,7 @@ module Scyther.Message (
 
 -- * Output
   , sptTID
-  , sptAgentId
+  , sptArbMsgId
   , sptFresh
   , sptAVar
   , sptMVar
@@ -66,11 +66,11 @@ instance Show TID where
   show (TID tid) = '#':show tid
 
 -- | An agent name identifier
-newtype AgentId = AgentId { agentId :: Int }
+newtype ArbMsgId = ArbMsgId { arbMsgId :: Int }
   deriving( Eq, Ord, Enum, Num, Data, Typeable )
 
-instance Show AgentId where
-  show (AgentId aid) = 'a':show aid
+instance Show ArbMsgId where
+  show (ArbMsgId aid) = 'a':show aid
 
 
 -- | A local identifier.
@@ -107,7 +107,7 @@ data Message =
   | MAVar   AVar        -- ^ A symbolically instantiated agent variable.
   | MMVar   MVar        -- ^ A symbolically instantiated message variable; 
                         --   @MVar (LocalId (Id \"v\", TID 1))@ corresponds to @s(|MV ''v'' tid1|)@.
-  | MAgent  AgentId     -- ^ Some agent name
+  | MArbMsg ArbMsgId    -- ^ An arbitrary message; i.e., a logical message variable.
   | MHash   Message            -- ^ Hashing
   | MTup    Message Message    -- ^ Pairing
   | MEnc    Message Message    -- ^ Encryption or signing depending on the key (the second argument)
@@ -143,7 +143,7 @@ msgTIDs (MConst _)    = empty
 msgTIDs (MFresh f)    = pure . lidTID . getFresh $ f
 msgTIDs (MAVar v)     = pure . avarTID $ v
 msgTIDs (MMVar v)     = pure . mvarTID $ v
-msgTIDs (MAgent _)    = empty
+msgTIDs (MArbMsg _)    = empty
 msgTIDs (MHash m)     = msgTIDs m
 msgTIDs (MTup m1 m2)  = msgTIDs m1 `mappend` msgTIDs m2
 msgTIDs (MEnc m1 m2)  = msgTIDs m1 `mappend` msgTIDs m2
@@ -153,21 +153,21 @@ msgTIDs (MAsymPK m)   = msgTIDs m
 msgTIDs (MAsymSK m)   = msgTIDs m
 msgTIDs (MInvKey m)   = msgTIDs m
 
--- | Agent identifiers of a message.
-msgAgentIds :: Message -> [AgentId]
-msgAgentIds (MConst _)    = empty
-msgAgentIds (MFresh _)    = empty
-msgAgentIds (MAVar _)     = empty
-msgAgentIds (MMVar _)     = empty
-msgAgentIds (MAgent a)    = pure a
-msgAgentIds (MHash m)     = msgAgentIds m
-msgAgentIds (MTup m1 m2)  = msgAgentIds m1 `mappend` msgAgentIds m2
-msgAgentIds (MEnc m1 m2)  = msgAgentIds m1 `mappend` msgAgentIds m2
-msgAgentIds (MSymK m1 m2) = msgAgentIds m1 `mappend` msgAgentIds m2
-msgAgentIds (MShrK m1 m2) = msgAgentIds m1 `mappend` msgAgentIds m2
-msgAgentIds (MAsymPK m)   = msgAgentIds m
-msgAgentIds (MAsymSK m)   = msgAgentIds m
-msgAgentIds (MInvKey m)   = msgAgentIds m
+-- | Arbitrary-message identifiers of a message (logical message variables).
+msgAMIDs :: Message -> [ArbMsgId]
+msgAMIDs (MConst _)    = empty
+msgAMIDs (MFresh _)    = empty
+msgAMIDs (MAVar _)     = empty
+msgAMIDs (MMVar _)     = empty
+msgAMIDs (MArbMsg a)    = pure a
+msgAMIDs (MHash m)     = msgAMIDs m
+msgAMIDs (MTup m1 m2)  = msgAMIDs m1 `mappend` msgAMIDs m2
+msgAMIDs (MEnc m1 m2)  = msgAMIDs m1 `mappend` msgAMIDs m2
+msgAMIDs (MSymK m1 m2) = msgAMIDs m1 `mappend` msgAMIDs m2
+msgAMIDs (MShrK m1 m2) = msgAMIDs m1 `mappend` msgAMIDs m2
+msgAMIDs (MAsymPK m)   = msgAMIDs m
+msgAMIDs (MAsymSK m)   = msgAMIDs m
+msgAMIDs (MInvKey m)   = msgAMIDs m
 
 -- | Free message variables of a message.
 msgFMV :: Message -> [MVar]
@@ -203,7 +203,6 @@ trivial :: Message -> Bool
 trivial (MConst _) = True
 trivial (MAVar _)  = True
 trivial (MTup _ _) = True
-trivial (MAgent _) = True
 trivial _          = False
 
 -- | The submessages of message.
@@ -262,7 +261,7 @@ normMsg m@(MConst _)          = m
 normMsg m@(MFresh _)          = m
 normMsg m@(MAVar _)           = m
 normMsg m@(MMVar _)           = m
-normMsg m@(MAgent _)          = m
+normMsg m@(MArbMsg _)         = m
 normMsg (MInvKey (MInvKey m)) = normMsg m
 normMsg (MInvKey (MAsymPK m)) = MAsymSK (normMsg m)
 normMsg (MInvKey (MAsymSK m)) = MAsymPK (normMsg m)
@@ -307,13 +306,9 @@ esplSubst (LocalId (_,tid)) conf var
 
 instance Isar TID where
   isar _ tid = text "tid" <> int (getTID tid)
-    --  | isPlainStyle conf = text "tid" <> int (getTID tid)
-    --  | otherwise         = text "tid" <> zeroWidthText "\\<^isub>" <> int (getTID tid)
 
-instance Isar AgentId where
-  isar _ aid = text "a" <> int (agentId aid)
-    --  | isPlainStyle conf = text "a" <> int (agentId aid)
-    --  | otherwise         = text "a" <> zeroWidthText "\\<^isub>" <> int (agentId aid)
+instance Isar ArbMsgId where
+  isar _ aid = text "a" <> int (arbMsgId aid)
 
 instance Isar LocalId where
   isar conf (LocalId (i, tid)) = isar conf i <-> isar conf tid
@@ -333,7 +328,7 @@ instance Isar Message where
       (MFresh i)    -> isar conf i 
       (MAVar i)     -> isar conf i
       (MMVar i)     -> isar conf i
-      (MAgent i)    -> isar conf i
+      (MArbMsg i)   -> isar conf i
       (MHash m)     -> text "Hash" <-> ppTup m
       pt@(MTup _ _) -> ppTup pt
       (MEnc m k)    -> text "Enc" <-> sep [ppTup m, ppTup k]
@@ -362,8 +357,8 @@ instance Isar Message where
 sptTID :: TID -> Doc
 sptTID = text . show
 
-sptAgentId :: AgentId -> Doc
-sptAgentId = (char 'a'  <>) . int . agentId
+sptArbMsgId :: ArbMsgId -> Doc
+sptArbMsgId = (char 'a'  <>) . int . arbMsgId
 
 sptLocalId :: LocalId -> Doc
 sptLocalId (LocalId (i, tid)) = sptId i <> sptTID tid
@@ -377,13 +372,12 @@ sptAVar = sptLocalId . getAVar
 sptMVar :: MVar -> Doc
 sptMVar = (char '?'  <>) . sptLocalId . getMVar
 
-
 sptMessage :: Message -> Doc
 sptMessage x = case x of
   (MConst i)    -> char '\'' <> sptId i <> char '\''
   (MFresh i)    -> sptFresh i
   (MAVar i)     -> sptAVar i
-  (MAgent i)    -> sptAgentId i
+  (MArbMsg i)    -> sptArbMsgId i
   (MMVar i)     -> sptMVar i
   (MHash m)     -> text "h" <> ppBetween 1 "(" ")" m
   pt@(MTup _ _) -> ppBetween 1 "(" ")" pt

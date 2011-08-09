@@ -98,7 +98,7 @@ class (Applicative m, Monad m) => MarkupMonad m where
 class MarkupMonad m => PrettyMonad m where
   -- components output
   prettyTID :: TID -> m Doc
-  prettyAgentId :: AgentId -> m Doc
+  prettyArbMsgId :: ArbMsgId -> m Doc
   prettyMessage :: Message -> m Doc
   prettyFacts   :: Facts -> m ([Doc],[Doc],[Doc])
   prettyFormula :: E.Mapping -> Formula -> m Doc
@@ -114,7 +114,7 @@ class MarkupMonad m => PrettyMonad m where
   prettyNextCase :: m Doc
   prettyChainRuleSplitCases :: [ChainRuleCase] -> m ([ChainRuleCase],[ChainRuleCase])
   prettyChainRuleApplication :: m Doc -> m Doc
-  prettyChainRuleCase :: (String, [Either TID AgentId]) -> m Doc
+  prettyChainRuleCase :: (String, [Either TID ArbMsgId]) -> m Doc
   prettyChainRuleQED :: Message -> [ChainRuleCase] -> m Doc
   prettyTypeCheckInduction :: String -> (m Doc, m Doc -> m Doc, m Doc)
   prettyTypingCase :: String -> String -> m Doc
@@ -129,7 +129,7 @@ class MarkupMonad m => PrettyMonad m where
   prettyTheoryDef :: String -> Doc -> m Doc
 
 -- | Abbreviation for one of the signature of 'prettyChainRuleSplitCases'.
-type ChainRuleCase = ((String, [Either TID AgentId]), Proof)
+type ChainRuleCase = ((String, [Either TID ArbMsgId]), Proof)
 
 ------------------------------------------------------------------------------
 -- Functions shared by the different monad instances
@@ -168,8 +168,8 @@ genericChainRuleSplitCases sel cases =
     TrivLongTermKeySecrecy _    -> Nothing
     TrivPremisesImplyConclusion -> 
       case seConcl se of 
-        FAtom (AHasType _ _) -> Just reason
-        _                    -> Nothing
+        FAtom (AHasType _) -> Just reason
+        _                  -> Nothing
   extractTrivial _ = Nothing
 
 -- | Pretty print a sequent with quantifiers, logical, and meta-logical facts for
@@ -366,7 +366,7 @@ typingLocale = (++ "_state")
 instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
   -- components output
   prettyTID tid = isar <$> ask <*> pure tid
-  prettyAgentId aid = isar <$> ask <*> pure aid
+  prettyArbMsgId aid = isar <$> ask <*> pure aid
   prettyMessage m = isar <$> ask <*> pure m
   prettyFacts f = isaFacts <$> ask <*> pure f
   prettyFormula mapping form = do
@@ -437,7 +437,7 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     kwCase <-> selector <-> text "note_unified facts = this facts"
     where
     ppNewVar (Left tid)  = prettyTID tid
-    ppNewVar (Right aid) = prettyAgentId aid
+    ppNewVar (Right aid) = prettyArbMsgId aid
     selector
       | any (`isPrefixOf` name) ["ik0", "fake"] || null newVars = text name
       | otherwise = parens $ text name <-> hsep (map ppNewVar newVars)
@@ -561,7 +561,7 @@ data SlimOutput = SlimOutput
 instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
   -- components output
   prettyTID = pure . sptTID
-  prettyAgentId = pure . sptAgentId
+  prettyArbMsgId = pure . sptArbMsgId
   prettyMessage = pure . sptMessage
   prettyFacts = pure . sptFacts 
   prettyFormula mapping form = pure $ sptFormula mapping form
@@ -616,7 +616,7 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
     kwCase <-> selector
     where
     ppNewVar (Left tid)  = prettyTID tid
-    ppNewVar (Right aid) = prettyAgentId aid
+    ppNewVar (Right aid) = prettyArbMsgId aid
     selector
       | any (`isPrefixOf` name) ["ik0", "fake"] || null newVars = text name
       | otherwise = parens $ text name <-> hsep (map ppNewVar newVars)

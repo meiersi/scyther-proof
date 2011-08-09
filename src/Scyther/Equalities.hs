@@ -4,14 +4,13 @@ module Scyther.Equalities (
     TIDEq
   , TIDRoleEq
   , RoleEq
-  , AgentEqRHS
-  , AgentEq
+  , ArbMsgEq
   , AVarEq
   , MVarEq
   , MsgEq
   , AnyEq(..)
 
-  , agentEqToMsgEq
+  , arbmEqToMsgEq
   , mvarEqToMsgEq
 
 -- * Compound Equalities
@@ -21,12 +20,12 @@ module Scyther.Equalities (
   , empty
   , solve
   , trimTIDEqs
-  , trimAgentEqs
+  , trimArbMsgEqs
 
   -- ** Destruction
   , getTIDEqs
   , getTIDRoleEqs
-  , getAgentEqs
+  , getArbMsgEqs
   , getAVarEqs
   , getMVarEqs
   , getPostEqs
@@ -38,15 +37,14 @@ module Scyther.Equalities (
   , substLocalId
   , substAVar
   , substMVar
-  , substAgentId
-  , substAgentEqRHS
+  , substAMID
   , substMsg
   , substAnyEq
 
   -- ** Additional Queries
   , threadRole
   , maxMappedTID
-  , maxMappedAgentId
+  , maxMappedArbMsgId
   , reflexive
   , null
 
@@ -55,10 +53,10 @@ module Scyther.Equalities (
   , emptyMapping
   , mkMapping
   , addTIDMapping
-  , addAgentIdMapping
+  , addArbMsgIdMapping
   , addTIDRoleMapping
   , deleteTIDMapping
-  , deleteAgentIdMapping
+  , deleteArbMsgIdMapping
 
 -- * Pretty Printing
   , sptAnyEq
@@ -96,14 +94,12 @@ type TIDRoleEqs = M.Map TID Role
 -- | The role equalities serve a double function:
 type RoleEq  = (Role, Role)
 
-type AgentEqRHS = Either AgentId AVar
-type AgentEq    = (AgentId, AgentEqRHS)
+-- | An equality on an arbitrar-message id (a logical message variable).
+type ArbMsgEq = (ArbMsgId, Message)
 
 -- | Like role equalities, the agent equalities specify both quantification and
--- equalities. Recall that an agent id is a logical variable denoting some
--- agent name. Such an agent name is either equal to another agent id or the
--- content of an agent variable of a thread.
-type AgentEqs = M.Map AgentId AgentEqRHS
+-- equalities.
+type ArbMsgEqs = M.Map ArbMsgId Message
 
 -- | Equalities between different agent variables. 
 --
@@ -128,7 +124,7 @@ data AnyEq =
     TIDEq     !TIDEq
   | TIDRoleEq !TIDRoleEq
   | RoleEq    !RoleEq
-  | AgentEq   !AgentEq
+  | ArbMsgEq   !ArbMsgEq
   | AVarEq    !AVarEq
   | MVarEq    !MVarEq
   | MsgEq     !MsgEq
@@ -136,7 +132,7 @@ data AnyEq =
 
 -- | A conjunction of equality facts.
 --
--- Invariants for a value @eqs = Equalities tideqs roleeqs avareqs mvareqs agnteqs@:
+-- Invariants for a value @eqs = Equalities tideqs roleeqs avareqs mvareqs arbmeqs@:
 --
 --   1. Domain and range normalized with respect to equalities. Note that this implies
 --      substitution must always consider TID substitution first.
@@ -150,9 +146,7 @@ data AnyEq =
 --        
 --     TODO: Complete properties for Agent ID's
 --
---        forall aid : dom(agnteqs).    substAgentId eqs aid = Just (Left aid)
---        forall  : dom(agnteqs).    substAgentId eqs aid = Just (Left aid)
---
+--        forall aid : dom(arbmeqs).    substAMID eqs aid = MArbMsg aid
 --
 --   2. Origin always greater than image for symmetric eqs.
 --
@@ -165,7 +159,7 @@ data AnyEq =
 --
 --   4. All thread identifiers are in the domain of roleeqs.
 --
---   5. All agent identifiers are in the domain of agnteqs.
+--   5. All agent identifiers are in the domain of arbmeqs.
 --
 --   6. No cycles.
 --
@@ -174,7 +168,7 @@ data Equalities = Equalities {
   , roleEqs :: TIDRoleEqs  -- ^ Thread to role assignments.
   , avarEqs :: AVarEqs  -- ^ Equalities between agent variables.
   , mvarEqs :: MVarEqs  -- ^ Equalities between message variables and arbitrary messages.
-  , agntEqs :: AgentEqs -- ^ Equalities between agent names and agent names or agent variables.
+  , arbmEqs :: ArbMsgEqs -- ^ Equalities between logical message variables and other messages.
   , postEqs :: MsgEqs   -- ^ Postponed equalities that stem from equalities involving
                         -- bi-directional keys and cannot be solved without
                         -- splitting in their most general form @KShr a b = KShr c d@. We
@@ -216,12 +210,8 @@ substMVar eqs mv = M.findWithDefault (MMVar mv') mv' (mvarEqs eqs)
   where mv' = mapMVar (substLocalId eqs) mv
 
 -- | Substitute an agent id representing an arbitrary agent name.
-substAgentId :: Equalities -> AgentId -> AgentEqRHS
-substAgentId eqs aid = M.findWithDefault (Left aid) aid (agntEqs eqs)
-
--- | Substitute the right-hand-side of an agent id equality.
-substAgentEqRHS :: Equalities -> AgentEqRHS -> AgentEqRHS
-substAgentEqRHS eqs = either (substAgentId eqs) (Right . substAVar eqs)
+substAMID :: Equalities -> ArbMsgId -> Message
+substAMID eqs aid = M.findWithDefault (MArbMsg aid) aid (arbmEqs eqs)
 
 -- | Substitute message constituents according to equalities.
 --
@@ -233,7 +223,7 @@ substMsg eqs = normMsg . go
     go (MFresh fr)    = MFresh (mapFresh (substLocalId eqs) fr)
     go (MAVar av)     = MAVar (substAVar eqs av)
     go (MMVar mv)     = substMVar eqs mv
-    go (MAgent aid)   = either MAgent MAVar (substAgentId eqs aid)
+    go (MArbMsg aid)  = substAMID eqs aid
     go (MHash m)      = MHash (go m)
     go (MTup m1 m2)   = MTup (go m1) (go m2)
     go (MEnc m1 m2)   = MEnc (go m1) (go m2)
@@ -259,9 +249,8 @@ substTIDRoleEq eqs (tid, role) = case threadRole tid' eqs of
     tid' = substTID eqs tid
 
 -- | Substitute an agent equality.
-substAgentEq :: Equalities -> AgentEq -> MsgEq
-substAgentEq eqs =
-  substMsgEq eqs . agentEqToMsgEq
+substArbMsgEq :: Equalities -> ArbMsgEq -> MsgEq
+substArbMsgEq eqs = substAMID eqs *** substMsg eqs
 
 -- | Substitute an agent variable equality.
 substAVarEq :: Equalities -> AVarEq -> AVarEq
@@ -278,21 +267,21 @@ substMsgEq eqs = substMsg eqs *** substMsg eqs
 -- | Substitute both sides of a representable equality.
 substAnyEq :: Equalities -> AnyEq -> AnyEq
 substAnyEq eqs eq0 = case eq0 of
-  TIDEq     eq -> TIDEq  $ substTIDEq     eqs eq
-  TIDRoleEq eq ->          substTIDRoleEq eqs eq
-  RoleEq    _  -> eq0
-  AgentEq   eq -> MsgEq  $ substAgentEq   eqs eq
-  AVarEq    eq -> AVarEq $ substAVarEq    eqs eq
-  MVarEq    eq -> MsgEq  $ substMVarEq    eqs eq
-  MsgEq     eq -> MsgEq  $ substMsgEq     eqs eq
+  TIDEq     eq  -> TIDEq  $ substTIDEq     eqs eq
+  TIDRoleEq eq  ->          substTIDRoleEq eqs eq
+  RoleEq    _   -> eq0
+  ArbMsgEq   eq -> MsgEq  $ substArbMsgEq   eqs eq
+  AVarEq    eq  -> AVarEq $ substAVarEq    eqs eq
+  MVarEq    eq  -> MsgEq  $ substMVarEq    eqs eq
+  MsgEq     eq  -> MsgEq  $ substMsgEq     eqs eq
 
 
 -- Checking for reflexivity
 ---------------------------
 
 -- | Convert an agent equality to a message equality.
-agentEqToMsgEq :: AgentEq -> MsgEq
-agentEqToMsgEq (aid, rhs) = (MAgent aid, either MAgent MAVar rhs)
+arbmEqToMsgEq :: ArbMsgEq -> MsgEq
+arbmEqToMsgEq (aid, rhs) = (MArbMsg aid, rhs)
 
 -- | Convert a message variable equallity to a message equality.
 mvarEqToMsgEq :: MVarEq -> MsgEq
@@ -304,7 +293,7 @@ reflexive eq0 = case eq0 of
   TIDEq     eq -> uncurry (==) eq
   TIDRoleEq _  -> False
   RoleEq    eq -> uncurry (==) eq
-  AgentEq   eq -> reflexive . MsgEq $ agentEqToMsgEq eq
+  ArbMsgEq  eq -> reflexive . MsgEq $ arbmEqToMsgEq eq
   AVarEq    eq -> uncurry (==) eq
   MVarEq    eq -> reflexive . MsgEq $ mvarEqToMsgEq eq
   MsgEq     eq -> uncurry (==) eq
@@ -321,8 +310,8 @@ getTIDRoleEqs :: Equalities -> [TIDRoleEq]
 getTIDRoleEqs = M.toList . roleEqs
 
 -- | The list of agent variable equalities.
-getAgentEqs :: Equalities -> [AgentEq]
-getAgentEqs = M.toList . agntEqs
+getArbMsgEqs :: Equalities -> [ArbMsgEq]
+getArbMsgEqs = M.toList . arbmEqs
 
 -- | The list of agent variable equalities.
 getAVarEqs :: Equalities -> [AVarEq]
@@ -338,9 +327,9 @@ getPostEqs = U.toList . postEqs
 
 -- | Convert a set of equalities ot the tuple with lists for each individual
 -- equality type.
-toLists :: Equalities -> ([TIDEq], [TIDRoleEq], [AgentEq], [AVarEq], [MVarEq], [MsgEq])
+toLists :: Equalities -> ([TIDEq], [TIDRoleEq], [ArbMsgEq], [AVarEq], [MVarEq], [MsgEq])
 toLists eqs = 
-  (getTIDEqs eqs, getTIDRoleEqs eqs, getAgentEqs eqs
+  (getTIDEqs eqs, getTIDRoleEqs eqs, getArbMsgEqs eqs
   , getAVarEqs eqs, getMVarEqs eqs, getPostEqs eqs)
 
 -- | Convert a set of equalities to a list of equalities.
@@ -348,7 +337,7 @@ toLists eqs =
 -- POST: Order of equalities equal to order in result of 'toLists'.
 toAnyEqs :: Equalities -> [AnyEq]
 toAnyEqs eqs = 
-  map TIDEq a ++ map TIDRoleEq b ++ map AgentEq c ++ map AVarEq d ++ 
+  map TIDEq a ++ map TIDRoleEq b ++ map ArbMsgEq c ++ map AVarEq d ++ 
   map  MVarEq e ++ map MsgEq f
   where (a, b, c, d, e, f) = toLists eqs
 
@@ -358,7 +347,7 @@ anyEqTIDs eq = case eq of
   TIDEq (tid, _)     -> return tid
   TIDRoleEq (tid, _) -> return tid
   RoleEq (_, _)      -> mzero
-  AgentEq (_, rhs)   -> either (const mzero) (return . avarTID) rhs
+  ArbMsgEq (_, m)    -> msgTIDs m
   AVarEq (a1, a2)    -> return (avarTID a1) `mplus` return (avarTID a2)
   MVarEq (v, m)      -> return (mvarTID v)  `mplus` msgTIDs m
   MsgEq (m1, m2)     -> msgTIDs m1          `mplus` msgTIDs m2
@@ -404,14 +393,14 @@ solveRepeated (ueq:ueqs) eqs improved = do
 -- | Solve a single unification equation. Equalities are only return when
 -- changed.
 solve1 :: Monad m => AnyEq -> Equalities -> m ([AnyEq], Equalities, Bool)
-solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs agnteqs posteqs) = 
+solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) = 
  -- trace ("solve1: " ++ show (sptAnyEq ueq)) $
   case ueq of
     TIDEq (tid1, tid2) ->
       let tid1' = substTID eqs tid1
           tid2' = substTID eqs tid2
           elimTID x y = return
-            ( mkAnyEqs TIDRoleEq roleeqs ++ mkAnyEqs AgentEq agnteqs ++ 
+            ( mkAnyEqs TIDRoleEq roleeqs ++ mkAnyEqs ArbMsgEq arbmeqs ++ 
               mkAnyEqs AVarEq aveqs ++ mkAnyEqs MVarEq mveqs ++
               map MsgEq (U.toList posteqs)
             , empty { tidEqs = M.insert x y tideqs }
@@ -439,27 +428,31 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs agnteqs posteqs) =
       let av1' = substAVar eqs av1
           av2' = substAVar eqs av2
           elimAVar x y = updateSolution (eqs {
-              mvarEqs =                M.map (substMsg        elimEqs) mveqs
-            , agntEqs =                M.map (substAgentEqRHS elimEqs) agnteqs
-            , avarEqs = M.insert x y $ M.map (substAVar       elimEqs) aveqs
+              mvarEqs =                M.map (substMsg  elimEqs) mveqs
+            , arbmEqs =                M.map (substMsg  elimEqs) arbmeqs
+            , avarEqs = M.insert x y $ M.map (substAVar elimEqs) aveqs
             })
             where elimEqs = empty { avarEqs = M.singleton x y }
       in
         elimVarEqVar elimAVar (av1', av1') (av2', av2')
 
-    AgentEq (lhs, rhs) ->
-      let elimAgentId x y = updateSolution (eqs {
-              mvarEqs =                M.map (substMsg        elimEqs) mveqs
-            , agntEqs = M.insert x y $ M.map (substAgentEqRHS elimEqs) agnteqs
-            })
-            where elimEqs = empty { agntEqs = M.singleton x y }
+    ArbMsgEq (lhs, rhs) ->
+      let elimArbMsgId x y
+            | x `elem` msgAMIDs y = 
+                  noUnifier $ "occurs check failed for '"++show x++"' in '"++show y++"'"
+            | otherwise =
+                updateSolution (eqs {
+                    mvarEqs =                M.map (substMsg elimEqs) mveqs
+                  , arbmEqs = M.insert x y $ M.map (substMsg elimEqs) arbmeqs
+                  })
+                  where elimEqs = empty { arbmEqs = M.singleton x y }
       in
-        case (substAgentId eqs lhs, substAgentEqRHS eqs rhs) of
-          (lhs'@(Left aid1), rhs'@(Left aid2)) ->
-            elimVarEqVar elimAgentId (aid1, lhs') (aid2, rhs')
-          (lhs'@(Right _  ),      (Left aid2)) -> elimAgentId aid2 lhs'
-          (     (Left aid1), rhs'@(Right _  )) -> elimAgentId aid1 rhs'
-          (     (Right av1),      (Right av2)) -> newEqs [AVarEq (av1, av2)]
+        case (substAMID eqs lhs, substMsg eqs rhs) of
+          (lhs'@(MArbMsg aid1), rhs'@(MArbMsg aid2)) ->
+            elimVarEqVar elimArbMsgId (aid1, lhs') (aid2, rhs')
+          (lhs'          , (MArbMsg aid2)) -> elimArbMsgId aid2 lhs'
+          ((MArbMsg aid1), rhs'          ) -> elimArbMsgId aid1 rhs'
+          (lhs'          , rhs'          ) -> newEqs [MsgEq (lhs', rhs')]
     
     MVarEq (lhs, rhs) ->
       let elimMVar x y 
@@ -467,9 +460,9 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs agnteqs posteqs) =
                 noUnifier $ "occurs check failed for '"++show x++"' in '"++show y++"'"
             | otherwise = 
                 updateSolution (eqs {
-                      mvarEqs =  M.insert x y $ M.map (substMsg elimEqs) mveqs
-                    })
-                    where elimEqs = empty { mvarEqs = M.singleton x y }
+                    mvarEqs =  M.insert x y $ M.map (substMsg elimEqs) mveqs
+                  })
+                  where elimEqs = empty { mvarEqs = M.singleton x y }
       in
         case (substMVar eqs lhs, substMsg eqs rhs) of
           (lhs'@(MMVar mv1), rhs'@(MMVar mv2)) ->
@@ -479,9 +472,15 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs agnteqs posteqs) =
           (lhs'            , rhs'            ) -> newEqs [MsgEq (lhs', rhs')]
             
     MsgEq eq -> case (substMsg eqs *** substMsg eqs) eq of
+      -- The order of pattern matches ensures that message variables are always
+      -- substituted by arbitrary-message ids.
       (MMVar mv1, rhs) -> newEqs [MVarEq (mv1, rhs)]
       (lhs, MMVar mv2) -> newEqs [MVarEq (mv2, lhs)]
 
+      (MArbMsg aid1, rhs) -> newEqs [ArbMsgEq (aid1, rhs)]
+      (lhs, MArbMsg aid2) -> newEqs [ArbMsgEq (aid2, lhs)]
+
+      -- TODO: Also exploit typing assumptions, if required.
       (MInvKey x,  MInvKey y ) -> newEqs [MsgEq (x, y)]
       (MInvKey x,  MAsymPK m1) -> newEqs [MsgEq (x, MAsymSK m1)]
       (MAsymPK m1, MInvKey x ) -> newEqs [MsgEq (x, MAsymSK m1)]
@@ -489,10 +488,6 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs agnteqs posteqs) =
       (MAsymSK m1, MInvKey x ) -> newEqs [MsgEq (x, MAsymPK m1)]
       (m1,         MInvKey x ) -> newEqs [MsgEq (x, m1)]
       (MInvKey x,  m1        ) -> newEqs [MsgEq (x, m1)]
-
-      (MAgent aid1, MAgent aid2) -> newEqs [AgentEq (aid1, Left aid2)]
-      (MAgent aid1, MAVar av2  ) -> newEqs [AgentEq (aid1, Right av2)]
-      (MAVar av1,   MAgent aid2) -> newEqs [AgentEq (aid2, Right av1)]
 
       (MAVar av1, MAVar av2) -> newEqs [AVarEq (av1, av2)]
 
@@ -545,16 +540,16 @@ trimTIDEqs eqs = (M.keys . tidEqs $ eqs, eqs { tidEqs = M.empty })
 
 -- | Remove the agent identifiers equalities. This is logically safe iff there is no fact
 -- outside the equalities that still refers to the dropped agent identifiers.
-trimAgentEqs :: Equalities -> ([AgentId], Equalities) -- ^ Dropped AgentIds plus updated equalities
-trimAgentEqs eqs = (M.keys . agntEqs $ eqs, eqs { agntEqs = M.empty })
+trimArbMsgEqs :: Equalities -> ([ArbMsgId], Equalities) -- ^ Dropped ArbMsgIds plus updated equalities
+trimArbMsgEqs eqs = (M.keys . arbmEqs $ eqs, eqs { arbmEqs = M.empty })
 
 -- | The maximal mapped thread identifier.
 maxMappedTID :: Equalities -> Maybe TID
 maxMappedTID = fmap (fst . fst) . M.maxViewWithKey . tidEqs
 
 -- | The maximal mapped agent identifier.
-maxMappedAgentId :: Equalities -> Maybe AgentId
-maxMappedAgentId = fmap (fst . fst) . M.maxViewWithKey . agntEqs
+maxMappedArbMsgId :: Equalities -> Maybe ArbMsgId
+maxMappedArbMsgId = fmap (fst . fst) . M.maxViewWithKey . arbmEqs
 
 
 -- | Retrieve the role of a thread.
@@ -582,9 +577,9 @@ emptyMapping = Mapping empty
 -- invariant that the domain of the equalities must be invariant under
 -- substitution. This is OK, as domain and range of a mapping are from
 -- different logical contexts.
-mkMapping :: M.Map TID TID -> M.Map AgentId AgentId -> Mapping
-mkMapping tideqs agnteqs = Mapping $
-  empty {tidEqs  = tideqs , agntEqs = M.map Left agnteqs}
+mkMapping :: M.Map TID TID -> M.Map ArbMsgId ArbMsgId -> Mapping
+mkMapping tideqs arbmeqs = Mapping $
+  empty {tidEqs  = tideqs , arbmEqs = M.map MArbMsg arbmeqs}
 
 -- | Add a mapping from one thread identifier to another one, possibly
 -- overriding an existing mapping.
@@ -592,11 +587,11 @@ addTIDMapping :: TID -> TID -> Mapping -> Mapping
 addTIDMapping from to = mapMapping $ \eqs ->
   eqs { tidEqs = M.insert from to $ tidEqs eqs }
 
--- | Add a mapping from one thread identifier to another one, possibly
--- overriding an existing mapping.
-addAgentIdMapping :: AgentId -> AgentId -> Mapping -> Mapping
-addAgentIdMapping from to = mapMapping $ \eqs -> 
-  eqs { agntEqs = M.insert from (Left to) $ agntEqs eqs }
+-- | Add a mapping from one arbitrary-message id to another arbitrary-message
+-- id, possibly overriding an existing mapping.
+addArbMsgIdMapping :: ArbMsgId -> ArbMsgId -> Mapping -> Mapping
+addArbMsgIdMapping from to = mapMapping $ \eqs -> 
+  eqs { arbmEqs = M.insert from (MArbMsg to) $ arbmEqs eqs }
 
 -- | Add a mapping from one thread identifier to an other role, possibly
 -- overriding an existing mapping.
@@ -611,9 +606,9 @@ deleteTIDMapping tid = mapMapping $ \eqs ->
   eqs { tidEqs = M.delete tid $ tidEqs eqs }
 
 -- | Delete the mapping of the given agent identifier.
-deleteAgentIdMapping :: AgentId -> Mapping -> Mapping
-deleteAgentIdMapping aid = mapMapping $ \eqs ->
-  eqs { agntEqs = M.delete aid $ agntEqs eqs }
+deleteArbMsgIdMapping :: ArbMsgId -> Mapping -> Mapping
+deleteArbMsgIdMapping aid = mapMapping $ \eqs ->
+  eqs { arbmEqs = M.delete aid $ arbmEqs eqs }
 
 
 ------------------------------------------------------------------------------
@@ -638,10 +633,10 @@ instance Isar AnyEq where
       RoleEq eq -> ppEq' (text . roleName) eq
       TIDRoleEq (tid, role) -> 
         text "roleMap r" <-> ppIsar tid <-> text ("= Some " ++ roleName role)
-      AgentEq eq -> ppEq  ppIsar (either ppIsar ppIsar) eq
-      AVarEq  eq -> ppEq' ppIsar eq
-      MVarEq  eq -> ppEq  ppIsar ppIsar eq
-      MsgEq   eq -> ppEq' ppIsar eq
+      ArbMsgEq eq -> ppEq  ppIsar ppIsar eq
+      AVarEq  eq  -> ppEq' ppIsar eq
+      MVarEq  eq  -> ppEq  ppIsar ppIsar eq
+      MsgEq   eq  -> ppEq' ppIsar eq
     where
       ppIsar :: Isar a => a -> Doc
       ppIsar = isar conf
@@ -655,10 +650,10 @@ sptAnyEq eq0 = case eq0 of
   RoleEq eq -> ppEq' (text . roleName) eq
   TIDRoleEq (tid, role) -> 
     text "role(" <-> sptTID tid <-> text (") = " ++ roleName role)
-  AgentEq eq -> ppEq  sptAgentId (either sptAgentId sptAVar) eq
-  AVarEq  eq -> ppEq' sptAVar eq
-  MVarEq  eq -> ppEq  sptMVar sptMessage eq
-  MsgEq   eq -> ppEq' sptMessage eq
+  ArbMsgEq eq -> ppEq  sptArbMsgId sptMessage eq
+  AVarEq  eq  -> ppEq' sptAVar eq
+  MVarEq  eq  -> ppEq  sptMVar sptMessage eq
+  MsgEq   eq  -> ppEq' sptMessage eq
 
 
 {-
@@ -666,25 +661,25 @@ sptAnyEq eq0 = case eq0 of
 sptEqualities :: Equalities -> 
                  ([Doc], [Doc], [Doc]) -- ^ quantified variables, representable
                                        --   equalities, non-representable equalities
-sptEqualities (Equalities tideqs roleeqs aveqs mveqs agnteqs) =
+sptEqualities (Equalities tideqs roleeqs aveqs mveqs arbmeqs) =
   ( map sptTID (M.keys roleeqs) ++
-    [ sptAgentId aid | (aid, Nothing) <- M.toList agnteqs]
+    [ sptArbMsgId aid | (aid, Nothing) <- M.toList arbmeqs]
   , ppMapMaybe ppTIDRoleEq roleeqs ++ 
     ppVarEqs ppAVar ppAVar                 aveqs ++ 
     ppVarEqs ppMVar sptMessage             mveqs ++
-    ppVarEqs ppAgent (maybe emptyDoc (either ppAgent ppAVar)) agnteqs
+    ppVarEqs ppAgent (maybe emptyDoc (either ppAgent ppAVar)) arbmeqs
   , ppMap      ppTIDEq  tideqs ++
-    ppMapMaybe ppAgentEq agnteqs
+    ppMapMaybe ppArbMsgEq arbmeqs
   )
   where
   ppAVar = sptMessage . MAVar
   ppMVar = sptMessage . MMVar
-  ppAgent = sptMessage . MAgent
+  ppAgent = sptMessage . MArbMsg
   ppMap ppElem = map ppElem . M.toList
   ppMapMaybe ppElem m = map ppElem [(k,v) | (k, Just v) <- M.toList m]
   ppTIDEq (tid1,tid2) = sptTID tid1 <-> text "->" <-> sptTID tid2
   ppTIDRoleEq (tid, role) = text "role(" <> sptTID tid <> text ") =" <-> text (roleName role)
-  ppAgentEq (aid, rhs) = sptAgentId aid <-> text "->" <-> either sptAgentId sptLocalId rhs
+  ppArbMsgEq (aid, rhs) = sptArbMsgId aid <-> text "->" <-> either sptArbMsgId sptLocalId rhs
   ppVarEqs dom ran = ppMap ppVarEq . equalityChains
     where
     ppVarEq (r,ds) = fsep . intersperse (char '=') $ ran r : map dom (S.toList ds)
