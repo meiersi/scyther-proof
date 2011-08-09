@@ -859,10 +859,12 @@ setFinalEq eq = modify $ \crs -> crs { crsFinalEq = Just eq }
 -- try to unify the two messages in the context of the current facts;
 -- this function will always succeed, but the facts may be Nothing
 unify :: Message -> Message -> ChainRuleM ()
-unify m m' = do
-  crs <- get
-  maybe mzero (modifyFacts . const) $ 
-    solve [certAnyEq (crsFacts crs) $ E.MsgEq (m', m)] (crsFacts crs)
+unify m m' 
+  | m == m'   = return () -- performance optimization
+  | otherwise = do
+      crs <- get
+      maybe mzero (modifyFacts . const) $ 
+        solve [certAnyEq (crsFacts crs) $ E.MsgEq (m', m)] (crsFacts crs)
   
 -- | Get a fresh thread identifier and update the facts accordingly
 getFreshTID :: ChainRuleM TID
@@ -915,10 +917,9 @@ addExpandedTypeAnn (m, ty0, tid) = do
         addTypeAnn (v, ty, tid)
         return v
 
-    expand mkV (KnownT step) = do
+    expand mkV ty@(KnownT _) = do
         v <- mkV
-        modifyFacts $ \facts -> 
-            insertEvOrd (certEvOrd facts (Learn v, Step tid step)) facts
+        addTypeAnn (v, ty, tid)
         return v
 
     expand _ (ConstT c)      = return (MConst c)
@@ -932,16 +933,14 @@ addExpandedTypeAnn (m, ty0, tid) = do
     arb :: ChainRuleM Message
     arb = MArbMsg <$> getFreshAMID
       
-    -- expand ty = error $ "expand: '" ++ ppTy ++ "' not supported"
-      -- where ppTy = show . render $ sptType Nothing ty 
---
 -- | Get the type annotation of a message.
 --
 -- PRE: The message must be normalized with respect to the current facts.
-getTypeAnn :: Message -> ChainRuleM (Maybe TypeAnn)
+getTypeAnn :: Message -> ChainRuleM TypeAnn
 getTypeAnn m = do
   tyas <- gets (typeAnns . crsFacts)
-  return $ headMay [ tya | tya@(m', _, _) <- S.toList tyas, m == m' ]
+  return $ headNote ("getTypeAnn: unannotated message '" ++ show m ++ "'")
+                    [ tya | tya@(m', _, _) <- S.toList tyas, m == m' ]
 
 
 -- number cases such that duplicates get numbered individually
@@ -1129,27 +1128,22 @@ chainRuleFacts m      facts0
             if v /= v'
               then msgChains prev v'
               else do
-                optTya <- getTypeAnn v
-                case optTya of 
-                  -- if it is not annotated, then it is a KnownT type => prove cyclicity
-                  Nothing -> do
-                    insertPrevious prev (Learn v)
-                    facts <- getsFacts id
-                    if cyclic (eventOrd facts)
-                      then mzero
-                      else error $ "failed to prove cyclicity for unannotated '" ++ show v++ "' in\n" ++
-                                   render (nest 2 $ sptSimpleFacts facts)
-                    
-                  Just (tya@(_,tyaTy,tyaTid)) -> case tyaTy of
+                tya <- getTypeAnn v
+                case tya of 
+                  (tya@(_,tyaTy,tyaTid)) -> case tyaTy of
+                    KnownT _     -> mzero -- protocol wellformedness checks that KnownT implies cyclicity
                     AgentT       -> mzero -- we already know the agent names
                     SumT ty1 ty2 -> do
                         deleteTypeAnn tya
-                        (addExpandedTypeAnn (v, ty1, tyaTid) <|>
-                         addExpandedTypeAnn (v, ty2, tyaTid))
+                        (addFastExpandedTypeAnn (v, ty1, tyaTid) <|>
+                         addFastExpandedTypeAnn (v, ty2, tyaTid))
                         msgChains prev v
                     -- all other type annotations should have been expanded already.
                     _ -> error $ "msgChains: unexpanded type annotation: " ++ show tya
 
+          -- fast expansion of type annotations: exploits that KnownT _ is guaranteed to be cyclic
+          addFastExpandedTypeAnn (_, KnownT _, _) = mzero
+          addFastExpandedTypeAnn tya              = addExpandedTypeAnn tya
 
 ------------------------------------------------------------------------------
 -- Message Equality Splitting to deal with 'MShrK a b = MShrK x y' eqs
@@ -1306,9 +1300,11 @@ sptFacts facts =
           (text setName <> lparen : (map (nest 2) . punctuate comma) 
             (ppSet sptMessage set)) ++ [rparen]
 
+{-
 sptSimpleFacts :: Facts -> Doc
 sptSimpleFacts facts = case sptFacts facts of 
     (ds1, ds2, ds3) -> vcat $ map vcat [ds1, [text ""], ds2, [text ""], ds3]
+-}
 
 -- | Compute a list of transitive chains representing an abbreviated version of
 -- the given binary relation.

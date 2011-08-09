@@ -31,7 +31,8 @@ module Scyther.Theory (
   , theoryProofSize
   , theoryOverview
   , classifyProperties
-  -- , wfTheory
+  -- , wfTheory       -- TODO: Implement type wellformedness check. 
+                      --       Currently, we rely on Isabelle for the last soundness check.
 
 ) where
 
