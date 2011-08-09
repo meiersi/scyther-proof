@@ -220,10 +220,8 @@ proof -
             ( s(MV ''AuthKey'' tid0) ) ")
       case (G_4_enc tid1) note_unified facts = this facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''22'', s(MV ''C'' tid1), s(AV ''G'' tid1),
-                              s(MV ''AuthKey'' tid0), s(MV ''Ta'' tid1)
-                           |}
-                           ( K ( s(MV ''A'' tid1) ) ( s(AV ''G'' tid1) ) ) ")
+                       Enc {| LC ''3'', s(MV ''C'' tid1), s(MV ''Tc2'' tid1) |}
+                           ( s(MV ''AuthKey'' tid0) ) ")
       qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
     qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
@@ -260,10 +258,8 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''22'', s(MV ''C'' tid0), s(AV ''G'' tid0),
-               s(MV ''AuthKey'' tid0), s(MV ''Ta'' tid0)
-            |}
-            ( K ( s(MV ''A'' tid0) ) ( s(AV ''G'' tid0) ) ) ")
+        Enc {| LC ''3'', s(MV ''C'' tid0), s(MV ''Tc2'' tid0) |}
+            ( s(MV ''AuthKey'' tid0) ) ")
     qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
   next
     case (G_3_S t r s tid0) note facts = this
@@ -394,5 +390,377 @@ context Kerberos_state begin
 end
 
 (* subsection:  Secrecy Properties  *)
+
+lemma (in restricted_Kerberos_state) A_AuthKey_secret:
+  assumes facts:
+    "roleMap r tid0 = Some A"
+    "RLKR(s(AV ''A'' tid0)) ~: reveals t"
+    "RLKR(s(MV ''C'' tid0)) ~: reveals t"
+    "RLKR(s(MV ''G'' tid0)) ~: reveals t"
+    "LN ''AuthKey'' tid0 : knows t"
+  shows "False"
+using facts proof(sources! " LN ''AuthKey'' tid0 ")
+  case A_2_AuthKey note_unified facts = this facts
+  thus ?thesis by (fastsimp dest!: ltk_secrecy)
+next
+  case A_2_AuthKey_1 note_unified facts = this facts
+  thus ?thesis by (fastsimp dest!: ltk_secrecy)
+next
+  case (C_3_AuthTicket_AuthKey tid1 a0 a1 tid3 a2 a3) note_unified facts = this facts
+  thus ?thesis proof(sources! "
+                   Enc {| LC ''21'', s(MV ''AuthKey'' tid1), s(AV ''G'' tid1),
+                          s(MV ''Ta'' tid1),
+                          Enc {| LC ''22'', a0, a1, LN ''AuthKey'' tid0, LN ''Ta'' tid3 |}
+                              ( K ( a2 ) ( a3 ) )
+                       |}
+                       ( K ( s(AV ''C'' tid1) ) ( s(MV ''A'' tid1) ) ) ")
+    case (A_2_enc tid4) note_unified facts = this facts
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  qed (insert facts, (((clarsimp, order?) | order))+)?
+qed (insert facts, fastsimp+)?
+
+lemma (in restricted_Kerberos_state) C_AuthKey_secret:
+  assumes facts:
+    "roleMap r tid0 = Some C"
+    "RLKR(s(AV ''C'' tid0)) ~: reveals t"
+    "RLKR(s(AV ''G'' tid0)) ~: reveals t"
+    "RLKR(s(MV ''A'' tid0)) ~: reveals t"
+    "( tid0, C_2 ) : steps t"
+    "s(MV ''AuthKey'' tid0) : knows t"
+  shows "False"
+proof -
+  note_prefix_closed facts = facts
+  thus ?thesis proof(sources! "
+                   Enc {| LC ''21'', s(MV ''AuthKey'' tid0), s(AV ''G'' tid0),
+                          s(MV ''Ta'' tid0), s(MV ''AuthTicket'' tid0)
+                       |}
+                       ( K ( s(AV ''C'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
+    case fake note_unified facts = this facts
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  next
+    case (A_2_enc tid1) note_unified facts = this facts
+    thus ?thesis by (fastsimp dest: A_AuthKey_secret intro: event_predOrdI)
+  qed (insert facts, fastsimp+)?
+qed
+
+lemma (in restricted_Kerberos_state) G_AuthKey_secret:
+  assumes facts:
+    "roleMap r tid0 = Some G"
+    "RLKR(s(AV ''G'' tid0)) ~: reveals t"
+    "RLKR(s(MV ''A'' tid0)) ~: reveals t"
+    "RLKR(s(MV ''C'' tid0)) ~: reveals t"
+    "( tid0, G_3 ) : steps t"
+    "s(MV ''AuthKey'' tid0) : knows t"
+  shows "False"
+proof -
+  note_prefix_closed facts = facts
+  thus ?thesis proof(sources! "
+                   Enc {| LC ''22'', s(MV ''C'' tid0), s(AV ''G'' tid0),
+                          s(MV ''AuthKey'' tid0), s(MV ''Ta'' tid0)
+                       |}
+                       ( K ( s(MV ''A'' tid0) ) ( s(AV ''G'' tid0) ) ) ")
+    case fake note_unified facts = this facts
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  next
+    case (A_2_enc_1 tid1) note_unified facts = this facts
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  next
+    case (C_3_AuthTicket_enc tid1 a0 a1 tid2 tid3 a2 a3) note_unified facts = this facts
+    thus ?thesis proof(sources! "
+                     Enc {| LC ''21'', s(MV ''AuthKey'' tid1), s(AV ''G'' tid1),
+                            s(MV ''Ta'' tid1),
+                            Enc {| LC ''22'', a0, s(AV ''G'' tid0), LN ''AuthKey'' tid2,
+                                   LN ''Ta'' tid3
+                                |}
+                                ( K ( a2 ) ( s(AV ''G'' tid0) ) )
+                         |}
+                         ( K ( s(AV ''C'' tid1) ) ( s(MV ''A'' tid1) ) ) ")
+      case (A_2_enc tid4) note_unified facts = this facts
+      thus ?thesis by (fastsimp dest: A_AuthKey_secret intro: event_predOrdI)
+    qed (insert facts, (((clarsimp, order?) | order))+)?
+  qed (insert facts, fastsimp+)?
+qed
+
+lemma (in restricted_Kerberos_state) G_ServKey_sec:
+  assumes facts:
+    "roleMap r tid0 = Some G"
+    "RLKR(s(AV ''G'' tid0)) ~: reveals t"
+    "RLKR(s(MV ''A'' tid0)) ~: reveals t"
+    "RLKR(s(MV ''C'' tid0)) ~: reveals t"
+    "RLKR(s(MV ''S'' tid0)) ~: reveals t"
+    "LN ''ServKey'' tid0 : knows t"
+  shows "False"
+using facts proof(sources! " LN ''ServKey'' tid0 ")
+  case (C_5_ServTicket_ServKey tid1 a0 a1 tid3 a2 a3) note_unified facts = this facts
+  thus ?thesis proof(sources! "
+                   Enc {| LC ''41'', s(MV ''ServKey'' tid1), s(AV ''S'' tid1),
+                          s(MV ''Tg'' tid1),
+                          Enc {| LC ''42'', a0, a1, LN ''ServKey'' tid0, LN ''Tg'' tid3 |}
+                              ( K ( a2 ) ( a3 ) )
+                       |}
+                       ( s(MV ''AuthKey'' tid1) ) ")
+    case (G_4_enc tid4) note_unified facts = this facts
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  qed (insert facts, (((clarsimp, order?) | order))+)?
+next
+  case G_4_ServKey note_unified facts = this facts
+  thus ?thesis proof(sources! "
+                   Enc {| LC ''22'', s(MV ''C'' tid0), s(AV ''G'' tid0),
+                          s(MV ''AuthKey'' tid0), s(MV ''Ta'' tid0)
+                       |}
+                       ( K ( s(MV ''A'' tid0) ) ( s(AV ''G'' tid0) ) ) ")
+    case fake note_unified facts = this facts
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  next
+    case (A_2_enc_1 tid1) note_unified facts = this facts
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  next
+    case (C_3_AuthTicket_enc tid1 a0 a1 tid2 tid3 a2 a3) note_unified facts = this facts
+    thus ?thesis by (fastsimp dest: G_AuthKey_secret intro: event_predOrdI)
+  qed (insert facts, fastsimp+)?
+next
+  case G_4_ServKey_1 note_unified facts = this facts
+  thus ?thesis by (fastsimp dest!: ltk_secrecy)
+qed (insert facts, fastsimp+)?
+
+lemma (in restricted_Kerberos_state) C_ServKey_sec:
+  assumes facts:
+    "roleMap r tid0 = Some C"
+    "RLKR(s(AV ''C'' tid0)) ~: reveals t"
+    "RLKR(s(AV ''G'' tid0)) ~: reveals t"
+    "RLKR(s(AV ''S'' tid0)) ~: reveals t"
+    "RLKR(s(MV ''A'' tid0)) ~: reveals t"
+    "( tid0, C_4 ) : steps t"
+    "s(MV ''ServKey'' tid0) : knows t"
+  shows "False"
+proof -
+  note_prefix_closed facts = facts
+  thus ?thesis proof(sources! "
+                   Enc {| LC ''21'', s(MV ''AuthKey'' tid0), s(AV ''G'' tid0),
+                          s(MV ''Ta'' tid0), s(MV ''AuthTicket'' tid0)
+                       |}
+                       ( K ( s(AV ''C'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
+    case fake note_unified facts = this facts
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  next
+    case (A_2_enc tid1) note_unified facts = this facts
+    thus ?thesis proof(sources! "
+                     Enc {| LC ''41'', s(MV ''ServKey'' tid0), s(AV ''S'' tid0),
+                            s(MV ''Tg'' tid0), s(MV ''ServTicket'' tid0)
+                         |}
+                         ( LN ''AuthKey'' tid1 ) ")
+      case fake note_unified facts = this facts
+      thus ?thesis by (fastsimp dest: A_AuthKey_secret intro: event_predOrdI)
+    next
+      case (G_4_enc tid2) note_unified facts = this facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''22'', s(MV ''C'' tid2), s(AV ''G'' tid2),
+                              LN ''AuthKey'' tid1, s(MV ''Ta'' tid2)
+                           |}
+                           ( K ( s(MV ''A'' tid2) ) ( s(AV ''G'' tid2) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest: A_AuthKey_secret intro: event_predOrdI)
+      next
+        case (A_2_enc_1 tid3) note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (C_3_AuthTicket_enc tid3 a0 a1 tid4 tid5 a2 a3) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''21'', s(MV ''AuthKey'' tid3), s(AV ''G'' tid3),
+                                s(MV ''Ta'' tid3),
+                                Enc {| LC ''22'', a0, s(AV ''G'' tid2), LN ''AuthKey'' tid1,
+                                       LN ''Ta'' tid5
+                                    |}
+                                    ( K ( a2 ) ( s(AV ''G'' tid2) ) )
+                             |}
+                             ( K ( s(AV ''C'' tid3) ) ( s(MV ''A'' tid3) ) ) ")
+          case (A_2_enc tid6) note_unified facts = this facts
+          thus ?thesis by (fastsimp dest: G_ServKey_sec intro: event_predOrdI)
+        qed (insert facts, (((clarsimp, order?) | order))+)?
+      qed (insert facts, fastsimp+)?
+    qed (insert facts, fastsimp+)?
+  qed (insert facts, fastsimp+)?
+qed
+
+(* subsection:  Authentication Properties  *)
+
+lemma (in restricted_Kerberos_state) C_auth:
+  assumes facts:
+    "roleMap r tid1 = Some C"
+    "RLKR(s(AV ''C'' tid1)) ~: reveals t"
+    "RLKR(s(AV ''G'' tid1)) ~: reveals t"
+    "RLKR(s(AV ''S'' tid1)) ~: reveals t"
+    "RLKR(s(MV ''A'' tid1)) ~: reveals t"
+    "( tid1, C_6 ) : steps t"
+  shows
+    "(?  tid2.
+        (?  tid3.
+           (?  tid4.
+              roleMap r tid2 = Some A &
+              roleMap r tid3 = Some G &
+              roleMap r tid4 = Some S &
+              s(MV ''A'' tid1) = s(AV ''A'' tid2) &
+              s(AV ''C'' tid1) = s(MV ''C'' tid2) &
+              s(AV ''G'' tid1) = s(MV ''G'' tid2) &
+              s(MV ''Ta'' tid1) = LN ''Ta'' tid2 &
+              s(MV ''AuthKey'' tid1) = LN ''AuthKey'' tid2 &
+              s(MV ''A'' tid1) = s(MV ''A'' tid3) &
+              s(AV ''C'' tid1) = s(MV ''C'' tid3) &
+              s(AV ''G'' tid1) = s(AV ''G'' tid3) &
+              s(AV ''S'' tid1) = s(MV ''S'' tid3) &
+              s(MV ''Tg'' tid1) = LN ''Tg'' tid3 &
+              s(MV ''AuthKey'' tid1) = s(MV ''AuthKey'' tid3) &
+              s(MV ''ServKey'' tid1) = LN ''ServKey'' tid3 &
+              s(AV ''C'' tid1) = s(MV ''C'' tid4) &
+              s(AV ''G'' tid1) = s(MV ''G'' tid4) &
+              s(AV ''S'' tid1) = s(AV ''S'' tid4) &
+              LN ''Tc3'' tid1 = s(MV ''Tc3'' tid4) &
+              s(MV ''ServKey'' tid1) = s(MV ''ServKey'' tid4))))"
+proof -
+  note_prefix_closed facts = facts
+  thus ?thesis proof(sources! "
+                   Enc {| LC ''21'', s(MV ''AuthKey'' tid1), s(AV ''G'' tid1),
+                          s(MV ''Ta'' tid1), s(MV ''AuthTicket'' tid1)
+                       |}
+                       ( K ( s(AV ''C'' tid1) ) ( s(MV ''A'' tid1) ) ) ")
+    case fake note_unified facts = this facts
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  next
+    case (A_2_enc tid2) note_unified facts = this facts
+    thus ?thesis proof(sources! "
+                     Enc {| LC ''6'', LN ''Tc3'' tid1 |} ( s(MV ''ServKey'' tid1) ) ")
+      case fake note_unified facts = this facts
+      thus ?thesis by (fastsimp dest: C_ServKey_sec intro: event_predOrdI)
+    next
+      case (S_6_enc tid3) note_unified facts = this facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''41'', s(MV ''ServKey'' tid1), s(AV ''S'' tid1),
+                              s(MV ''Tg'' tid1), s(MV ''ServTicket'' tid1)
+                           |}
+                           ( LN ''AuthKey'' tid2 ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest: A_AuthKey_secret intro: event_predOrdI)
+      next
+        case (G_4_enc tid4) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''22'', s(MV ''C'' tid4), s(AV ''G'' tid4),
+                                LN ''AuthKey'' tid2, s(MV ''Ta'' tid4)
+                             |}
+                             ( K ( s(MV ''A'' tid4) ) ( s(AV ''G'' tid4) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest: A_AuthKey_secret intro: event_predOrdI)
+        next
+          case (A_2_enc_1 tid5) note_unified facts = this facts
+          thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        next
+          case (C_3_AuthTicket_enc tid5 a0 a1 tid6 tid7 a2 a3) note_unified facts = this facts
+          thus ?thesis proof(sources! "
+                           Enc {| LC ''42'', s(MV ''C'' tid3), s(AV ''S'' tid3),
+                                  LN ''ServKey'' tid4, s(MV ''Tg'' tid3)
+                               |}
+                               ( K ( s(MV ''G'' tid3) ) ( s(AV ''S'' tid3) ) ) ")
+            case fake note_unified facts = this facts
+            thus ?thesis by (fastsimp dest: C_ServKey_sec intro: event_predOrdI)
+          next
+            case (C_5_ServTicket_enc tid8 a3 a4 tid9 tid10 a5 a6) note_unified facts = this facts
+            thus ?thesis proof(sources! "
+                             Enc {| LC ''21'', s(MV ''AuthKey'' tid5), s(AV ''G'' tid5),
+                                    s(MV ''Ta'' tid5),
+                                    Enc {| LC ''22'', a0, s(AV ''G'' tid4), LN ''AuthKey'' tid2,
+                                           LN ''Ta'' tid7
+                                        |}
+                                        ( K ( a2 ) ( s(AV ''G'' tid4) ) )
+                                 |}
+                                 ( K ( s(AV ''C'' tid5) ) ( s(MV ''A'' tid5) ) ) ")
+              case (A_2_enc tid11) note_unified facts = this facts
+              thus ?thesis proof(sources! "
+                               Enc {| LC ''41'', s(MV ''ServKey'' tid8), s(AV ''S'' tid8),
+                                      s(MV ''Tg'' tid8),
+                                      Enc {| LC ''42'', a3, s(AV ''S'' tid3), LN ''ServKey'' tid4,
+                                             LN ''Tg'' tid10
+                                          |}
+                                          ( K ( a5 ) ( s(AV ''S'' tid3) ) )
+                                   |}
+                                   ( s(MV ''AuthKey'' tid8) ) ")
+                case (G_4_enc tid11) note_unified facts = this facts
+                thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+              qed (insert facts, (((clarsimp, order?) | order))+)?
+            qed (insert facts, (((clarsimp, order?) | order))+)?
+          next
+            case (G_4_enc_1 tid8) note_unified facts = this facts
+            thus ?thesis by (fastsimp dest: A_AuthKey_secret intro: event_predOrdI)
+          qed (insert facts, fastsimp+)?
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed (insert facts, fastsimp+)?
+  qed (insert facts, fastsimp+)?
+qed
+
+lemma (in restricted_Kerberos_state) G_auth:
+  assumes facts:
+    "roleMap r tid3 = Some G"
+    "RLKR(s(AV ''G'' tid3)) ~: reveals t"
+    "RLKR(s(MV ''A'' tid3)) ~: reveals t"
+    "RLKR(s(MV ''C'' tid3)) ~: reveals t"
+    "( tid3, G_3 ) : steps t"
+  shows
+    "(?  tid1.
+        (?  tid2.
+           roleMap r tid1 = Some C &
+           roleMap r tid2 = Some A &
+           s(MV ''A'' tid1) = s(MV ''A'' tid3) &
+           s(AV ''C'' tid1) = s(MV ''C'' tid3) &
+           s(AV ''G'' tid1) = s(AV ''G'' tid3) &
+           LN ''Tc2'' tid1 = s(MV ''Tc2'' tid3) &
+           s(MV ''AuthKey'' tid1) = s(MV ''AuthKey'' tid3) &
+           s(MV ''A'' tid1) = s(AV ''A'' tid2) &
+           s(AV ''C'' tid1) = s(MV ''C'' tid2) &
+           s(AV ''G'' tid1) = s(MV ''G'' tid2) &
+           s(MV ''AuthKey'' tid1) = LN ''AuthKey'' tid2))"
+proof -
+  note_prefix_closed facts = facts
+  thus ?thesis proof(sources! "
+                   Enc {| LC ''22'', s(MV ''C'' tid3), s(AV ''G'' tid3),
+                          s(MV ''AuthKey'' tid3), s(MV ''Ta'' tid3)
+                       |}
+                       ( K ( s(MV ''A'' tid3) ) ( s(AV ''G'' tid3) ) ) ")
+    case fake note_unified facts = this facts
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  next
+    case (A_2_enc_1 tid4) note_unified facts = this facts
+    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  next
+    case (C_3_AuthTicket_enc tid4 a0 a1 tid5 tid6 a2 a3) note_unified facts = this facts
+    thus ?thesis proof(sources! "
+                     Enc {| LC ''3'', a0, s(MV ''Tc2'' tid3) |} ( LN ''AuthKey'' tid5 ) ")
+      case fake note_unified facts = this facts
+      thus ?thesis by (fastsimp dest: G_AuthKey_secret intro: event_predOrdI)
+    next
+      case (C_3_enc tid7) note_unified facts = this facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''21'', s(MV ''AuthKey'' tid4), s(AV ''G'' tid4),
+                              s(MV ''Ta'' tid4),
+                              Enc {| LC ''22'', s(AV ''C'' tid7), s(AV ''G'' tid3),
+                                     LN ''AuthKey'' tid5, LN ''Ta'' tid6
+                                  |}
+                                  ( K ( a2 ) ( s(AV ''G'' tid3) ) )
+                           |}
+                           ( K ( s(AV ''C'' tid4) ) ( s(MV ''A'' tid4) ) ) ")
+        case (A_2_enc tid8) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''21'', LN ''AuthKey'' tid5, s(AV ''G'' tid7),
+                                s(MV ''Ta'' tid7), s(MV ''AuthTicket'' tid7)
+                             |}
+                             ( K ( s(AV ''C'' tid4) ) ( s(MV ''A'' tid7) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest: A_AuthKey_secret intro: event_predOrdI)
+        next
+          case (A_2_enc tid8) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, (((clarsimp, order?) | order))+)?
+    qed (insert facts, fastsimp+)?
+  qed (insert facts, fastsimp+)?
+qed
 
 end
