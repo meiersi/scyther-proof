@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Main where
+module Main (main) where
 
 import Data.Maybe
 import Data.Char
@@ -107,10 +107,6 @@ findCheckedArg p a as = do
     guard (p x)
     return x
 
-getArg :: String -> Arguments -> String
-getArg a = 
-  fromMaybe (error $ "getArg: argument '" ++ a ++ "' not found") . findArg a
-
 addArg :: String -> String -> Arguments -> Arguments
 addArg a v = ((a,v):)
 
@@ -128,58 +124,11 @@ withArguments argMode io = do
 -- Argument Parsing
 ------------------------------------------------------------------------------
  
--- | ProofStrategy that should be used for selecting the desired proof.
-data ProofStrategy = 
-    NoProof
-    -- ^ Don't prove anything.
-  | Shortest
-    -- ^ Search proof with the fewest number of chain rule applications.
-  | First
-    -- ^ Return the first found proof.
-  deriving( Show, Eq )
-
--- | Determine how proven lemmas should be reused.
-data Reuse =
-    NoReuse
-    -- ^ Do not reuse any lemmas.
-  | ContradictionReuse
-    -- ^ Reuse implications with 'FFalse' as conclusion.
-  | AllReuse
-    -- ^ Reuse all lemmas if possible.
-    -- conclusion.
-  deriving( Show, Eq )
-
--- | Print mode to be used for the output.
 data PrintMode =
     SPTheory       -- ^ Output as a security protocol theory.
   | IsarXSymbol    -- ^ Output as an Isabelle theory using XSymbol symbols.
   | IsarASCII      -- ^ Output as an Isabelle theory using ASCII symbols.
   deriving( Show, Eq )
-
-data Command = 
-    Translate {
-      fstrategy       :: ProofStrategy
-    , fbound          :: Int
-    , freuse          :: Reuse
-    , fnoMinimize     :: Bool
-    , fnoSoundness    :: Bool
-    , fnoAttackSearch :: Bool
-    , foverview       :: Bool
-    -- , ffol            :: Bool
-    , fisabelle       :: Bool
-    , fisabelleCores  :: Int
-    , fnoGeneration   :: Bool
-    , fmaxTime        :: Int
-    , fhide           :: String
-    , fhtml           :: Bool
-    , flineWidth      :: Int
-    , fprintMode      :: PrintMode
-    , foutputFile     :: FilePath
-    , foutputDir      :: FilePath
-    , freportFile     :: FilePath
-    , ffiles          :: [FilePath]
-    }
-  deriving( Show )
 
 -- | Main mode.
 setupMainMode :: IO (Mode [(String,String)])
