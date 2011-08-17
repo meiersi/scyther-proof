@@ -101,6 +101,9 @@ argExists a = isJust . findArg a
 findArg :: MonadPlus m => String -> Arguments -> m String
 findArg a' as = msum [ return v | (a,v) <- as, a == a' ]
 
+findArgs :: String -> Arguments -> [String]
+findArgs a = reverse . findArg a  -- need to reverse due to def of addArg
+
 findCheckedArg :: (Read a, MonadPlus m) => (a -> Bool) -> String -> Arguments -> m a
 findCheckedArg p a as = do
     x <- read `liftM` findArg a as
@@ -318,7 +321,7 @@ translateWorker as templateFile reportVar
 
     -- Input files
     -----------------------
-    inFiles = findArg "inFile" as
+    inFiles = findArgs "inFile" as
     n       = length inFiles
 
     maxFileNameLength :: Int
@@ -523,14 +526,14 @@ translateWorker as templateFile reportVar
     noMinimize     = argExists "noMinimize" as
     noSoundness    = argExists "noSoundness" as
     noAttackSearch = argExists "noAttackSearch" as
-    noReuse        = Just "noReuse" == findArg "reuse" as
+    noReuse        = Just "none" == findArg "reuse" as
 
     reuseSelector :: Sequent -> Named Proof -> Bool
     reuseSelector = case findArg "reuse" as of
-      Just "noReuse"      -> mkReuse $ const False
-      Just "secrecyReuse" -> mkReuse $ \th ->
+      Just "none"    -> mkReuse $ const False
+      Just "secrecy" -> mkReuse $ \th ->
         (complete $ thmProof th) && (FAtom AFalse == seConcl (thmSequent th))
-      _                   -> mkReuse $ (complete . thmProof)
+      _              -> mkReuse $ (complete . thmProof)
       where
       mkReuse thmSel se th
         | isTypingFormula $ seConcl se = 
