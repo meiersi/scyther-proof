@@ -180,7 +180,7 @@ property (of Kerberos) S_auth:
      
      // We only know that there is a ticket-granting server. For all we know he
      // could have grantet the ticket because of a forged request from a
-     // compromised authenticator.
+     // compromised authenticator. Therefore, the following equalities do not hold.
 
      // // consequence from exchange with client
      // role(1) = C &

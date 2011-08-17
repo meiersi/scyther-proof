@@ -8,22 +8,16 @@ text{*
 
     http://www.lsv.ens-cachan.fr/Software/spore/wideMouthedFrog.html
 
-  Note that we cannot reason about the timestamps in our current model.
-  Furthermore, our current calculus for backwards reasoning is too weak
-  to reason about the original protocol
-
-    1: I -> S: I, {TimeI, R, kIR}k(I,S)
-    2: R <- S:    {TimeS, I, kIR}k(R,S)
-
-  because the server S could receive the message {TimeI, R, kIR}k(I,S)
-  arbitrarily many times from himself. Therefore, we added global constants
-  identifying the different steps.
+  Timestamps are modelled as fresh numbers that are immediatly made public.
 *}
 
 protocol WMF
 {
-  1. I -> S: I,R, {'step1', TimeI, R, kIR}k(I,S)
-  2. R <- S: S,I, {'step2', TimeS, I, kIR}k(R,S)
+  1_leak. I -> : TimeI
+  1. I -> S: I,R, {'1', TimeI, R, kIR}k(I,S)
+
+  2_leak. S -> : TimeS
+  2. R <- S: S,I, {'2', TimeS, I, kIR}k(R,S)
 }
 
 

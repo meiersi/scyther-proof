@@ -63,7 +63,6 @@ subsection{* Security Properties *}
 
 // The type inference heuristic infers the wrong type for I@R. Therefore, we
 // had to slightly adapt its output and state it manually.
-
 property (of NSLPK) NSLPK_typing:
   "A@S   :: Known(S_ca1)
    B@S   :: Known(S_ca1)

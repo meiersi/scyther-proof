@@ -397,11 +397,11 @@ Setup of case-studies:
 
   Concrete Protocols:
     + Denning-Sacco (regression, nested encryption)
-    Kerberos IV     (according to bella, nested encryption)
-    + Kerberos V      (standard, complexity)
+    + Kerberos IV   (according to bella, nested encryption)
+    + Kerberos V    (standard, complexity)
     + NSL7          (demonstrates public-key certificates)
-    TLS             (according to Paulson, regression)
-    + X.509         (standard)
+    + TLS           (according to Paulson, regression)
+    + X.509         (standard, comparison)
     + Yahalom       (regression)
     + Woo Lam Pi 3  (well-known protocol with nested encryption)
 
