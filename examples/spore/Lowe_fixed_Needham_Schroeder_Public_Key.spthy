@@ -28,8 +28,8 @@ protocol NSLPK
   ca1. I -> : I, R
   ca2. I <- : S, sign{'ca2', pkR,    R}pk(S)
 
-  1. I ->  : {'1', ni, I}pkR   
-       -> R: {'1', ni, I}pk(R)
+  1. I ->  : I, {'1', ni, I}pkR   
+       -> R: I, {'1', ni, I}pk(R)
 
   ca1. R -> : R, I
   ca2. R <- : S, sign{'ca2', pkI,  I}pk(S)
@@ -60,19 +60,6 @@ axiom (of NSLPK) R_uncompromised_S:
 
 
 subsection{* Security Properties *}
-
-// The type inference heuristic infers the wrong type for I@R. Therefore, we
-// had to slightly adapt its output and state it manually.
-property (of NSLPK) NSLPK_typing:
-  "A@S   :: Known(S_ca1)
-   B@S   :: Known(S_ca1)
-   I@R   :: Known(R_1) | Agent 
-   S@I   :: Known(I_ca2)
-   S@R   :: Known(R_ca2)
-   ni@R  :: Known(R_1) | ni@I
-   nr@I  :: Known(I_2) | nr@R
-   pkI@R :: Known(R_ca2)
-   pkR@I :: Known(I_ca2)"
 
 property (of NSLPK) I_pkR_auth:
   premises
