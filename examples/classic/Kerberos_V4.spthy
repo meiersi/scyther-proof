@@ -61,6 +61,8 @@ protocol Kerberos
   6. C <- S: {'6', Tc3}ServKey
 }
 
+// The type inference heuristic is wrong for the type of ServTicket@C
+// Therefore, we had to modify its output to the following type.
 property (of Kerberos) Kerberos_typing:
   "// client variables
    A@C          :: Known(C_2)

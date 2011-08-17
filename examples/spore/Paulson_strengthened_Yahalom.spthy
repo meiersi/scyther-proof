@@ -31,7 +31,6 @@ protocol Yahalom
 }
 
 
-
 subsection{* Secrecy Properties *}
 
 properties (of Yahalom)

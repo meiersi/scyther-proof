@@ -1,11 +1,6 @@
 theory AmendedNS
 begin
 
-text{* 
-  TODO (2011/05/12): Remove SomekIR and Somenr hack. Typing inference fails,
-  because it does not propagate that nr is possibly intruder constructed.
-*}
-
 section{* The Amended Needham Schroeder Symmetric Key Protocol *}
 
 text{*
@@ -18,18 +13,13 @@ text{*
     1. Instead of assuming a typed model we are using global constants to
        ensure distinctness of messages from different steps.
 
-    2. As we do not support reasoning about encrypted tickets yet, we are using
-       a hack: Namely, we allow the recipient to check the structure of the 
-       received message. However, we are using free variables such that no
-       accidental equalities are introduced.
-
-    3. We use the weaker authentication property of non-injective agreement
+    2. We use the weaker authentication property of non-injective agreement
        instead of injective agreement because the later cannot yet be proven
        automatically. However, based on the resulting Isabelle file it would be
        easy to also derive injective agreement from the proven non-injective
        variants.
 
-    4. We model the invertible function 'dec(x)' as tupling with a fixed public
+    3. We model the invertible function 'dec(x)' as tupling with a fixed public
        constant 'dec'; i.e., we only exploit 'dec's tagging capabilities.
 
     TODO: Check that this protocol can also be verified with bidirectional
@@ -72,7 +62,7 @@ property (of AmendedNS) AmendedNS_msc_typing:
    nr@I       :: Known(I_6) | nr@R
    nr@S       :: Known(S_3) | nr@R
    TicketR@I  :: 
-     Known(I_4) | {'3' , kIR@S, (Known(I_4) | nr@R), Agent}k(Agent, Agent)
+     Known(I_4) | {'3' , kIR@S, (nr@R | Known(I_4)), Agent}k(Agent, Agent)
  "
 
 properties (of AmendedNS)

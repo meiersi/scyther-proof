@@ -1,4 +1,4 @@
-# Checking standard examples.
+# Regression test: checking standard examples.
 
 check-all: check-classic check-spore iso9798-generate-and-check-proofs iso9798-generate-and-check-parallel-proofs
 
@@ -8,6 +8,18 @@ check-classic:
 check-spore:
 	scyther-proof spore/*.spthy --shortest -Ospore/isabelle-proofs --ASCII --isabelle
 
+
+# Case studies for the journal version: Meier, Cremers, Basin. "Efficient
+# Construction of Symbolic Protocol Security Proofs". 2011. to be published.
+
+CASESTUDY_IN  = spore/Lowe_modified_BAN_concrete_Andrew_Secure_RPC.spthy spore/Woo_Lam_Pi_3.spthy spore/Amended_Needham_Schroeder_Symmetric_Key.spthy spore/Lowe_fixed_Needham_Schroeder_Public_Key.spthy spore/Paulson_strengthened_Yahalom.spthy spore/Lowe_modified_Denning_Sacco_shared_key.spthy spore/BAN_modified_CCITT_X509_3.spthy spore/Kerberos_V5.spthy classic/Kerberos_V4.spthy classic/TLS.spthy
+CASESTUDY_OUT = case_study_out
+
+case-studies-journal:
+	scyther-proof $(CASESTUDY_IN) -O$(CASESTUDY_OUT) --no-reuse --shortest
+
+case-studies-journal-html:
+	scyther-proof $(CASESTUDY_IN) --shortest -O$(CASESTUDY_OUT) --isabelle --html
 
 # Generation, checking, and visualization of security proofs for the
 # authentication protocols from the ISO/IEC-9798 standard, as described in
