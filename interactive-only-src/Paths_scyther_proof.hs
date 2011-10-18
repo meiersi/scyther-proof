@@ -8,7 +8,7 @@ import Data.Version (Version(..))
 import System.Environment (getEnv)
 
 version :: Version
-version = Version {versionBranch = [0,3,0], versionTags = []}
+version = Version {versionBranch = [0,3,1], versionTags = []}
 
 bindir, libdir, datadir, libexecdir :: FilePath
 
