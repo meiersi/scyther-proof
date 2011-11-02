@@ -4,7 +4,7 @@ begin
 section{* The Needham-Schroeder-Lowe Public-Key Protocol *}
 
 text{*
-  Modeled after Paulson's description in Isabelle/HOL/Auth/NS_Public.thy.
+  Modeled after the description by Paulson in Isabelle/HOL/Auth/NS_Public.thy.
 
   Notable differences:
     
@@ -24,13 +24,10 @@ protocol ns_public
 subsection{* Secrecy Properties *}
 
 properties (of ns_public) 
-  // type invariant inferred from the protocol specification
-  auto: msc-typing
-
-  I_ni_secrecy:   secret(I, -, ni,    {I,R}) 
-  R_nr_secrecy:   secret(R, -, nr,    {I,R}) 
-  I_nr_secrecy:   secret(I, 2, nr,    {I,R}) 
-  R_ni_secrecy:   secret(R, 3, ni,    {I,R}) 
+  I_ni_secrecy:   secret(I, -, ni, {I,R}) 
+  R_nr_secrecy:   secret(R, -, nr, {I,R}) 
+  I_nr_secrecy:   secret(I, 2, nr, {I,R}) 
+  R_ni_secrecy:   secret(R, 3, ni, {I,R}) 
 
 
 subsection{* Authentication Properties *}
