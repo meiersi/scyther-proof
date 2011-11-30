@@ -51,6 +51,8 @@ tokens :-
   <0>        "]"                { keyword RBRACKET }
   <0>        "{"                { keyword LBRACE }
   <0>        "}"                { keyword RBRACE }
+  <0>        "/"                { keyword SLASH }
+  <0>        "\\"               { keyword BACKSLASH }
   <0>        "'"                { keyword SQUOTE }
   <0>        \"                 { keyword DQUOTE }
   <0>        "~"                { keyword TILDE }
@@ -138,6 +140,8 @@ data Keyword =
   | RBRACKET
   | LBRACE 
   | RBRACE
+  | SLASH
+  | BACKSLASH
   | TILDE
   | HAT
   | STAR
@@ -184,6 +188,8 @@ instance Show Keyword where
       RBRACKET -> symbol "]"
       LBRACE  -> symbol "{"
       RBRACE -> symbol "}"
+      SLASH -> symbol "/"
+      BACKSLASH -> symbol "\\"
       TILDE -> symbol "~"
       HAT -> symbol "^"
       STAR -> symbol "*"

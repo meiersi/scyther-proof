@@ -1,6 +1,6 @@
 build-type:         Simple
 name:               scyther-proof
-version:            0.3.1
+version:            0.3.2
 license:            GPL
 license-file:       LICENSE
 category:           Security, Theorem Provers
