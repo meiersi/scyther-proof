@@ -1,3 +1,11 @@
+* 0.4.0 Bugfixes and dropped export of library
+
+    - Compiles now with GHC 7.0.x, 7.2.x, 7.4.x
+    - Fixed some corner cases in unification code for key-inversion.
+    - Library is no longer exported, as there are no more users of it.
+      We split our internal development and the tamarin-prover provides its
+      own utility libraries.
+
 * 0.3.2 Lexer improvements
 
     - Also lex SLASH and BACKSLASH symbols.

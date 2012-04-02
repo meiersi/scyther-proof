@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, DeriveDataTypeable #-}
+{-# LANGUAGE CPP, FlexibleContexts, DeriveDataTypeable #-}
 -- | Conjunctions of the logical facts needed during a proof using decryption chain reasoning.
 module Scyther.Facts (
 
@@ -61,7 +61,14 @@ import Extension.Prelude
 import Safe
 import Data.List
 import Data.Maybe
+
+-- workaround new Monoid operator <>
+#if __GLASGOW_HASKELL__ < 704
 import Data.Monoid
+#else
+import Data.Monoid hiding ((<>))
+#endif
+
 import Data.Foldable (foldMap)
 import qualified Data.Set as S
 import qualified Data.Map as M

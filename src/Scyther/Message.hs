@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
+{-# LANGUAGE CPP, GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
 -- | The actual messages being sent and received over the network are always
 -- ground. Here we develop a representation of the denotations of actual
 -- messages that may occur during a security proof. This involves symbolically
@@ -45,7 +45,14 @@ import Control.Monad
 import Control.Applicative
 
 import Data.Data
+
+-- workaround new Monoid operator <>
+#if __GLASGOW_HASKELL__ < 704
 import Data.Monoid
+#else
+import Data.Monoid hiding ((<>))
+#endif
+
 import qualified Data.Set as S
 
 import Text.Isar

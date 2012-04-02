@@ -213,7 +213,7 @@ headerLastCell header t = case lastCellIndex t of
   Nothing          ->                         t
 
 -- | Append a cell containing a number; i.e. round and right align.
-appendNumCell :: RealFrac a 
+appendNumCell :: (Show a, RealFrac a )
               => Int -- ^ Number of digits after the decimal point
               -> a -> Table String -> Table String
 appendNumCell dec x = 

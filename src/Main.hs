@@ -63,7 +63,7 @@ versionStr = concat
   [ programName
   , " "
   , showVersion version
-  , ", (C) Simon Meier, ETH Zurich, 2009-2011"
+  , ", (C) Simon Meier, ETH Zurich, 2009-2012"
   ]
 
 -- | Version string with HTML markup.
@@ -74,7 +74,7 @@ htmlVersionStr = concat
     , showVersion version
     , ", &copy; "
     , link "http://people.inf.ethz.ch/meiersi" "Simon Meier"
-    , ", ETH Zurich, 2009-2011"
+    , ", ETH Zurich, 2009-2012"
     ]
   where
     link href name = 
