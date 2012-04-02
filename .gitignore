@@ -1,3 +1,14 @@
 dist/
 testbed/
 cabal-dev/
+
+examples/case_study_out/Amended_Needham_Schroeder_Symmetric_Key/
+examples/case_study_out/BAN_modified_CCITT_X509_3/
+examples/case_study_out/Kerberos_V4/
+examples/case_study_out/Kerberos_V5/
+examples/case_study_out/Lowe_fixed_Needham_Schroeder_Public_Key/
+examples/case_study_out/Lowe_modified_BAN_concrete_Andrew_Secure_RPC/
+examples/case_study_out/Lowe_modified_Denning_Sacco_shared_key/
+examples/case_study_out/Paulson_strengthened_Yahalom/
+examples/case_study_out/TLS/
+examples/case_study_out/Woo_Lam_Pi_3/
