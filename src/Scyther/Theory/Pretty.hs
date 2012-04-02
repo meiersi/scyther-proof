@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances, FlexibleContexts #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 -- | Pretty printing a security protocol theory.
 module Scyther.Theory.Pretty (
     TaggedIdentityT(..)

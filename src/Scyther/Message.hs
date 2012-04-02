@@ -24,6 +24,8 @@ module Scyther.Message (
   , trivial
   , submessages
   , messageparts
+  , mustBeSymKey
+
   -- ** Construction/Transformation
   , mapFresh
   , mapAVar
@@ -229,6 +231,15 @@ messageparts :: Message -> S.Set Message
 messageparts m@(MTup m1 m2)   = S.insert m $ messageparts m1 `S.union` messageparts m2
 messageparts m@(MEnc m1 m2)   = S.insert m $ messageparts m1 `S.union` messageparts m2
 messageparts m                = S.singleton m
+
+-- | True if no ground instance of the message can be an asymmetric key.
+mustBeSymKey :: Message -> Bool
+mustBeSymKey (MMVar _)   = False
+mustBeSymKey (MArbMsg _) = False
+mustBeSymKey (MAsymSK _) = False
+mustBeSymKey (MAsymPK _) = False
+mustBeSymKey (MInvKey m) = mustBeSymKey m
+mustBeSymKey _           = True
 
 
 -- Construction/Transformaiton
