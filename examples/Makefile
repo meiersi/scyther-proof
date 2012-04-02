@@ -16,7 +16,7 @@ CASESTUDY_IN  = spore/Lowe_modified_BAN_concrete_Andrew_Secure_RPC.spthy spore/W
 CASESTUDY_OUT = case_study_out
 
 case-studies-journal:
-	scyther-proof $(CASESTUDY_IN) -O$(CASESTUDY_OUT) --no-reuse --shortest
+	scyther-proof $(CASESTUDY_IN) -O$(CASESTUDY_OUT) --shortest
 
 case-studies-journal-html:
 	scyther-proof $(CASESTUDY_IN) --shortest -O$(CASESTUDY_OUT) --isabelle --html
