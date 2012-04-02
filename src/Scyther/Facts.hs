@@ -1137,7 +1137,7 @@ chainRuleFacts m      facts0
               else do
                 tya <- getTypeAnn v
                 case tya of 
-                  (tya@(_,tyaTy,tyaTid)) -> case tyaTy of
+                  (_,tyaTy,tyaTid) -> case tyaTy of
                     KnownT _     -> mzero -- protocol wellformedness checks that KnownT implies cyclicity
                     AgentT       -> mzero -- we already know the agent names
                     SumT ty1 ty2 -> do

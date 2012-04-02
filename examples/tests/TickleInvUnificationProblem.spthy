@@ -1,0 +1,38 @@
+theory TickleInvUnificationProblem begin
+
+/* 
+
+
+
+Run this protocol with
+
+  scyther-proof --shortest --no-attack-search 
+
+and you'll see that the case of an initiator sending the message expected in
+the third step is not considered. This is because
+
+  key = inv(key)
+
+is mistakenly excluded by the occurs check. The Iabelle theory would catch
+this, as it implements the occurs check by trying to prove
+
+  |key| /= |inv(key)|
+
+which would fail in this case.
+
+*/
+
+protocol P {
+  1. I <- : key
+  2. I -> : sign{'1',key}key
+  3. I <- : {'1',key}key
+  4. I -> : secret
+}
+
+properties (of P)
+  auto: msc-typing
+
+  I_sec_ni: secret(I, -, secret, {})
+
+
+end

@@ -437,8 +437,19 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
 
     ArbMsgEq (lhs, rhs) ->
       let elimArbMsgId x y
-            | x `elem` msgAMIDs y = 
-                  noUnifier $ "occurs check failed for '"++show x++"' in '"++show y++"'"
+            | x `elem` msgAMIDs y = case y of 
+                MInvKey _ -> postpone (MArbMsg x) y 
+                  -- Here, we have to postpone the equality as 'x = inv(x)'
+                  -- has a solution.
+                  -- 
+                  -- This is a hacky solution. The real solution is to
+                  -- implement an occurs check strong enough to deal with the
+                  -- 'inv(inv(x)) = x' cancellation rule.
+                  --
+                  -- FIXME: Implement proper equational unification, as done
+                  -- in the tamarin-prover.
+                _  -> noUnifier $ "occurs check failed for '" ++ show x ++ 
+                                  "' in '" ++ show y ++ "'"
             | otherwise =
                 updateSolution (eqs {
                     mvarEqs =                M.map (substMsg elimEqs) mveqs
@@ -455,14 +466,16 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
     
     MVarEq (lhs, rhs) ->
       let elimMVar x y 
-            | x `elem` msgFMV y = 
-                -- FIXME: This is unsound for 'x == inv(x)'!
-                -- The proper way is to postpone such equalities and perform
-                -- a case split on their outermost constructor if necessary.
-                --
-                -- Note that this unsoundness is caught by the Isabelle
-                -- certificate checking and did not yet occur in practice.
-                noUnifier $ "occurs check failed for '"++show x++"' in '"++show y++"'"
+            | x `elem` msgFMV y = case y of
+                MInvKey _ -> postpone (MMVar x) y 
+                  -- Here, we have to postpone the equality as 'x = inv(x)'
+                  -- has a solution.
+                  -- 
+                  -- This is a hacky solution. The real solution is to
+                  -- implement an occurs check strong enough to deal with the
+                  -- 'inv(inv(x)) = x' cancellation rule.
+                _ -> noUnifier $ "occurs check failed for '" ++ show x ++
+                                 "' in '" ++ show y ++ "'"
             | otherwise = 
                 updateSolution (eqs {
                     mvarEqs =  M.insert x y $ M.map (substMsg elimEqs) mveqs
@@ -490,14 +503,13 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
       (MAsymPK m1, MInvKey x ) -> newEqs [MsgEq (x, MAsymSK m1)]
       (MInvKey x,  MAsymSK m1) -> newEqs [MsgEq (x, MAsymPK m1)]
       (MAsymSK m1, MInvKey x ) -> newEqs [MsgEq (x, MAsymPK m1)]
-      -- FIXME: This is unsound! It could be an equality of the form
-      -- m1 == inv(sigma(v,i)) and then 'sigma(v,i)' could still be
-      -- instantiated with 'pk(m2)'.
-      --
-      -- Note that this unsoundness is caught by the Isabelle
-      -- certificate checking and did not yet occur in practice.
-      (m1,         MInvKey x ) -> newEqs [MsgEq (x, m1)]
-      (MInvKey x,  m1        ) -> newEqs [MsgEq (x, m1)]
+      -- We postpone equalities between messages and inversions if both of
+      -- them may still be an asymmetric key. Otherwise, the inversion can be
+      -- eliminated as it is applied to a symmetric key.
+      (m1, m2@(MInvKey x)) | mayBeAsymKeys [m1, x] -> postpone m1 m2
+                           | otherwise             -> newEqs [MsgEq (x, m1)]
+      (m1@(MInvKey x), m2) | mayBeAsymKeys [x, m2] -> postpone m1 m2
+                           | otherwise             -> newEqs [MsgEq (x, m2)]
 
       (MAVar av1, MAVar av2) -> newEqs [AVarEq (av1, av2)]
 
@@ -520,8 +532,7 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
         | m11 == m12                 -> newEqs [MsgEq (m11, m21), MsgEq (m11, m22)]
         | m21 == m22                 -> newEqs [MsgEq (m11, m21), MsgEq (m12, m21)]
         | (m1, m2) `U.equiv` posteqs -> skipEq
-        | otherwise                  -> 
-            return ([], eqs { postEqs = U.equate m1 m2 $ posteqs }, False)
+        | otherwise                  -> postpone m1 m2
 
       (MConst c1, MConst c2)
         | c1 == c2  -> skipEq
@@ -530,18 +541,20 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
       (m1, m2) -> different "message" m1 m2
   
   where
-  skipEq              = return ([],   eqs , False)
-  newEqs ueqs         = return (ueqs, eqs , False)
-  updateSolution eqs' = return ([],   eqs', True)
-  noUnifier           = fail . ("solve1: " ++)
-  different ty x y    = noUnifier $ ty ++ " '" ++ show x ++ "' /= '" ++ show y ++ "'"
+    skipEq              = return ([],   eqs , False)
+    newEqs ueqs         = return (ueqs, eqs , False)
+    updateSolution eqs' = return ([],   eqs', True)
+    noUnifier           = fail . ("solve1: " ++)
+    different ty x y    = noUnifier $ ty ++ " '" ++ show x ++ "' /= '" ++ show y ++ "'"
+    postpone m1 m2      = return ([], eqs { postEqs = U.equate m1 m2 $ posteqs }, False)
 
-  elimVarEqVar elim (vl, lhs) (vr, rhs) =
-    case compare vl vr of
-      EQ -> skipEq
-      LT -> elim vr lhs
-      GT -> elim vl rhs
+    elimVarEqVar elim (vl, lhs) (vr, rhs) =
+      case compare vl vr of
+        EQ -> skipEq
+        LT -> elim vr lhs
+        GT -> elim vl rhs
 
+    mayBeAsymKeys = any (not . mustBeSymKey)
 
 -- | Remove the thread identifier equalities. This is logically safe iff there is no fact
 -- outside the equalities that still refers to the dropped thread identifiers.
