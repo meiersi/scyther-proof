@@ -456,6 +456,12 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
     MVarEq (lhs, rhs) ->
       let elimMVar x y 
             | x `elem` msgFMV y = 
+                -- FIXME: This is unsound for 'x == inv(x)'!
+                -- The proper way is to postpone such equalities and perform
+                -- a case split on their outermost constructor if necessary.
+                --
+                -- Note that this unsoundness is caught by the Isabelle
+                -- certificate checking and did not yet occur in practice.
                 noUnifier $ "occurs check failed for '"++show x++"' in '"++show y++"'"
             | otherwise = 
                 updateSolution (eqs {
@@ -484,6 +490,12 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
       (MAsymPK m1, MInvKey x ) -> newEqs [MsgEq (x, MAsymSK m1)]
       (MInvKey x,  MAsymSK m1) -> newEqs [MsgEq (x, MAsymPK m1)]
       (MAsymSK m1, MInvKey x ) -> newEqs [MsgEq (x, MAsymPK m1)]
+      -- FIXME: This is unsound! It could be an equality of the form
+      -- m1 == inv(sigma(v,i)) and then 'sigma(v,i)' could still be
+      -- instantiated with 'pk(m2)'.
+      --
+      -- Note that this unsoundness is caught by the Isabelle
+      -- certificate checking and did not yet occur in practice.
       (m1,         MInvKey x ) -> newEqs [MsgEq (x, m1)]
       (MInvKey x,  m1        ) -> newEqs [MsgEq (x, m1)]
 
