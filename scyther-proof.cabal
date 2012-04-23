@@ -84,6 +84,7 @@ data-files:
   examples/iso9798/*.spthy
   examples/iso9798/isabelle-proofs/*.thy
   examples/iso9798/isabelle-parallel-proofs/*.thy
+  examples/experimental/ExponentialBlowup.spthy
 
   isabelle/AUTHORS  
   isabelle/document/root.tex  
