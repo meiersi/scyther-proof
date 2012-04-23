@@ -1,0 +1,33 @@
+theory RepeatedExchange begin
+
+/* Author: Simon Meier <iridcode@gmail.com>
+   Date:   2012/04/22
+
+   Purpose: This protocol demonstrates that the minimal proof size with lemma
+   reause can be exponentially smaller than the one without. The reason for
+   this is that, without lemmas, we cannot share the work of proving the
+   secrecy of the preivous key between the different options of how to obtain
+   the current key. Just uncomment the secrecy1 and secrecy2 lemmas to see the
+   effect.
+*/
+
+protocol test {
+  1. A -> B: A, B, {k1}k(A,B)
+  2. A <- B: A, B, {k2}h('1_1', k1), {k2}h('1_2', k1)
+  3. A -> B: A, B, {k3}h('2_1', k2), {k2}h('2_2', k2)
+  4. A <- B: A, B, {k4}h('3_1', k3), {k4}h('3_2', k3)
+
+  // A simpler construction that exhibits the same effect
+  // 1. A -> B: A, B, {'1',k1,k1}k(A,B)
+  // 2. A <- B: A, B, {'2',k2,k2}k1
+  // 3. A -> B: A, B, {'3',k3,k3}k2
+  // 4. A <- B: A, B, {'4',k4,k4}k3
+}
+
+properties (of test) 
+  // secrecy1: secret(A, 1, k1, {A,B})
+  // secrecy2: secret(A, 2, k2, {A,B})
+  secrecy3: secret(B, 3, k3, {A,B})
+  // secrecy4: secret(A, 4, k4, {A,B})
+
+end
