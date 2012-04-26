@@ -12,9 +12,6 @@ protocol CR
 properties (of CR) 
   C_k_secrecy:    secret(C, -, k, {S} )
 
-
-subsection{* Authentication Properties *}
-
 property (of CR) C_ni_synch:
   premises
     "role(1) = C"
