@@ -29,8 +29,8 @@ import System.Timing
 import System.Environment
 import System.Process
 
-import System.Console.CmdArgs.Explicit
 import System.Console.CmdArgs.Text
+import System.Console.CmdArgs.Explicit 
 
 import Extension.Prelude
 
@@ -39,7 +39,7 @@ import Extension.Prelude
 
 import Scyther.Facts hiding (MVar, empty)
 import Scyther.Sequent
-import Scyther.Proof
+import Scyther.Proof   as SP
 import Scyther.Theory
 import Scyther.Theory.Parser
 import Scyther.Theory.Pretty

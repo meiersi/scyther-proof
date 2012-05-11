@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts -cpp #-}
+{-# LANGUAGE BangPatterns, CPP, MagicHash #-}
 {-# LINE 1 "Theory/Lexer.x" #-}
 
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-unused-matches -fno-warn-unused-binds -fno-warn-missing-signatures #-}
@@ -547,7 +547,7 @@ alex_scan_tkn user orig_input len input s last_acc =
 
 	let
 		base   = alexIndexInt32OffAddr alex_base s
-		(I# (ord_c)) = ord c
+		!(I# (ord_c)) = ord c
 		offset = (base +# ord_c)
 		check  = alexIndexInt16OffAddr alex_check offset
 		
