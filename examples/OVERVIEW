@@ -27,4 +27,7 @@ The meaning of the subdirectories is the following:
     '$SCYTHER_PROOF/isabelle/README' file for installing the custom keywords
     file.
 
+  experimental
+
+    Experimental protocols.
 
