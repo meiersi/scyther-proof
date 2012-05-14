@@ -18,13 +18,6 @@ description:
                     Machine-Checked Protocol Security Proofs\" by Meier,
                     Cremers, and Basin available from
                     <http://people.inf.ethz.ch/meiersi/publications/index.html>
-                    .
-                    Parts of the infrastructure underlying scyther-proof are
-                    reused in other projects by the same author. Therefore,
-                    most of its modules are exported in the corresponding
-                    scyther-proof library. However, this library is not yet
-                    thought for general use. Please contact the author, if you
-                    would like to build upon/extend scyther-proof.
 
 homepage:           http://www.infsec.ethz.ch/people/meiersi/
 stability:          Beta

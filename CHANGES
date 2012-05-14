@@ -1,4 +1,8 @@
-* 0.4.0 Bugfixes and dropped export of library
+* 0.4.1.0 Bugfixes and dropped export of library
+    - widen 'pretty' dependency
+    - update package description
+
+* 0.4.0.0 Bugfixes and dropped export of library
 
     - Compiles now with GHC 7.0.x, 7.2.x, 7.4.x
     - Fixed some corner cases in unification code for key-inversion.
