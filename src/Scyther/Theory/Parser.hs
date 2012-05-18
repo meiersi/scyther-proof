@@ -558,7 +558,7 @@ claims protoMap = do
     when ('-' `elem` claimId) (fail $ "hyphen '-' not allowed in property name '"++claimId++"'")
     let mkThySequent (mkClaimId, se) = mkThyItem (mkClaimId claimId, se)
         singleSequents = map (liftM (return . (,) id) . ($ proto))
-          [ niagreeSequent, secrecySequent, implicationSequent, parseTypingSequent ]
+          [ agreeSequent, secrecySequent, implicationSequent, parseTypingSequent ]
         multiSequents = map ($ proto)
           [ parseNonceSecrecy, parseFirstSends
           , parseTransferTyping, parseAutoProps ]
@@ -679,10 +679,11 @@ secrecySequent proto = do
   where
   msgSet = braced $ sepBy pattern (kw COMMA)
 
--- | Parse non-injective agreement claim.
-niagreeSequent :: Protocol -> Parser s Sequent
-niagreeSequent proto = do
-    funOpen "niagree"
+-- | Parse (non-)injective agreement claim.
+agreeSequent :: Protocol -> Parser s Sequent
+agreeSequent proto = do
+    qualifier <- (funOpen "niagree" *> pure Standard) <|>
+                 (funOpen "iagree"  *> pure Injective)
     (roleCom, stepCom, patCom) <- roleStepPattern
     kw RIGHTARROW
     (roleRun, stepRun, patRun) <- roleStepPattern
@@ -705,7 +706,7 @@ niagreeSequent proto = do
             Just Nothing      -> error "niagreeSequent: claim is trivially true"
             Nothing           -> error "niagreeSequent: failed to construct claim"
 
-    return (Sequent prem concl Standard)
+    return (Sequent prem concl qualifier)
   where
     (tidCom, prem0) = freshTID (empty proto)
     tidRun          = succ tidCom

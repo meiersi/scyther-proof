@@ -175,11 +175,18 @@ genericChainRuleSplitCases sel cases =
 
 -- | Pretty print a sequent with quantifiers, logical, and meta-logical facts for
 -- the premise and a single document representing the conclusion.
-prettySequentParts :: PrettyMonad m => Sequent -> m (([Doc], [Doc], [Doc]), Doc)
-prettySequentParts (Sequent prem concl _qualifier) = do
-  ppPrem  <- prettyFacts prem
-  ppConcl <- prettyFormula (eqsToMapping prem) concl
-  return (ppPrem, ppConcl)
+prettySequentParts :: PrettyMonad m
+                   => Sequent
+                   -> m (([Doc], [Doc], [Doc]), SequentQualifier, Doc)
+prettySequentParts (Sequent prem concl qualifier) = do
+    ppPrem  <- prettyFacts prem
+    ppConcl <- prettyFormula (eqsToMapping prem) concl
+    return (ppPrem, qualifier, ppConcl)
+  where
+
+-- | Pretty-print a sequent qualifier.
+prettySequentQualifier Standard = emptyDoc
+prettySequentQualifier Injective = text "injectively"
 
 -- | Pretty print a proof.
 prettyProof :: PrettyMonad m =>
@@ -346,7 +353,7 @@ isaLongTermKeySecrecyProof p = vcat $ map text
 isaSequentProp :: MarkupMonad m => Sequent -> ReaderT IsarConf m Doc
 isaSequentProp se = do
   conf <- ask
-  ( (premTids,  ppPremFacts, _), ppConcl ) <- prettySequentParts se
+  ( (premTids,  ppPremFacts, _), qualifier, ppConcl ) <- prettySequentParts se
   let quantify q vs = case vs of
         [] -> id
         _  -> ((q conf <> fsep vs <> char '.') $$) . nest 2
@@ -389,7 +396,7 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
       -- where
       -- singleFact f = return ([], [f], [])
   prettySequent se = do
-    ( (_, ppPremFacts, _), ppConcl) <- prettySequentParts se
+    ( (_, ppPremFacts, _), qualifier, ppConcl) <- prettySequentParts se
     let doc | nullFacts (sePrem se) = doubleQuotes ppConcl
             | otherwise =
                 text "assumes facts:" $-$
@@ -577,7 +584,8 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
       -- where
       -- singleFact f = return ([], [f], [])
   prettySequent se = do
-    ( (premQuantified,  ppPremRepr, ppPremNonRepr), ppConclRaw) <- prettySequentParts se
+    ((premQuantified,  ppPremRepr, ppPremNonRepr), qualifier, ppConclRaw)
+        <- prettySequentParts se
     let ppPremFacts  = ppPremRepr ++ ppPremNonRepr
         premQuantifier = pure $ case premQuantified of
           [] -> text "premises"
@@ -587,7 +595,8 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
             | otherwise =
                 premQuantifier $-$
                 (nest 2 . vcat $ map (kwFact . pure . doubleQuotes) ppPremFacts) $-$
-                (sep [text "imply", nest 2 ppConcl])
+                (sep [ text "imply" <-> prettySequentQualifier qualifier
+                     , nest 2 ppConcl])
     doc
   -- proof output
   ensureProofMode _ = emptyDoc

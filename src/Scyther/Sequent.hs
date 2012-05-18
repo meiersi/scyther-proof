@@ -200,7 +200,9 @@ frule rule state = do
 
 -- | Try to saturate a sequent, if possible and leading to new facts.
 saturate :: MonadPlus m => Sequent -> m Sequent
-saturate = changePrem (return . saturateFacts)
+saturate se = do
+    guard (isStandard se)
+    changePrem (return . saturateFacts) se
 
 -- | Try to use the chain rule.
 --
