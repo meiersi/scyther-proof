@@ -34,6 +34,7 @@ protocol isoiec_9798_3_1
                   sign{'isoiec_9798_3_1_sig_1', TNA, B, Text1 }pk(A)
 }
 
+// No injective agreement here.
 properties (of isoiec_9798_3_1)
   B_non_injective_agreement: 
     niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A})
@@ -60,6 +61,7 @@ protocol isoiec_9798_3_2
                   sign{'isoiec_9798_3_2_sig_2', Ra, Rb, B, Text2 }pk(A)
 }
 
+// Injective authentication.
 properties (of isoiec_9798_3_2)
   // Note: for this agreement property the identity B must not be dropped
   B_non_injective_agreement: 
@@ -93,6 +95,9 @@ protocol isoiec_9798_3_3
                   sign{'isoiec_9798_3_3_sig_2', TNB, A, Text3 }pk(B)
 }
 
+// No injective agreement. It requires a forth and back message, which does
+// not exist for role B. For role 'A', we miss an opportunity for injective
+// authentication, as we could include 'TNA' in the second message exchange.
 properties (of isoiec_9798_3_3)
   A_non_injective_agreement: 
     niagree(A_2[A,B,TNB,Text3] -> B_2[A,B,TNB,Text3], {B})
@@ -126,6 +131,7 @@ protocol isoiec_9798_3_4
                   sign{'isoiec_9798_3_4_sig_2', RB, RA, A, Text4 }pk(B)
 }
 
+// Both properties also hold injectively.
 properties (of isoiec_9798_3_4)
   // The identity A in Step 3 is required for this property to hold.
   A_non_injective_agreement: 
@@ -166,6 +172,7 @@ protocol isoiec_9798_3_5
                   sign{'isoiec_9798_3_5_sig_2', RA, RB, B, Text3 }pk(A)
 }
 
+// Both properties also hold injectively.
 properties (of isoiec_9798_3_5)
   // The identity A in Step 3 is required for this property to hold.
   A_non_injective_agreement: 
@@ -239,6 +246,8 @@ protocol isoiec_9798_3_6_1
                   sign{'isoiec_9798_3_6_opt_1_sig_5', Rb, Ra5, B, A, Text8}pkA
 }
 
+// All properties except hold injectively. NOTE: Investigate this
+// authentication "flaw" between Ra5 and Ra in role 'B'.
 properties (of isoiec_9798_3_6_1)
   A_non_injective_agreement: 
     niagree(A_5[A,B,Ra,Rb,Text2] -> B_2[A,B,Ra,Rb,Text2], {B, T})
@@ -337,6 +346,7 @@ protocol isoiec_9798_3_6_2
                   sign{'isoiec_9798_3_6_opt_2_sig_5', Rb, Ra5, B, A, Text8}pkA
 }
 
+// All properties also hold injectively.
 properties (of isoiec_9798_3_6_2)
   // Note that we do not get agreement on T!
   A_non_injective_agreement: 
@@ -419,6 +429,7 @@ protocol isoiec_9798_3_7_1
 
 }
 
+// All properties also hold injectively.
 properties (of isoiec_9798_3_7_1)
   // Note that we do not get agreement on T!
   A_non_injective_agreement: 
@@ -504,6 +515,7 @@ protocol isoiec_9798_3_7_2
 
 }
 
+// All properties also hold injectively.
 properties (of isoiec_9798_3_7_2)
   A_non_injective_agreement: 
     niagree(A_5[A,B,Ra,Rb,Text8] -> B_5[A,B,Ra,Rb,Text8], {B, T})

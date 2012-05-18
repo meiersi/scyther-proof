@@ -31,6 +31,7 @@ protocol isoiec_9798_4_1_bdkey
                   h(('CCF', k[A,B]), ('isoiec_9798_4_1_ccf_1', TNA, B, Text1))
 }
 
+// Does not hold injectively.
 properties (of isoiec_9798_4_1_bdkey)
   B_non_injective_agreement:
     niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
@@ -54,6 +55,7 @@ protocol isoiec_9798_4_2_bdkey
                   h(('CCF', k[A,B]), ('isoiec_9798_4_2_ccf_2', Rb, B, Text2))
 }
 
+// Does hold injectively.
 properties (of isoiec_9798_4_2_bdkey)
   B_non_injective_agreement:
     niagree(B_2[A,B,Rb,Text2] -> A_2[A,B,Rb,Text2], {A, B})
@@ -81,6 +83,8 @@ protocol isoiec_9798_4_3_bdkey
                   h(('CCF', k[A,B]), ('isoiec_9798_4_3_ccf_2', TNb, A, Text3))
 }
 
+// Does not hold injectively. Missing an opportunity to get injective
+// agreement for role A by adding TNa in the second message.
 properties (of isoiec_9798_4_3_bdkey)
   A_non_injective_agreement:
     niagree(A_2[A,B,TNb,Text3] -> B_2[A,B,TNb,Text3], {A, B})
@@ -111,6 +115,7 @@ protocol isoiec_9798_4_4_bdkey
                   h(('CCF', k[A,B]), ('isoiec_9798_4_4_ccf_3', Rb, Ra, Text4))
 }
 
+// Both properties also hold injectively.
 properties (of isoiec_9798_4_4_bdkey)
   A_non_injective_agreement:
     niagree(A_3[A,B,Ra,Rb,Text2,Text4] -> B_3[A,B,Ra,Rb,Text2,Text4], {A, B})
