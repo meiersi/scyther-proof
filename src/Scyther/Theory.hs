@@ -31,7 +31,7 @@ module Scyther.Theory (
   , theoryProofSize
   , theoryOverview
   , classifyProperties
-  -- , wfTheory       -- TODO: Implement type wellformedness check. 
+  -- , wfTheory       -- TODO: Implement type wellformedness check.
                       --       Currently, we rely on Isabelle for the last soundness check.
 
 ) where
@@ -141,11 +141,11 @@ addMissingTypingInvariants thy =
   where
     mkTypingSequent p = case mscTyping p of
         Just typ -> return $ ThySequent ( protoName p ++ "_msc_typing"
-                                        , Sequent (empty p) (FAtom (ATyping typ)))
+                                        , Sequent (empty p) (FAtom (ATyping typ)) Standard)
         Nothing  -> mzero
 
     add item = case item of
-        ThyProtocol p 
+        ThyProtocol p
           | noTypingInvariant p -> [item] ++ mkTypingSequent p
         _                       -> [item]
 
@@ -160,10 +160,10 @@ addMissingTypingInvariants thy =
 
 -- | Prove all claims with the given heuristic optionally using the given
 -- bound.
-proveSequents :: (Sequent -> Theorem -> Bool) 
+proveSequents :: (Sequent -> Theorem -> Bool)
                  -- ^ Predicate determining theorems for reuse for proving the
                  -- given sequent.
-              -> ([Named Sequent] -> Sequent -> Maybe Proof) 
+              -> ([Named Sequent] -> Sequent -> Maybe Proof)
                  -- ^ Proof construction function.
               -> Theory -> Theory
 proveSequents reuse prover thy =
@@ -171,7 +171,7 @@ proveSequents reuse prover thy =
   where
   prove (item@(ThySequent (name, se))) = do
     prevItems <- get
-    let reusableThms = [ (thmName th, thmSequent th) 
+    let reusableThms = [ (thmName th, thmSequent th)
                        | ThyTheorem th <- prevItems, reuse se th, thmProto th == seProto se]
 
     case prover reusableThms se of
@@ -189,7 +189,7 @@ shrinkTheory mustKeep (Theory name items) =
   thmInfo thm = (thmName thm, thmProto thm)
   kept = [ thmInfo thm | ThyTheorem thm <- items, mustKeep $ thmName thm ]
   dependencies =
-    [ (thmInfo thm, dep) 
+    [ (thmInfo thm, dep)
     | ThyTheorem thm <- items, dep <- S.toList . depends $ thmProof thm ]
   toKeep = reachableSet kept dependencies
   keep :: ThyItem -> Bool
@@ -224,35 +224,34 @@ ensureUniqueRoleNames thy
 -- | Compose all protocol in the theory in parallel. Assumes that both protocol
 -- names as well as role names are /globally/ unique.
 composeParallel :: Theory -> Theory
-composeParallel thy 
+composeParallel thy
     | length ps <= 1 = thy
     | otherwise      = thy { thyItems = [ThyProtocol pc, ThySequent sec] ++ items3 }
   where
     (ps,  items1) = partitionEithers $ do
         item <- thyItems thy
-        case item of 
+        case item of
             ThyProtocol p -> return $ Left p
             _             -> return $ Right item
 
     (typs, items2) = partitionEithers $ do
-        item <- items1 
+        item <- items1
         case item of
-            ThySequent (_, Sequent _ (FAtom (ATyping typ)))
+            ThySequent (_, Sequent _ (FAtom (ATyping typ)) Standard)
               -> return $ Left typ
             ThySequent x -> return $ Right $ ThySequent $ prefixProtoName (seProto $ snd x) x
             ThyTheorem x -> return $ Right $ ThyTheorem $ prefixProtoName (thmProto x) x
             _            -> return $ Right item
 
-
     prefixProtoName :: Protocol -> (String, a) -> (String, a)
     prefixProtoName p x@(n, v)
       | protoName p `isPrefixOf` n = x
       | otherwise                  = (protoName p ++ "_" ++ n, v)
-     
+
     namec = thyName thy
     pc    = Protocol namec (concatMap protoRoles ps)
     sec   = ( namec ++ "_composed_typing"
-            , Sequent (empty pc) (FAtom (ATyping (M.unions typs)))
+            , Sequent (empty pc) (FAtom (ATyping (M.unions typs))) Standard
             )
 
     replaceProtocol :: Protocol -> Protocol
@@ -266,16 +265,16 @@ composeParallel thy
 
 -- | Find a protocol in the theory according to its name.
 lookupProtocol :: String -> Theory -> Maybe Protocol
-lookupProtocol name thy = 
+lookupProtocol name thy =
   headMay [proto | ThyProtocol proto <- thyItems thy, protoName proto == name]
 
 -- | Find all unsound theorems of the theory.
 unsoundTheorems :: Theory -> [(Protocol, String)]
-unsoundTheorems (Theory _ items) = 
-  [ (prfProto prf, name) 
-  | ThyTheorem (name, prf) <- items, not (sound prf) 
+unsoundTheorems (Theory _ items) =
+  [ (prfProto prf, name)
+  | ThyTheorem (name, prf) <- items, not (sound prf)
   ] ++
-  [ (seProto se, name) 
+  [ (seProto se, name)
   | ThySequent (name, se) <- items
   ]
 
@@ -291,7 +290,7 @@ classifyProperties :: (String -> Bool) -> Theory -> (Int, Int, Int)
 classifyProperties toClassify = foldl classify (0,0,0) . thyItems
   where
   getSequent (ThyTheorem thm) = do
-    guard (toClassify $ thmName thm) 
+    guard (toClassify $ thmName thm)
     return $ thmSequent thm
   getSequent (ThySequent se)  = do
     guard (toClassify (fst se))
@@ -337,11 +336,11 @@ lookupTypeInvariants proto thy = do
 -- together with the corresponding chain rule. If no typing is given, then it
 -- tries to infer it from the message sequence chart.
 theoryOverview :: Theory -> Theory
-theoryOverview thy@(Theory name items) = 
+theoryOverview thy@(Theory name items) =
   Theory name $ concat [ protoOverview proto | ThyProtocol proto <- items]
   where
-  protoOverview proto = 
-    (ThyText "section" $ "Overview of protocol '"++protoName proto++"'") : 
+  protoOverview proto =
+    (ThyText "section" $ "Overview of protocol '"++protoName proto++"'") :
     ThyProtocol proto : typInvs
     where
     typInvs = case lookupTypeInvariants proto thy of
@@ -355,7 +354,7 @@ theoryOverview thy@(Theory name items) =
                   \(maybe some message patterns are not unifiable)"
       xs -> concatMap addChainRule xs
 
-    addChainRule (item, typ) = 
+    addChainRule (item, typ) =
       [ item
       , ThyText "text" $ unlines
           [ "Note that the chain rule below is only an informal representation of the"

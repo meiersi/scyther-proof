@@ -3,6 +3,7 @@ module Scyther.Sequent (
 
   -- * Datatype
     Sequent(..)
+  , SequentQualifier(..)
   , seProto
 
   -- ** Logically safe construction
@@ -33,18 +34,35 @@ import Scyther.Formula
 -- Sequents
 ------------------------------------------------------------------------------
 
+-- | A qualifier changing the interpretation of a sequent.
+data SequentQualifier =
+       Standard
+       -- ^ The standard interpretation of a sequent as given in our CSF'10
+       -- paper on strong invariants for the efficient construction of
+       -- machine-checked security proofs.
+     | Injective
+       -- ^ An injective interpretation of a sequent. Only valid for sequents
+       -- that have exactly one free TID-variable in the premise and exactly
+       -- one further TID-variable in the conclusion.
+     deriving( Eq, Ord, Show, Data, Typeable )
+
 -- | A sequent with a conjunction of a set of facts as the premise and a single
 -- formula as the conclusion denoting a statement about a reachable state of
 -- a protocol.
 data Sequent = Sequent {
-    sePrem  :: Facts
-  , seConcl :: Formula
+    sePrem      :: Facts
+  , seConcl     :: Formula
+  , seQualifier :: SequentQualifier
   }
   deriving( Eq, Show, Ord, Data, Typeable )
 
 -- | The protocol of a sequent.
 seProto :: Sequent -> Protocol
 seProto = protocol . sePrem
+
+-- | 'True' iff the sequent is viewed with the 'Standard' interpretation.
+isStandard :: Sequent -> Bool
+isStandard = (Standard ==) . seQualifier
 
 
 -- Construction
@@ -53,8 +71,8 @@ seProto = protocol . sePrem
 -- | Make all thread identifiers occurring in the sequent unique by
 -- consistently relabeling the thread identifiers in the conclusion.
 uniqueTIDQuantifiers :: Sequent -> Sequent
-uniqueTIDQuantifiers (Sequent prem concl) = 
-  Sequent prem (relabelTIDs [nextTID prem..] concl)
+uniqueTIDQuantifiers (Sequent prem concl quali) =
+  Sequent prem (relabelTIDs [nextTID prem..] concl) quali
 
 -- | Apply a function to the premise, but return only the updated sequent if
 -- the premise was changed.
@@ -73,42 +91,40 @@ changePrem f se = do
 --
 -- Uses 'fail' for error reporting.
 wellTypedCases :: MonadPlus m => Sequent -> m [(String, Sequent)]
-wellTypedCases se = case seConcl se of
-  FAtom (ATyping typ) -> 
-      return $ protoRoles (seProto se) >>= roleProofs typ
-  _ -> mzero
+wellTypedCases se@(Sequent _ (FAtom (ATyping typ)) Standard) =
+    return $ protoRoles (seProto se) >>= roleProofs
   where
-  roleProofs typ role = proveRecvs S.empty (roleSteps role)
-    where
-    proveRecvs _ [] = []
-    proveRecvs recv (      Send _ _       : steps) = proveRecvs recv steps
-    proveRecvs recv ((Recv _ (PMVar lid)) : steps) = 
-      -- don't prove single reiceves as they are handled directly by the tactic
-      -- on the Isabelle side.
-      proveRecvs (S.insert lid recv) steps
-    proveRecvs recv (step@(Recv _ pt)     : steps) = 
-      let mvars = patFMV pt
-      in (S.toList mvars >>= proveVar) `mplus` 
-         (proveRecvs (recv `S.union` mvars) steps)
+    roleProofs role =
+        proveRecvs S.empty (roleSteps role)
       where
-      proveVar v
-        | v `S.member` recv = fail "proveVar: not first receive"
-        | otherwise = do
-            return (name, Sequent prem concl)
-        where
-        name = roleName role ++ "_" ++ stepLabel step ++ "_" ++ getId v
-        (tid, prem0) = freshTID (sePrem se)
-        mv = MVar (LocalId (v, tid))
-        premErr = error $ "wellTypedCases: could not add thread " ++ show tid ++ ". This should not happen."
-        prem1 = maybe premErr saturateFacts . join $ 
-          conjoinAtoms [AEv (Step tid step), AEq (E.TIDRoleEq (tid, role))] prem0
-        prem = fromMaybe (error "failed to set typing") $ setTyping typ prem1
-        concl = FAtom $ 
-            case M.lookup (v, role) typ of
-              Just ty -> AHasType (MMVar mv, ty, tid)
-              Nothing -> error $ 
-                "wellTypedCases: no type given for '"++show v++"' in role '"++roleName role++"'"
+        proveRecvs _    []                             = []
+        proveRecvs recv (      Send _ _       : steps) = proveRecvs recv steps
+        proveRecvs recv ((Recv _ (PMVar lid)) : steps) =
+          -- don't prove single reiceves as they are handled directly by the tactic
+          -- on the Isabelle side.
+          proveRecvs (S.insert lid recv) steps
+        proveRecvs recv (step@(Recv _ pt)     : steps) =
+          let mvars = patFMV pt
+          in (S.toList mvars >>= proveVar) `mplus`
+             (proveRecvs (recv `S.union` mvars) steps)
+          where
+            proveVar v
+              | v `S.member` recv = fail "proveVar: not first receive"
+              | otherwise         = return (name, Sequent prem concl Standard)
+              where
+                name         = roleName role ++ "_" ++ stepLabel step ++ "_" ++ getId v
+                (tid, prem0) = freshTID (sePrem se)
+                mv           = MVar (LocalId (v, tid))
+                premErr      = error $ "wellTypedCases: could not add thread " ++ show tid ++ ". This should not happen."
+                prem1        = maybe premErr saturateFacts . join $
+                                 conjoinAtoms [AEv (Step tid step), AEq (E.TIDRoleEq (tid, role))] prem0
+                prem  = fromMaybe (error "failed to set typing") $ setTyping typ prem1
+                concl = FAtom $ case M.lookup (v, role) typ of
+                  Just ty -> AHasType (MMVar mv, ty, tid)
+                  Nothing -> error $
+                    "wellTypedCases: no type given for '"++show v++"' in role '"++roleName role++"'"
 
+wellTypedCases _ = mzero
 
 -- | Emulate a variant Isabelle's 'frule' tactic. It works only if the given
 -- maping of free variables of the rule makes the premise of the rule provable
@@ -117,10 +133,10 @@ wellTypedCases se = case seConcl se of
 -- last step works currently only for conclusions being false of pure
 -- conclusions.
 --
--- NOTE that 'frule' works only for rules that contain no existential
--- quantifiers in the conclusion.
+-- NOTE that 'frule' works only for rules that are standard sequents and that
+-- contain no existential quantifiers in the conclusion.
 fruleInst :: MonadPlus m
-      => Sequent -- ^ rule 
+      => Sequent -- ^ rule
       -> E.Mapping -- ^ mapping of free variables of rule to proof state
       -> Sequent -- ^ proof state
       -> m (Maybe Sequent) -- ^ some result if resolution worked. Nothing
@@ -128,21 +144,23 @@ fruleInst :: MonadPlus m
                            -- premises of proof state were extended.
                            --
                            -- mzero if rule could not be applied
-fruleInst rule mapping state = do
-  atoms <- conjunctionToAtoms $ seConcl rule
-  let statePrem = sePrem state
-  guard (proveFacts statePrem (sePrem rule) mapping)
-  optStatePrem' <- conjoinAtoms (map (substAtom (E.getMappingEqs mapping)) atoms) statePrem
-  case optStatePrem' of
-    Nothing         -> do return Nothing
-    Just statePrem' -> do guard (statePrem /= statePrem')
-                          return . Just $ Sequent statePrem' (seConcl state)
+fruleInst rule mapping state
+  | isStandard rule && isStandard state = do
+      atoms <- conjunctionToAtoms $ seConcl rule
+      let statePrem = sePrem state
+      guard (proveFacts statePrem (sePrem rule) mapping)
+      optStatePrem' <- conjoinAtoms (map (substAtom (E.getMappingEqs mapping)) atoms) statePrem
+      case optStatePrem' of
+        Nothing         -> do return Nothing
+        Just statePrem' -> do guard (statePrem /= statePrem')
+                              return . Just $ Sequent statePrem' (seConcl state) Standard
+  | otherwise = mzero
 
 -- | Like 'fruleInst' but tries all mappings.
 frule :: MonadPlus m
-      => Sequent -- ^ rule 
+      => Sequent -- ^ rule
       -> Sequent -- ^ proof state
-      -> m (E.Mapping, Maybe Sequent) 
+      -> m (E.Mapping, Maybe Sequent)
          -- ^ some result if resolution worked. Nothing denotes that False was
          -- derived. Just means that premises of proof state were extended.
          --
@@ -184,17 +202,18 @@ frule rule state = do
 saturate :: MonadPlus m => Sequent -> m Sequent
 saturate = changePrem (return . saturateFacts)
 
--- | Try to use the chain rule. 
+-- | Try to use the chain rule.
 --
 -- MonadPlus is used to report a failure to apply the rule.
 --
-chainRule :: MonadPlus m 
-          => Sequent -> Message 
+chainRule :: MonadPlus m
+          => Sequent -> Message
           -> m [((String, [Either TID ArbMsgId]), Sequent)]
-chainRule se m = 
+chainRule se m = do
+    guard (isStandard se)
     map (second mkSequent) `liftM` chainRuleFacts m (sePrem se)
-  where 
-    mkSequent prem = Sequent prem (seConcl se)
+  where
+    mkSequent prem = Sequent prem (seConcl se) Standard
 
 -- | Try to exploit the typing. Fails if no new facts could be derived.
 exploitTyping :: MonadPlus m => Sequent -> m Sequent
@@ -203,14 +222,14 @@ exploitTyping = changePrem exploitTypingFacts
 -- | Split a splittable equality.
 -- splitting can be done.
 splitEq :: E.MsgEq -> Sequent -> [Maybe Sequent]
-splitEq eq se 
+splitEq eq se
   | eq `elem` splittableEqs prems = map (fmap updPrem) $ splitEqFacts eq prems
   | otherwise                     = error $ "splitEq: equality not present"
   where
     prems = sePrem se
     updPrem prem' = se {sePrem = prem'}
 
-  
+
 
 
 

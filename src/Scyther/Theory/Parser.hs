@@ -34,7 +34,7 @@ module Scyther.Theory.Parser (
   , genFunApp
   , funOpen
   , funApp
- 
+
   -- ** Security protocol theorys for the free-algebra
   , protocol
   , claims
@@ -90,7 +90,7 @@ type Token = (SourcePos, Keyword)
 --
 -- NOTE: Lexical errors are thrown using 'error'.
 scanString :: FilePath -> String -> [Token]
-scanString filename s = 
+scanString filename s =
   case runAlex s gatherUntilEOF of
     Left err  -> error err
     Right kws -> kws
@@ -99,7 +99,7 @@ scanString filename s =
     AlexPn _ line col <- alexGetPos
     let pos = newPos filename line col
     k <- alexMonadScan
-    case k of 
+    case k of
       EOF -> return [(pos,EOF)]
       _   -> do kws <- gatherUntilEOF
                 return $ (pos,k) : kws
@@ -125,7 +125,7 @@ token p = P.token (show . snd) fst (p . snd)
 -- | Parse a term.
 kw :: Keyword -> Parser s ()
 kw t = token check
-  where 
+  where
   check t' | t == t' = Just () | otherwise = Nothing
 
 -- | Parse content between keywords.
@@ -210,7 +210,7 @@ parseFile parser state f = do
     Left err -> error $ show err
 
 -- | Parse a security protocol theory given as a string using the given
--- filename for the error messages 
+-- filename for the error messages
 parseTheory :: FilePath -> IO Theory
 parseTheory = parseFile theory ()
 
@@ -339,7 +339,7 @@ resolveId avars mvars i
 -- | Resolve all identifiers in the pattern.
 resolveIds :: S.Set Id -> S.Set Id -> Pattern -> Pattern
 resolveIds avars mvars = go
-  where 
+  where
   resolve = resolveId avars mvars
   go pt@(PConst _)   = pt
   go pt@(PFresh _)   = pt
@@ -360,7 +360,7 @@ resolveIds avars mvars = go
 -- PRE: The role must use disjoint identifiers for fresh messages, agent
 -- variables, and message variables.
 resolveIdsLocalToRole :: Role -> Pattern -> Pattern
-resolveIdsLocalToRole role = resolveIds (roleFAV role) (roleFMV role) 
+resolveIdsLocalToRole role = resolveIds (roleFAV role) (roleFMV role)
 
 
 -- Messages
@@ -377,13 +377,13 @@ localIdentifier = LocalId <$> ((,) <$> ident <*> threadId)
 -- | Resolve a thread identifier
 resolveTID :: MonadPlus m => E.Mapping -> TID -> m Role
 resolveTID mapping tid =
-  liftMaybe' ("resolveTID: no role assigned to thread "++show tid) 
+  liftMaybe' ("resolveTID: no role assigned to thread "++show tid)
              (E.threadRole tid (E.getMappingEqs mapping))
 
 -- | Resolve a local identifier.
 -- PRE: Thread id must be in the role equalities.
 resolveLocalId :: MonadPlus m => E.Mapping -> LocalId -> m Message
-resolveLocalId mapping (LocalId (i, tid)) = 
+resolveLocalId mapping (LocalId (i, tid)) =
   do role <- resolveTID mapping tid
      return $ inst tid (resolveId (roleFAV role) (roleFMV role) i)
   `mplus`
@@ -395,16 +395,16 @@ resolveStep mapping tid stepId = do
   role <- resolveTID mapping tid
   let roleId = roleName role
   if isPrefixOf roleId stepId
-    then liftMaybe' ("resolveStep: step '"++stepId++"' not part of role '"++roleName role++"'") 
+    then liftMaybe' ("resolveStep: step '"++stepId++"' not part of role '"++roleName role++"'")
                     (lookupRoleStep (drop (length roleId + 1) stepId) role)
     else fail ("resolveStep: role of step '"++stepId++"' does not agree to role '"
-               ++roleName role++"' of thread "++show tid) 
+               ++roleName role++"' of thread "++show tid)
 
 -- | Parse an instantiation of a pattern.
 instantiation :: MonadPlus m => Parser s (E.Mapping -> m Message)
-instantiation = do 
+instantiation = do
   tid <- TID <$> (funOpen "inst" *> integer <* kw COMMA)
-  m <- (do i <- identifier 
+  m <- (do i <- identifier
            let (stepId, iTyp) = splitAt (length i - 3) i
            when (iTyp /= "_pt") (fail $ "inst: could not resolve pattern '"++i++"'")
            return $ \mapping -> do
@@ -449,7 +449,7 @@ tuplemessage = chainr1 message ((liftA2 $ liftM2 MTup) <$ kw COMMA)
 TODO: Update to new syntax
 
 Protocol := "protocol" Identifier "{" Transfer+ "}"
-Transfer := Identifier "->" Identifier ":" Term 
+Transfer := Identifier "->" Identifier ":" Term
           | Identifier "->" ":" Term  "<-" Identifier ":" Term
           | Identifier "<-" ":" Term  "->" Identifier ":" Term
 Term := "{" Term "}" Key
@@ -504,36 +504,36 @@ transfer = do
               return [(left, Recv lbl pt), (right, Send lbl pt)]
            )
        )
-   ) 
+   )
 
 -- | Parse a protocol.
 protocol :: Parser s Protocol
 protocol = do
-  name <- string "protocol" *> identifier 
+  name <- string "protocol" *> identifier
   transfers <- concat <$> braced (many1 transfer)
   -- convert parsed transfers into role scripts
   let roleIds = S.fromList $ map fst transfers
       roles = do
         actor <- S.toList roleIds
         let steps = [ step | (i, step) <- transfers, i == actor ]
-        return $ Role (getId actor) 
+        return $ Role (getId actor)
                       (ensureFreshSteps actor (S.map addSpacePrefix roleIds) steps)
   return $ Protocol name roles
   where
   addSpacePrefix = Id . (' ':) . getId
   dropSpacePrefixes = S.map dropSpacePrefix
   -- | Ensure message variables are received before they are sent.
-  ensureFreshSteps actor possibleAvars = 
+  ensureFreshSteps actor possibleAvars =
       go (S.singleton (addSpacePrefix actor)) S.empty S.empty
     where
       go _ _ _ [] = []
-      go avars mvars fresh (Send l pt : rs) = 
-        let avars' = avars `S.union` (((patFMV pt `S.intersection` possibleAvars) 
+      go avars mvars fresh (Send l pt : rs) =
+        let avars' = avars `S.union` (((patFMV pt `S.intersection` possibleAvars)
                                        `S.difference` mvars) `S.difference` fresh)
             fresh' = fresh `S.union` ((patFMV pt `S.difference` avars') `S.difference` mvars)
             pt' = resolveIds (dropSpacePrefixes avars') (dropSpacePrefixes mvars) pt
         in Send l pt' : go avars' mvars fresh' rs
-      go avars mvars fresh (Recv l pt : rs) = 
+      go avars mvars fresh (Recv l pt : rs) =
         let mvars' = mvars `S.union` ((patFMV pt `S.difference` avars) `S.difference` fresh)
             pt' = resolveIds (dropSpacePrefixes avars) (dropSpacePrefixes mvars') pt
         in  Recv l pt' : go avars mvars' fresh rs
@@ -542,16 +542,16 @@ protocol = do
 -- Parse Claims
 ------------------------------------------------------------------------------
 
--- | Parse a claim. 
+-- | Parse a claim.
 claims :: (String -> Maybe Protocol) -> Parser s [ThyItem]
 claims protoMap = do
   let mkAxiom (name, se) = ThyTheorem (name, Axiom se)
-  (multiplicity, mkThyItem) <- 
-    (string "property"   *> pure (id,                   ThySequent)) <|> 
+  (multiplicity, mkThyItem) <-
+    (string "property"   *> pure (id,                   ThySequent)) <|>
     (string "properties" *> pure ((concat <$>) . many1, ThySequent)) <|>
     (string "axiom"      *> pure (id,                   mkAxiom   ))
   protoId <- kw LPAREN *> string "of" *> identifier
-  proto <- liftMaybe' ("unknown protocol '"++protoId++"'") $ protoMap protoId 
+  proto <- liftMaybe' ("unknown protocol '"++protoId++"'") $ protoMap protoId
   kw RPAREN
   multiplicity $ do
     claimId <- try $ identifier <* kw COLON
@@ -569,74 +569,74 @@ claims protoMap = do
 -- msc-typing
 parseAutoProps :: Protocol -> Parser s [(String -> String,Sequent)]
 parseAutoProps proto =
-  string "auto" *> kw MINUS *> string "properties" *> 
+  string "auto" *> kw MINUS *> string "properties" *>
   pure (concat
     [ transferTyping proto, firstSendSequents proto, nonceSecrecySequents proto ])
 
 -- | Create secrecy claims for nonces and variables.
 parseNonceSecrecy :: Protocol -> Parser s [(String -> String,Sequent)]
-parseNonceSecrecy proto = 
+parseNonceSecrecy proto =
   string "nonce" *> kw MINUS *> string "secrecy" *> pure (nonceSecrecySequents proto)
 
 -- | Create secrecy claims for nonces and variables.
 nonceSecrecySequents :: Protocol -> [(String -> String,Sequent)]
-nonceSecrecySequents proto = 
-  concatMap mkSequent . toposort $ protoOrd proto
+nonceSecrecySequents proto =
+    concatMap mkSequent . toposort $ protoOrd proto
   where
-  mkSequent (step, role) = case step of
-    Send _ pt -> do
-      n@(PFresh i) <- S.toList $ subpatterns pt
-      guard (not (plainUse pt n) && firstUse n)
-      return $ secrecySe (MFresh . Fresh) i
-    Recv _ pt -> do
-      v@(PMVar i) <- S.toList $ subpatterns pt
-      guard (not (plainUse pt v) && firstUse v)
-      return $ secrecySe (MMVar . MVar) i
-    where
-    (tid, prem0) = freshTID (empty proto)
-    (prefix, _) = break (step ==) $ roleSteps role
-    firstUse = (`S.notMember` (S.unions $ map (subpatterns . stepPat) prefix))
-    plainUse pt = (`S.member` splitpatterns pt)
-    avars = [ MAVar (AVar (LocalId (v,tid)))
-            | (PAVar v) <- S.toList . S.unions . map (subpatterns.stepPat) $ roleSteps role ]
-    secrecySe constr i =
-      ( (++("_"++roleName role++"_sec_"++getId i))
-      , Sequent prem (FAtom AFalse)
-      )
-      -- flip (Sequent proto) FFalse $ FFacts $
-      -- insertEv (Learn (constr (LocalId (i,tid)))) $ 
-      -- insertEv (Step tid step) $ 
-      -- foldr uncompromise (insertRole tid role emptyFacts) avars
+    mkSequent (step, role) = case step of
+        Send _ pt -> do
+          n@(PFresh i) <- S.toList $ subpatterns pt
+          guard (not (plainUse pt n) && firstUse n)
+          return $ secrecySe (MFresh . Fresh) i
+        Recv _ pt -> do
+          v@(PMVar i) <- S.toList $ subpatterns pt
+          guard (not (plainUse pt v) && firstUse v)
+          return $ secrecySe (MMVar . MVar) i
       where
-      -- here we know that conjunction will work, as we build it by ourselves
-      Just (Just prem) = conjoinAtoms atoms prem0
-      atoms = [ AEq (E.TIDRoleEq (tid, role))
-              , AEv (Step tid step)
-              , AEv (Learn (constr (LocalId (i, tid))))
-              ] ++ map AUncompr avars
+        (tid, prem0) = freshTID (empty proto)
+        (prefix, _) = break (step ==) $ roleSteps role
+        firstUse = (`S.notMember` (S.unions $ map (subpatterns . stepPat) prefix))
+        plainUse pt = (`S.member` splitpatterns pt)
+        avars = [ MAVar (AVar (LocalId (v,tid)))
+                | (PAVar v) <- S.toList . S.unions . map (subpatterns.stepPat) $ roleSteps role ]
+        secrecySe constr i =
+          ( (++("_"++roleName role++"_sec_"++getId i))
+          , Sequent prem (FAtom AFalse) Standard
+          )
+          -- flip (Sequent proto) FFalse $ FFacts $
+          -- insertEv (Learn (constr (LocalId (i,tid)))) $
+          -- insertEv (Step tid step) $
+          -- foldr uncompromise (insertRole tid role emptyFacts) avars
+          where
+          -- here we know that conjunction will work, as we build it by ourselves
+          Just (Just prem) = conjoinAtoms atoms prem0
+          atoms = [ AEq (E.TIDRoleEq (tid, role))
+                  , AEv (Step tid step)
+                  , AEv (Learn (constr (LocalId (i, tid))))
+                  ] ++ map AUncompr avars
 
 parseFirstSends :: Protocol -> Parser s [(String -> String,Sequent)]
 parseFirstSends proto =
   string "first" *> kw MINUS *> string "sends" *> pure (firstSendSequents proto)
 
 firstSendSequents :: Protocol -> [(String -> String,Sequent)]
-firstSendSequents proto = 
-  concatMap mkRoleSequents $ protoRoles proto
+firstSendSequents proto =
+    concatMap mkRoleSequents $ protoRoles proto
   where
-  mkRoleSequents role = 
-    concatMap mkStepSequents $ zip (inits steps) steps
-    where
-    steps = roleSteps role
-    (tid, prem0) = freshTID (empty proto)
-    mkStepSequents (_,            Recv _ _  ) = []
-    mkStepSequents (prefix, step@(Send _ pt)) = do
-      n@(PFresh i) <- S.toList $ splitpatterns pt
-      guard (n `S.notMember` S.unions (map (subpatterns.stepPat) prefix))
-      let learn = (Learn (MFresh (Fresh (LocalId (i, tid)))))
-          atoms = [ AEq (E.TIDRoleEq (tid, role)), AEv learn ]
-          Just (Just prem) = conjoinAtoms atoms prem0
-          concl = FAtom (AEvOrd (Step tid step, learn))
-      return ( (++("_" ++ getId i)), Sequent prem concl)
+    mkRoleSequents role =
+        concatMap mkStepSequents $ zip (inits steps) steps
+      where
+        steps = roleSteps role
+        (tid, prem0) = freshTID (empty proto)
+        mkStepSequents (_,            Recv _ _  ) = []
+        mkStepSequents (prefix, step@(Send _ pt)) = do
+          n@(PFresh i) <- S.toList $ splitpatterns pt
+          guard (n `S.notMember` S.unions (map (subpatterns.stepPat) prefix))
+          let learn = (Learn (MFresh (Fresh (LocalId (i, tid)))))
+              atoms = [ AEq (E.TIDRoleEq (tid, role)), AEv learn ]
+              Just (Just prem) = conjoinAtoms atoms prem0
+              concl = FAtom (AEvOrd (Step tid step, learn))
+          return ( (++("_" ++ getId i)), Sequent prem concl Standard)
 
 parseTransferTyping :: Protocol -> Parser s [(String -> String, Sequent)]
 parseTransferTyping proto =
@@ -645,7 +645,7 @@ parseTransferTyping proto =
 transferTyping :: Protocol -> [(String -> String, Sequent)]
 transferTyping proto = case mscTyping proto of
   Just typing -> pure
-    ((++"_msc_typing"), Sequent (empty proto) (FAtom (ATyping typing)))
+    ((++"_msc_typing"), Sequent (empty proto) (FAtom (ATyping typing)) Standard)
   Nothing     -> fail "transferTyping: failed to construct typing"
 
 -- | Parse secrecy formula.
@@ -655,7 +655,7 @@ secrecySequent proto = do
   roleId <- funOpen "secret" *> identifier
   role <- liftMaybe' ("could not find role '"++roleId++"'") $ lookupRole roleId proto
   lbl <- kw COMMA *> (identifier <|> kw MINUS *> pure "-")
-  stepAtoms <- 
+  stepAtoms <-
     (do step <- liftMaybe $ lookupRoleStep lbl role
         return $ [AEv (Step tid step)]
      `mplus` return [])
@@ -667,15 +667,15 @@ secrecySequent proto = do
   kw COMMA
   uncompromised <- map (inst tid . resolveIdsLocalToRole role) <$> msgSet
   kw RPAREN
-  -- construct secrecy claim 
-  let atoms = [ AEq (E.TIDRoleEq (tid, role)), AEv (Learn m) ] ++ stepAtoms ++ 
+  -- construct secrecy claim
+  let atoms = [ AEq (E.TIDRoleEq (tid, role)), AEv (Learn m) ] ++ stepAtoms ++
               map AUncompr uncompromised
       prem  = case conjoinAtoms atoms prem0 of
         Just (Just prem1) -> prem1
         Just Nothing      -> error "secrecySequent: secrecy claim is trivially true"
         Nothing           -> error "secrecySequent: failed to construct secrecy claim"
-   
-  return $ Sequent prem (FAtom AFalse)
+
+  return $ Sequent prem (FAtom AFalse) Standard
   where
   msgSet = braced $ sepBy pattern (kw COMMA)
 
@@ -690,12 +690,12 @@ niagreeSequent proto = do
     uncompromised <- map (AUncompr . instPat tidCom roleCom) <$> patSet
     kw RPAREN
     let premAtoms  = [ AEq (E.TIDRoleEq (tidCom, roleCom))
-                     , AEv (Step tidCom stepCom) 
-                     ] ++ 
+                     , AEv (Step tidCom stepCom)
+                     ] ++
                      uncompromised
 
         conclAtoms = [ AEq (E.TIDRoleEq (tidRun, roleRun))
-                     , AEv (Step tidRun stepRun) 
+                     , AEv (Step tidRun stepRun)
                      , AEq (E.MsgEq ( instPat tidRun roleRun patRun
                                     , instPat tidCom roleCom patCom ))
                      ]
@@ -705,11 +705,11 @@ niagreeSequent proto = do
             Just Nothing      -> error "niagreeSequent: claim is trivially true"
             Nothing           -> error "niagreeSequent: failed to construct claim"
 
-    return (Sequent prem concl)
+    return (Sequent prem concl Standard)
   where
     (tidCom, prem0) = freshTID (empty proto)
     tidRun          = succ tidCom
-    
+
     patSet = braced $ sepBy pattern (kw COMMA)
     instPat tid role = inst tid . resolveIdsLocalToRole role
 
@@ -723,11 +723,11 @@ niagreeSequent proto = do
 parseTypingSequent :: Protocol -> Parser s Sequent
 parseTypingSequent proto = do
     typ <- M.fromList <$> doubleQuoted (many1 typeAssertion)
-    return $ Sequent (empty proto) (FAtom (ATyping typ))
+    return $ Sequent (empty proto) (FAtom (ATyping typ)) Standard
   where
     variable = (,) <$> (Id <$> identifier) <*> (kw AT *> roleById proto)
 
-    typeAssertion = (,) <$> (variable <* kw COLON <* kw COLON) 
+    typeAssertion = (,) <$> (variable <* kw COLON <* kw COLON)
                         <*> (normType <$> msgTypeDisj)
 
     msgTypeTup  = foldr1 TupT <$> sepBy1 msgTypeDisj (kw COMMA)
@@ -735,7 +735,7 @@ parseTypingSequent proto = do
 
     msgType = asum
       [       pure AgentT <* string "Agent"
-      ,       (ConstT . Id) <$> singleQuoted identifier 
+      ,       (ConstT . Id) <$> singleQuoted identifier
       ,       HashT   <$> funApp "h" msgTypeTup
       ,       EncT    <$> braced msgTypeTup <*> msgType
       ,       SymKT   <$> (funOpen "k" *> msgTypeDisj) <*> (kw COMMA *> msgTypeDisj <* kw RPAREN)
@@ -760,11 +760,11 @@ roleStepById :: Protocol -> Parser s (Role, RoleStep)
 roleStepById proto = do
     stepId <- identifier
     let (lbl, roleId) = (reverse *** (init . reverse)) (break ('_' ==) $ reverse stepId)
-    role <- liftMaybe' ("could not find role '" ++ roleId ++ 
+    role <- liftMaybe' ("could not find role '" ++ roleId ++
                         "' in protocol '" ++ protoName proto ++ "'")
                        (lookupRole roleId proto)
 
-    step <- liftMaybe' ("unknown label '" ++ lbl ++ "' in role '" ++ roleId ++ "'") 
+    step <- liftMaybe' ("unknown label '" ++ lbl ++ "' in role '" ++ roleId ++ "'")
                        (lookupRoleStep lbl role)
     return (role, step)
 
@@ -849,8 +849,8 @@ eqFact = do
 
 -- | Parse a raw fact.
 rawFacts :: MonadPlus m => Parser s [RawFact m]
-rawFacts = foldl1 (<|>) 
-  ( [try orderFacts, honestFact] ++ 
+rawFacts = foldl1 (<|>)
+  ( [try orderFacts, honestFact] ++
     map (liftM return) [roleEqFact, knowsFact, stepFact, eqFact] )
 
 -- | Parse the conclusion "False".
@@ -870,9 +870,9 @@ existenceConcl proto mapping = do
   return $ foldr FExists (foldr1 FConj . map FAtom $ atoms) tids
   where
   singleThread = pure <$> (strings ["a", "thread"] *> integer)
-  multiThreads = strings ["threads"] *> sepBy1 integer (kw COMMA) 
-  threads = (singleThread <|> multiThreads) <* strings ["such","that"] 
- 
+  multiThreads = strings ["threads"] *> sepBy1 integer (kw COMMA)
+  threads = (singleThread <|> multiThreads) <* strings ["such","that"]
+
 -- | Parse a conclusion.
 -- currently only contradiction supported
 conclusion :: Protocol -> E.Mapping -> Parser s Formula
@@ -881,7 +881,7 @@ conclusion proto mapping = asum
 
 -- | Parse a general implication claim.
 implicationSequent :: Protocol -> Parser s Sequent
-implicationSequent proto = do 
+implicationSequent proto = do
   facts <- concat <$> (string "premises" *> many (doubleQuoted rawFacts))
   roleeqs <- extractRoleEqs proto facts
   let mapping = foldr (uncurry E.addTIDRoleMapping) (E.Mapping E.empty) roleeqs
@@ -893,7 +893,7 @@ implicationSequent proto = do
   prems <- maybe (fail "contradictory premises") return optPrems
   string "imply"
   concl <- conclusion proto mapping
-  return $ Sequent prems concl
+  return $ Sequent prems concl Standard
 
 {-
 -- | Construct the premise modifier. The given set of role equalities is used
@@ -901,14 +901,14 @@ implicationSequent proto = do
 mkPremiseMod :: MonadPlus m => E.Mapping -> [RawFact m] -> Facts -> m Facts
 mkPremiseMod mapping rawfacts facts = do
   atoms <- sequence [ mkAtom mapping | RawAtom mkAtom <- rawfacts ]
-  optFacts <- conjoinAtoms atoms facts 
+  optFacts <- conjoinAtoms atoms facts
   maybe (error "mkPremiseMod: contradictory facts") return $ optFacts
 -}
 
 -- | A formal comment; i.e., (header, body)
 formalComment :: Parser s (String, String)
 formalComment =
-    (,) <$> text begin 
+    (,) <$> text begin
         <*> (concat <$> many (text content) <* text end)
   where
     text f = token (\t -> case t of TEXT ty -> f ty; _ -> mzero)
@@ -920,11 +920,11 @@ formalComment =
     end _                     = mzero
 
 
- ------------------------------------------------------------------------------ 
+ ------------------------------------------------------------------------------
  -- Parse a theory
- ------------------------------------------------------------------------------ 
+ ------------------------------------------------------------------------------
 
-    
+
 -- | Parse a theory.
 theory :: Parser s Theory
 theory = do
@@ -933,7 +933,7 @@ theory = do
     string "begin" *> addItems (Theory thyId []) <* string "end"
   where
     addItems :: Theory -> Parser s (Theory)
-    addItems thy = 
+    addItems thy =
       do p <- protocol
          case lookupProtocol (protoName p) thy of
            Just _  -> fail $ "duplicate protocol '" ++ protoName p ++ "'"

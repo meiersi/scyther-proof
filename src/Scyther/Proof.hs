@@ -49,8 +49,8 @@ import Control.Monad.BoundedDFS
 
 import Extension.Prelude
 
-import Scyther.Facts 
-import qualified Scyther.Equalities as E 
+import Scyther.Facts
+import qualified Scyther.Equalities as E
 import Scyther.Sequent
 
 ------------------------------------------------------------------------------
@@ -121,12 +121,13 @@ prfProto = seProto . prfSequent
 -- | Try proving a sequent by assumption; i.e. by showing that the premises
 -- directly imply the conclusion.
 byAssumption :: Monad m => Sequent -> m Proof
-byAssumption se@(Sequent prem concl)
+byAssumption se@(Sequent prem concl Standard)
   | proveFalse prem         = return $ Trivial se TrivContradictoryPremises
   | proveFormula prem concl = return $ Trivial se TrivPremisesImplyConclusion
   | otherwise = case exploitLongTermKeySecrecy prem of
       Just key -> return $ Trivial se (TrivLongTermKeySecrecy key)
       Nothing  -> fail $ "byAssumption: cannot prove conclusion from premises"
+byAssumption _ = fail $ "byAssumption: only work for standard sequents"
 
 
 -- | An order preferring typing conclusions and then false conclusions.
@@ -142,14 +143,14 @@ reuseOrder f1                     f2                     = compare f1 f2
 
 -- | A generic proof strategy for proving sequents. Eagerly reuses lemmas in
 -- the order they were given using forward resolution.
-genericProof :: MonadPlus m           
+genericProof :: MonadPlus m
              => m ()                  -- ^ A marker for usages of the chain rule.
              -> (Facts -> [Message])  -- ^ A heuristic for the order of
                                       --   messages to be tried using the chain rule.
              -> [Named Sequent]       -- ^ Rules that should be reused in this proof.
              -> Sequent               -- ^ The sequent to be proven
              -> m Proof
-genericProof chainRuleMarker goals rawRules se0 = 
+genericProof chainRuleMarker goals rawRules se0 =
   case saturate se0 of
     Just se1 -> (RuleApp se0 Saturate . return) `liftM` prove se1
     Nothing  ->                                         prove se0
@@ -162,7 +163,7 @@ genericProof chainRuleMarker goals rawRules se0 =
   reuseRule se rule = do
     (mapping, optSequent) <- frule (snd rule) se
     let mkProof = RuleApp se (ForwardResolution rule mapping)
-    case optSequent of 
+    case optSequent of
       Nothing      -> return $ return $ mkProof []
       Just sequent -> return $ (mkProof . return) `liftM` prove sequent
 
@@ -176,7 +177,7 @@ genericProof chainRuleMarker goals rawRules se0 =
       Nothing    -> return $ Missing se "prover stuck => no type invariant available" True
 
   -- prove a sequent
-  prove se = 
+  prove se =
     case byAssumption se of
       Just prf -> return prf  -- proven by assumption
       Nothing  ->
@@ -194,7 +195,7 @@ genericProof chainRuleMarker goals rawRules se0 =
                     let sequents = splitEq eq se
                     RuleApp se (SplitEq eq (map isJust sequents)) `liftM`
                       mapM prove (catMaybes sequents)
-                  
+
                   -- there is none => chain rule is our last resort
                   [] ->
                     case goals (sePrem se) of
@@ -206,23 +207,23 @@ genericProof chainRuleMarker goals rawRules se0 =
 -- | Use a (possibly bounded) depth-first search for finding the proof.
 -- TODO: Make error handling explicit.
 dfsProof :: Maybe Int -> (Facts -> [Message]) -> [Named Sequent] -> Sequent -> Maybe Proof
-dfsProof Nothing heuristic rules se = 
+dfsProof Nothing heuristic rules se =
   runUnboundedDFS $ genericProof (return ()) heuristic rules se
-dfsProof (Just bound) heuristic rules se = 
+dfsProof (Just bound) heuristic rules se =
   evalBoundedDFS (genericProof (updateCost succ) heuristic rules se) (<= bound) 0
-  
+
 -- | Use branch-and-bound search to find the shortest proof.
 -- TODO: Make error handling explicit.
 shortestProof :: Maybe Int -> (Facts -> [Message]) -> [Named Sequent] -> Sequent -> Maybe Proof
-shortestProof optBound heuristic rules se = 
+shortestProof optBound heuristic rules se =
   evalBranchAndBound
     (genericProof (updateCost (fmap succ)) heuristic rules se)
-    optBound 
+    optBound
 
 -- | Check if there exists a case where the prover gets stuck using unbounded DFS
 -- and the given heuristic and theorems to reuse.
 existsPossibleAttack :: (Facts -> [Message]) -> [Named Sequent] -> Sequent -> Maybe Proof
-existsPossibleAttack heuristic rules se = 
+existsPossibleAttack heuristic rules se =
   findAttack =<< (runUnboundedDFS $ genericProof (return ()) heuristic rules se)
 
 ------------------------------------------------------------------------------
@@ -236,7 +237,7 @@ checkProof se0 prf0 = evalStateT (go prf0) se0
   mkSubproof se prf = put se >> go prf
 
   go :: Proof -> StateT Sequent Maybe Proof
-  go (Missing _ reason showSequent) = 
+  go (Missing _ reason showSequent) =
     Missing <$> get <*> pure reason <*> pure showSequent
   go prf@(Axiom seAxiom) = do
     se <- get
@@ -270,7 +271,7 @@ checkProof se0 prf0 = evalStateT (go prf0) se0
     let statePrem = sePrem se
     guard (proveFacts statePrem (sePrem $ snd thm) mapping)
     optSequent <- fruleInst (snd thm) mapping se
-    case optSequent of 
+    case optSequent of
       Nothing -> do guard (null prfs)
                     return $ RuleApp se rule prfs
       Just sequent -> case prfs of
@@ -309,19 +310,19 @@ findAttack :: Proof -> Maybe Proof
 findAttack = fmap head . go . return
   where
     unvisited prf = Missing (prfSequent prf) "not yet investigated" False
-    
+
     go :: [Proof] -> Maybe [Proof]
     go []           = Nothing
     go (prf : prfs) = case prf of
-        RuleApp se rule subprfs -> 
+        RuleApp se rule subprfs ->
             -- look for an attack in the subproofs of the given rule
             (do subprfs' <- go subprfs
                 return $ RuleApp se rule subprfs' : map unvisited prfs
             ) `mplus`
             -- look for an attack in the remaining proofs
-            ((unvisited prf :) `liftM` go prfs) 
+            ((unvisited prf :) `liftM` go prfs)
         -- attack found: return it together with the unvisited siblings
-        PossibleAttack _ _  -> return $ prf : map unvisited prfs 
+        PossibleAttack _ _  -> return $ prf : map unvisited prfs
         -- look for an attack in the siblings and prepend ourselves unvisited
         _                   -> (unvisited prf :) `liftM` go prfs
 
@@ -339,10 +340,10 @@ sound prf = complete prf && isJust (checkProof (prfSequent prf) prf)
 -- | Minimize a proof by removing all unnecesary forward resolutions.
 minimizeProof :: Proof -> Proof
 minimizeProof prf0 = fromMaybe prf0 $ do
-  prf <- go prf0 
+  prf <- go prf0
   checkProof (prfSequent prf) prf
   where
-  go (RuleApp se rule@(ForwardResolution _ _) [prf]) = do 
+  go (RuleApp se rule@(ForwardResolution _ _) [prf]) = do
     prf' <- go prf
     (checkProof se prf' <|> pure (RuleApp se rule [prf']))
   go (RuleApp se rule prfs) =
@@ -358,7 +359,7 @@ depends _ = S.empty
 
 -- | Extracts the first type invariant occurring in a forward resolution. This
 -- is required because in Isabelle type invariants are handled using locales,
--- while we are handling them using forward resolution. 
+-- while we are handling them using forward resolution.
 --
 -- Note that our system here is more general, but for the current setup, we do
 -- not see this generality.
@@ -381,14 +382,14 @@ newtype ProofSize = ProofSize (Sum Int, Sum Int, Sum Int)
   deriving( Eq, Ord, Monoid )
 
 instance Show ProofSize where
-  show s = 
+  show s =
     concat ["C:", show nChain, " F:", show nForward, " M:", show nMissing]
     where
     (nChain, nForward, nMissing) = getProofSize s
 
 -- | Extract the raw proof size information.
 getProofSize :: ProofSize -> (Int, Int, Int)
-getProofSize (ProofSize (nChain, nForward, nMissing)) = 
+getProofSize (ProofSize (nChain, nForward, nMissing)) =
   (getSum nChain, getSum nForward, getSum nMissing)
 
 -- | The size of a missing proof.
@@ -425,10 +426,10 @@ mapProofSequents f  = go
 displayChainRule :: Protocol -> Maybe Typing -> Proof
 displayChainRule _ _ = error "displayChainRule: not yet upgraded"
 {-
-displayChainRule proto optTyp = 
+displayChainRule proto optTyp =
   RuleApp se (ChainRule optTyp m (map fst cases)) (map mkPrf cases)
   where
-  tid   = 0 
+  tid   = 0
   m     = (MMVar (LocalId (Id "m", tid)))
   prem  = insertEv (Learn m) $ insertThread tid $ emptyFacts
   se    = Sequent proto (FFacts prem) FFalse

@@ -25,7 +25,7 @@ import Text.Isar
 import Text.Dot (Dot)
 
 import qualified Scyther.Equalities as E
-import Scyther.Facts 
+import Scyther.Facts
 import Scyther.Sequent
 import Scyther.Proof
 import Scyther.Theory
@@ -55,7 +55,7 @@ instance (Document d, Applicative f) => Document (f d) where
   nest  = liftA2 nest . pure
   caseEmptyDoc = liftA3 caseEmptyDoc
 
-  
+
 
 ------------------------------------------------------------------------------
 -- A type-tagging identity monad transformer
@@ -65,7 +65,7 @@ newtype TaggedIdentityT t m a = TaggedIdentityT { unTaggedIdentityT :: m a }
   deriving( Functor, Applicative, Monad )
 
 instance MonadTrans (TaggedIdentityT t) where
-  lift = TaggedIdentityT 
+  lift = TaggedIdentityT
 
 runTaggedIdentityT :: t -> TaggedIdentityT t m a -> m a
 runTaggedIdentityT _ = unTaggedIdentityT
@@ -82,7 +82,7 @@ class (Applicative m, Monad m) => MarkupMonad m where
   theoremRef      :: Document d => Protocol -> String -> m d
   theoremDef      :: Document d => Theorem -> m d -> m d
   keyword         :: Document d => String -> m d -> m d
-  noteCases       :: Document d => Dot a 
+  noteCases       :: Document d => Dot a
                                 -> [(String, Dot b)]  -- ^ named non-trivial cases
                                 -> [(String, Dot b)]  -- ^ named trivial cases
                                 -> m d -> m d
@@ -140,7 +140,7 @@ type ChainRuleCase = ((String, [Either TID ArbMsgId]), Proof)
 ---------------
 
 explainSequent :: Sequent -> String
-explainSequent = 
+explainSequent =
   render . runIdentity . runTaggedIdentityT SlimOutput . prettySequent
 
 withExplainedSequent :: (Document d, MarkupMonad m) => Sequent -> m d -> m d
@@ -167,8 +167,8 @@ genericChainRuleSplitCases sel cases =
   extractTrivial (Trivial se reason) = case reason of
     TrivContradictoryPremises   -> Just reason
     TrivLongTermKeySecrecy _    -> Nothing
-    TrivPremisesImplyConclusion -> 
-      case seConcl se of 
+    TrivPremisesImplyConclusion ->
+      case seConcl se of
         FAtom (AHasType _) -> Just reason
         _                  -> Nothing
   extractTrivial _ = Nothing
@@ -176,20 +176,20 @@ genericChainRuleSplitCases sel cases =
 -- | Pretty print a sequent with quantifiers, logical, and meta-logical facts for
 -- the premise and a single document representing the conclusion.
 prettySequentParts :: PrettyMonad m => Sequent -> m (([Doc], [Doc], [Doc]), Doc)
-prettySequentParts (Sequent prem concl) = do
+prettySequentParts (Sequent prem concl _qualifier) = do
   ppPrem  <- prettyFacts prem
   ppConcl <- prettyFormula (eqsToMapping prem) concl
   return (ppPrem, ppConcl)
 
 -- | Pretty print a proof.
-prettyProof :: PrettyMonad m => 
+prettyProof :: PrettyMonad m =>
             String       -- ^ Name of the theorem that is proven
          -> (Bool, Bool) -- ^ (facts are loaded, thesis is being proven)
-         -> Proof 
+         -> Proof
          -> m Doc
 prettyProof _ _ (Axiom _) = emptyDoc
 
-prettyProof _ prfConf (Trivial _ reason) = 
+prettyProof _ prfConf (Trivial _ reason) =
   ensureProofMode prfConf <-> prettyTrivial reason
 
 prettyProof _ _ (Missing se reason showSequent)
@@ -206,13 +206,13 @@ prettyProof thName prfConf (RuleApp se Saturate [prf]) =
 
 --  A forward resolution that lead to no further proofs
 prettyProof _ prfConf (RuleApp se (ForwardResolution (thName, _) _) []) =
-  ensureProofMode prfConf <-> 
+  ensureProofMode prfConf <->
     prettyForwardContradiction (theoremRef (seProto se) thName)
 -- a forward resolution with a single successor.
 prettyProof outerThName prfConf (RuleApp se (ForwardResolution (thName, thSe) tideqs) [prf]) =
     wrapper $
-      withProofSequent prf 
-        (prettyForwardResolution (theoremRef (seProto se) thName) thSe tideqs) $-$ 
+      withProofSequent prf
+        (prettyForwardResolution (theoremRef (seProto se) thName) thSe tideqs) $-$
       prettyProof outerThName newMode prf
   where
     isTyping = isTypingFormula . seConcl $ thSe
@@ -234,7 +234,7 @@ prettyProof thName prfConf (RuleApp se (ChainRule m names) prfs) = do
     $-$
     vcat (intersperse prettyNextCase (map (pure . nest 2) ppCases)) $-$
     prettyChainRuleQED m trivialCases
-  where 
+  where
   selectCase (info, prf) =
     withProofSequent prf (prettyChainRuleCase info) $-$ prettyProof thName (True, False) prf
 
@@ -243,14 +243,14 @@ prettyProof thName _ (RuleApp se (TypingCases names) prfs) = do
     let mkDot = dotSequentMarked S.empty . prfSequent
         nonTrivialCases = zip names $ map mkDot prfs
     noteCases (dotSequentMarked S.empty se) nonTrivialCases []
-      (withExplanation (explainSequent se) pre) 
+      (withExplanation (explainSequent se) pre)
       $-$
       modifier (vcat . intersperse prettyNextCase $ map (nest 2 . pure) ppCases) $-$
       post
   where
     (pre, modifier, post) = prettyTypeCheckInduction thName
     ppCase (name, prf) =
-      let caseDoc = prettyTypingCase thName name 
+      let caseDoc = prettyTypingCase thName name
       in  withProofSequent prf caseDoc $-$ prettyProof thName (True, True) prf
 
 prettyProof thName _ (RuleApp se (SplitEq eq@(MShrK _ _, MShrK _ _) [True,True]) prfs) = do
@@ -260,20 +260,20 @@ prettyProof thName _ (RuleApp se (SplitEq eq@(MShrK _ _, MShrK _ _) [True,True])
       prettySplitEqQed
   where
     ppCase (name, prf) =
-        withProofSequent prf (prettySplitEqCase name) $-$ 
+        withProofSequent prf (prettySplitEqCase name) $-$
         prettyProof thName (True, False) prf
 
 prettyProof _ _ (RuleApp _ rule _) = error $ "prettyProof: unmatched rule\n" ++ show rule
- 
+
 -- | Pretty print a theory item.
 --
 -- Note that this also ensures that quantifiers are made unique.
 prettyThyItem :: PrettyMonad m => [ThyItem] -> ThyItem -> m Doc
-prettyThyItem items (ThyProtocol proto) = prettyProtoDef proto 
+prettyThyItem items (ThyProtocol proto) = prettyProtoDef proto
   [th | ThyTheorem th <- items, isAxiom th, thmProto th == proto]
-prettyThyItem _ (ThySequent (name, se)) = 
+prettyThyItem _ (ThySequent (name, se)) =
   prettyTheorem (name, Missing (uniqueTIDQuantifiers se) ("proof to be done") False)
-prettyThyItem _ (ThyTheorem (name, prf)) = 
+prettyThyItem _ (ThyTheorem (name, prf)) =
   prettyTheorem (name, prf)
 prettyThyItem _ (ThyText header txt) = prettyFormalComment header txt
 
@@ -287,8 +287,8 @@ prettyTheory (Theory name items) = do
 prettySoundness :: Applicative f => Theory -> f Doc
 prettySoundness thy = case unsoundTheorems thy of
     []  -> emptyDoc
-    ths -> vcat $ 
-      map text ["", "(* NOTE that the proofs of the following theorems are UNSOUND:", ""] ++ 
+    ths -> vcat $
+      map text ["", "(* NOTE that the proofs of the following theorems are UNSOUND:", ""] ++
       map ppThm ths ++
       map text ["*)"]
   where
@@ -317,7 +317,7 @@ instance MarkupMonad m => MarkupMonad (TaggedIdentityT t m) where
   withExplanation e   = TaggedIdentityT . withExplanation e . unTaggedIdentityT
   theoremRef proto    = lift . theoremRef proto
   theoremDef thm      = TaggedIdentityT . theoremDef thm . unTaggedIdentityT
-  keyword tag         = TaggedIdentityT . keyword tag . unTaggedIdentityT 
+  keyword tag         = TaggedIdentityT . keyword tag . unTaggedIdentityT
   noteCases se ntc tc  = TaggedIdentityT . noteCases se ntc tc . unTaggedIdentityT
 
 
@@ -329,7 +329,7 @@ instance MarkupMonad m => MarkupMonad (TaggedIdentityT t m) where
 isaTactic :: TrivReason -> String
 isaTactic TrivContradictoryPremises   = "((clarsimp, order?) | order)"
 isaTactic (TrivLongTermKeySecrecy _)  = "(fastsimp dest!: ltk_secrecy)"
-isaTactic TrivPremisesImplyConclusion = "(fastsimp intro: event_predOrdI split: if_splits)" 
+isaTactic TrivPremisesImplyConclusion = "(fastsimp intro: event_predOrdI split: if_splits)"
 
 -- | Isabelle proof of long-term key secrecy.
 isaLongTermKeySecrecyProof :: Protocol -> Doc
@@ -347,7 +347,7 @@ isaSequentProp :: MarkupMonad m => Sequent -> ReaderT IsarConf m Doc
 isaSequentProp se = do
   conf <- ask
   ( (premTids,  ppPremFacts, _), ppConcl ) <- prettySequentParts se
-  let quantify q vs = case vs of 
+  let quantify q vs = case vs of
         [] -> id
         _  -> ((q conf <> fsep vs <> char '.') $$) . nest 2
       doc | nullFacts (sePrem se) = ppConcl
@@ -398,7 +398,7 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     pure doc
   -- proof output
   ensureProofMode (factsLoaded, proofMode) =
-    (if proofMode then emptyDoc else text "thus ?thesis") <-> 
+    (if proofMode then emptyDoc else text "thus ?thesis") <->
     (if factsLoaded then emptyDoc else text "using facts")
 
   withFactsMode (_, proofMode) doc
@@ -418,20 +418,20 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     | otherwise = do
         conf <- ask
         let mappedPrems = applyMapping mapping $ sePrem thSe
-            ppPrems = zip [1..] . map (isaAtom conf (eqsToMapping mappedPrems)) $ 
+            ppPrems = zip [1..] . map (isaAtom conf (eqsToMapping mappedPrems)) $
                       toAtoms mappedPrems
-            ppPremProve (i, premFact) = 
+            ppPremProve (i, premFact) =
               text "have f" <> int i <> colon <-> doubleQuotes premFact <->
               text "using facts by (auto intro: event_predOrdI)"
             ppProven = pure . vcat $ map ppPremProve ppPrems
-            ppResolve = 
-              thRef <> text "[OF" <> (hcat $ map ((text " f" <>) . int . fst) ppPrems) <> 
+            ppResolve =
+              thRef <> text "[OF" <> (hcat $ map ((text " f" <>) . int . fst) ppPrems) <>
                        text ", simplified]"
         ppProven $-$
           kwNote <-> text ("facts = facts") <-> ppResolve
 
   prettyNextCase = kwNext
-  prettyChainRuleSplitCases = return . fst . genericChainRuleSplitCases snd 
+  prettyChainRuleSplitCases = return . fst . genericChainRuleSplitCases snd
   prettyChainRuleApplication m =
     sep [ kwProof <> text "(sources! \"", nest 4 m <-> text "\")"]
   prettyChainRuleCase (name, newVars) =
@@ -444,25 +444,25 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
       | otherwise = parens $ text name <-> hsep (map ppNewVar newVars)
   prettyChainRuleQED _ trivCases
     | null tactics = kwQED <-> text "(insert facts, fastsimp+)?" -- be conservative
-    | otherwise    = 
+    | otherwise    =
         kwQED <-> text "(insert facts, (" <> hsep (intersperse (text "|") tactics) <> text ")+)?"
     where
       tactics = map text . nub . map isaTactic . snd $ genericChainRuleSplitCases snd trivCases
 
-  prettyTypeCheckInduction typName = 
+  prettyTypeCheckInduction typName =
     ( kwProof <-> text "-" $$
       ( nest 2 $ vcat
-          [ text "have" <-> doubleQuotes 
+          [ text "have" <-> doubleQuotes
               (text "(t,r,s)" <-> (isaIn <$> ask) <-> text wellTypedStates)
           , kwProof <> text "(cases rule: reachable_in_approxI_ext"
-          , text "      [OF" <-> text monoTyp <> text ", completeness_cases_rule])" 
+          , text "      [OF" <-> text monoTyp <> text ", completeness_cases_rule])"
           ]
       )
     , nest 2
     , (nest 2 $ vcat
         [ kwQED
         , text "thus" <-> doubleQuotes (text (typingLocale typName) <-> text "t r s") <->
-            text "by unfold_locales auto" 
+            text "by unfold_locales auto"
         ]
       ) $$ kwQED
     )
@@ -474,10 +474,10 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
       kwCase <-> text ("("++ name ++" t r s") <-> prettyTID 0 <> text") note facts = this" $-$
           text ("then interpret state: "++ typingLocale typName ++" t r s") $-$
           nest 2 (text "by unfold_locales auto") $-$
-          text "show ?case using facts" 
+          text "show ?case using facts"
 
   -- equality splitting
-  prettySplitEqCase name = 
+  prettySplitEqCase name =
       text "case" <-> text name <-> text "note_unified facts = this facts"
 
   prettySplitEqApplication eq =
@@ -488,53 +488,53 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     (text "thus ?thesis proof(cases rule: Kbd_cases)")
 
   prettySplitEqQed = text "qed (fastsimp+)?"
-  
+
   -- theory output
   prettyComment comment = text "(*" <-> text comment <-> text "*)"
-  prettyFormalComment header comment = 
+  prettyFormalComment header comment =
     text "(*" <-> text header <> colon <-> text comment <-> text "*)"
-  prettyProtoDef proto axioms = 
+  prettyProtoDef proto axioms =
     withGraph (dotProtocol proto) $
       (isar <$> ask <*> pure proto) $-$
       text "" $-$
       (text restrictedLocaleDecl) $-$
       (nest 2 . vcat . map ppAxiom $ axioms)
     where
-    restrictedLocaleDecl = concat 
+    restrictedLocaleDecl = concat
       [ "locale ", restrictedStateLocale proto, " = "++stateLocale proto
       , if null axioms then "" else " +" ]
-    ppAxiom axiom = 
-      text "assumes" <-> text (thmName axiom) <> colon $-$ 
+    ppAxiom axiom =
+      text "assumes" <-> text (thmName axiom) <> colon $-$
       (nest 2 . doubleQuotes . isaSequentProp $ thmSequent axiom)
 
-  prettyTheorem th@(name, prf) 
+  prettyTheorem th@(name, prf)
     | isAxiom th = emptyDoc
-    | otherwise  = case destTypingFormula (seConcl se) of 
+    | otherwise  = case destTypingFormula (seConcl se) of
         Just typ -> ppTypingLocale typ
         Nothing  -> ppLemma
     where
     p  = prfProto prf
     se = prfSequent prf
     ppPrf = prettyProof name (False, True) prf
-    
+
     -- pretty print a lemma
     ppLemma = ppProp $-$ ppPrf
       where
       locale = "(in " ++ restrictedStateLocale (seProto $ prfSequent prf) ++ ") "
       ppName = keyword "property" (text "lemma") <-> text (locale ++ name ++ ":")
-      ppProp = withProofSequent prf $ 
+      ppProp = withProofSequent prf $
         theoremDef th ppName $-$ nest 2 (prettySequent $ prfSequent prf)
-    -- pretty print a typing locale definition 
+    -- pretty print a typing locale definition
     ppTypingLocale typ = do
       conf <- ask
-      vcat 
-        [ keyword "property" (text "type_invariant") <-> 
+      vcat
+        [ keyword "property" (text "type_invariant") <->
             text name <->
             text "for" <-> text (protoName p)
         , text "where \"" <> text name <-> text "= mk_typing" $$
             nest 2 (pure $ isar conf typ) <> char '"'
         , text ""
-        , keyword "property" (text "sublocale") <-> 
+        , keyword "property" (text "sublocale") <->
             text (stateLocale p) <-> isaSublocale conf <-> text (typingLocale name)
         , ppPrf
         , text ""
@@ -564,13 +564,13 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
   prettyTID = pure . sptTID
   prettyArbMsgId = pure . sptArbMsgId
   prettyMessage = pure . sptMessage
-  prettyFacts = pure . sptFacts 
+  prettyFacts = pure . sptFacts
   prettyFormula mapping form = pure $ sptFormula mapping form
     -- case form of
       -- FFalse                 -> singleFact $ text "False"
       -- FFacts facts           -> pure $ sptFacts moreRoleEqs facts
       -- FHasType lid Nothing   -> singleFact $ text "weakly-atomic" <> parens (sptLocalId lid)
-      -- FHasType lid (Just ty) -> 
+      -- FHasType lid (Just ty) ->
         -- singleFact $ text "hasType" <> parens (sptLocalId lid <> comma <-> sptType sptRoleStep ty)
       -- FTyping Nothing        -> singleFact $ text "weakly-atomic"
       -- FTyping (Just typing)  -> singleFact $ sptTyping typing
@@ -594,24 +594,24 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
   withFactsMode _   = id
   prettyTrivial reason = case reason of
     TrivPremisesImplyConclusion -> text "tautology"
-    TrivLongTermKeySecrecy key  -> 
+    TrivLongTermKeySecrecy key  ->
       text "contradicts secrecy of" <-> pure (sptMessage key)
     _  -> emptyDoc
-  prettyMissing se reason = 
+  prettyMissing se reason =
     nestShort' "(*" "*)" (text reason $-$ prettySequent se)
   prettySaturate _ = keyword "proof" $ text "saturate"
   prettyForwardContradiction thRef = text "contradictory due to '" <> thRef <> text "'"
-  prettyForwardResolution thRef _ mapping = 
+  prettyForwardResolution thRef _ mapping =
     keyword "proof" (text "resolve") <-> text "'" <> thRef <> ppMapping
     where
     ppMapping | null (E.toAnyEqs (E.getMappingEqs mapping)) = emptyDoc
               | otherwise = text "' mapping" <-> ppTidEqs
-    ppTidEqs = pure . hsep . punctuate comma . map E.sptAnyEq . E.toAnyEqs $ 
+    ppTidEqs = pure . hsep . punctuate comma . map E.sptAnyEq . E.toAnyEqs $
                E.getMappingEqs mapping
   prettyNextCase = kwNext
-  prettyChainRuleSplitCases = return . fst . genericChainRuleSplitCases snd 
-  prettyChainRuleApplication m = 
-    sep [ keyword "proof" (text "sources") <> lparen, 
+  prettyChainRuleSplitCases = return . fst . genericChainRuleSplitCases snd
+  prettyChainRuleApplication m =
+    sep [ keyword "proof" (text "sources") <> lparen,
           nest 4 (m <-> rparen)]
   prettyChainRuleCase (name, newVars) =
     kwCase <-> selector
@@ -632,14 +632,14 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
   prettySplitEqCase name = text "case" <-> text name
 
   prettySplitEqApplication eq =
-    sep [ keyword "proof" (text "split") <> lparen, 
+    sep [ keyword "proof" (text "split") <> lparen,
           nest 4 (pure $ E.sptAnyEq (E.MsgEq eq) <-> rparen)]
 
   prettySplitEqQed = text "qed"
-  
+
   -- theory output
   prettyComment comment = text "/*" <-> text comment <-> text "*/"
-  prettyFormalComment header comment = 
+  prettyFormalComment header comment =
       text (header ++ "{*") <> text comment <> text "*}"
   prettyProtoDef proto _ = withGraph (dotProtocol proto) (pure $ sptProtocol proto)
 
@@ -648,19 +648,19 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
     withProofSequent prf ppProp $-$ ppPrf
     where
     p = prfProto prf
-    thmType | isAxiom th = "axiom" 
+    thmType | isAxiom th = "axiom"
             | otherwise  = "property"
-    ppName = keyword "property" (text thmType) <-> 
+    ppName = keyword "property" (text thmType) <->
              text ("(of "++protoName p++") "++name++":")
     ppProp = theoremDef th ppName $-$ nest 2 (prettySequent $ prfSequent prf)
     ppPrf  = prettyProof name (False, True) prf
 
   prettyTheoryDef name body = vcat [
-      keyword "theory" (text "theory") <-> text name <-> 
+      keyword "theory" (text "theory") <-> text name <->
       keyword "theory" (text "begin")
     , text ""
     , pure body
-    , text "" 
+    , text ""
     , keyword "theory" (text "end") ]
 
 kwFact :: (MarkupMonad m, Document d) => m d -> m d
@@ -693,7 +693,7 @@ instance Isar Sequent where
   isar conf se = runReader (prettySequent se) conf
 instance Isar Proof where
   isar conf prf = runReader (prettyProof "" (False, True) prf) conf
-  
+
 -- instance Isar Theorem where
   -- isar conf thm = runReader (prettyTheorem thm Nothing) conf
 
