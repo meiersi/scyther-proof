@@ -79,6 +79,7 @@ data TrivReason =
 -- | Supported rules.
 data Rule =
     Saturate
+  | ReduceInjectivity
   | ForwardResolution (Named Sequent) E.Mapping
   | ChainRule Message [(String, [Either TID ArbMsgId])]
   | SplitEq  E.MsgEq [Bool]  -- True, if sub-proof for this case is present.
@@ -151,9 +152,12 @@ genericProof :: MonadPlus m
              -> Sequent               -- ^ The sequent to be proven
              -> m Proof
 genericProof chainRuleMarker goals rawRules se0 =
-  case saturate se0 of
-    Just se1 -> (RuleApp se0 Saturate . return) `liftM` prove se1
-    Nothing  ->                                         prove se0
+  case reduceInjectivity se0 of
+    Just se1 -> (RuleApp se0 ReduceInjectivity . return) `liftM`
+                (genericProof chainRuleMarker goals rawRules se1)
+    Nothing  -> case saturate se0 of
+      Just se1 -> (RuleApp se0 Saturate . return) `liftM` prove se1
+      Nothing  ->                                         prove se0
   where
   -- the theorems for reuse: prefer false conclusions over arbitrary conclusions
   reusableRules :: [Named Sequent]
@@ -261,6 +265,11 @@ checkProof se0 prf0 = evalStateT (go prf0) se0
       Just key' -> do guard (key == key')
                       Trivial <$> get <*> pure reason
       Nothing   -> mzero
+  go (RuleApp _ ReduceInjectivity [prf]) = do
+    se <- get
+    case reduceInjectivity se of
+      Just se' -> (RuleApp se ReduceInjectivity . return) <$> (put se' >> go prf)
+      Nothing  -> go prf
   go (RuleApp _ Saturate [prf]) = do
     se <- get
     case saturate se of

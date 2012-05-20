@@ -110,6 +110,7 @@ class MarkupMonad m => PrettyMonad m where
   prettyTrivial :: TrivReason -> m Doc
   prettyMissing :: Sequent -> String -> m Doc
   prettySaturate :: Sequent -> m Doc
+  prettyReduceInjectivity :: Sequent -> m Doc
   prettyForwardContradiction :: m Doc -> m Doc
   prettyForwardResolution :: m Doc -> Sequent -> E.Mapping -> m Doc
   prettyNextCase :: m Doc
@@ -185,6 +186,7 @@ prettySequentParts (Sequent prem concl qualifier) = do
   where
 
 -- | Pretty-print a sequent qualifier.
+prettySequentQualifier :: PrettyMonad m => SequentQualifier -> m Doc
 prettySequentQualifier Standard = emptyDoc
 prettySequentQualifier Injective = text "injectively"
 
@@ -209,6 +211,11 @@ prettyProof _ _ (PossibleAttack _ attack) =
 prettyProof thName prfConf (RuleApp se Saturate [prf]) =
   withFactsMode prfConf $
     withProofSequent prf (prettySaturate se) $-$
+    prettyProof thName (True, False) prf
+
+prettyProof thName prfConf (RuleApp se ReduceInjectivity [prf]) =
+  withFactsMode prfConf $
+    withProofSequent prf (prettyReduceInjectivity se) $-$
     prettyProof thName (True, False) prf
 
 --  A forward resolution that lead to no further proofs
@@ -353,7 +360,7 @@ isaLongTermKeySecrecyProof p = vcat $ map text
 isaSequentProp :: MarkupMonad m => Sequent -> ReaderT IsarConf m Doc
 isaSequentProp se = do
   conf <- ask
-  ( (premTids,  ppPremFacts, _), qualifier, ppConcl ) <- prettySequentParts se
+  ( (premTids,  ppPremFacts, _), _qualifier, ppConcl ) <- prettySequentParts se
   let quantify q vs = case vs of
         [] -> id
         _  -> ((q conf <> fsep vs <> char '.') $$) . nest 2
@@ -396,7 +403,7 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
       -- where
       -- singleFact f = return ([], [f], [])
   prettySequent se = do
-    ( (_, ppPremFacts, _), qualifier, ppConcl) <- prettySequentParts se
+    ( (_, ppPremFacts, _), _qualifier, ppConcl) <- prettySequentParts se
     let doc | nullFacts (sePrem se) = doubleQuotes ppConcl
             | otherwise =
                 text "assumes facts:" $-$
@@ -417,6 +424,8 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     nestShort' "(*" "*)" (text reason $-$ prettySequent se) <-> text "oops"
   prettySaturate _ =
     text "note_prefix_closed facts = facts"
+  prettyReduceInjectivity _ =
+    text "(* TODO: Reduce injectivity pretty printing *)"
 
   prettyForwardContradiction thRef =
     kwBy <-> text "(fastsimp dest:" <-> thRef <-> text "intro: event_predOrdI)"
@@ -609,6 +618,7 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
   prettyMissing se reason =
     nestShort' "(*" "*)" (text reason $-$ prettySequent se)
   prettySaturate _ = keyword "proof" $ text "saturate"
+  prettyReduceInjectivity _ = keyword "proof" $ text "reduce_injectivity"
   prettyForwardContradiction thRef = text "contradictory due to '" <> thRef <> text "'"
   prettyForwardResolution thRef _ mapping =
     keyword "proof" (text "resolve") <-> text "'" <> thRef <> ppMapping

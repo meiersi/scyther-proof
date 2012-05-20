@@ -8,6 +8,7 @@ module Scyther.Sequent (
 
   -- ** Logically safe construction
   , wellTypedCases
+  , reduceInjectivity
   , saturate
   , frule
   , fruleInst
@@ -197,6 +198,14 @@ frule rule state = do
     Just prem1 -> do guard (prem1 /= prem0)
                      return (mapping, Just $ Sequent prem1 (seConcl state))
 -}
+
+-- | Try to prove an 'Injective' sequent by reducing it to its non-injective
+-- counterpart.
+reduceInjectivity :: Sequent -> Maybe Sequent
+reduceInjectivity se = do
+  guard (seQualifier se == Injective)
+  -- FIXME: Check validity of reduction
+  return (se { seQualifier = Standard })
 
 -- | Try to saturate a sequent, if possible and leading to new facts.
 saturate :: MonadPlus m => Sequent -> m Sequent
