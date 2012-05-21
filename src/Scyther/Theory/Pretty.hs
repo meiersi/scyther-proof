@@ -21,6 +21,8 @@ import Control.Monad.Identity
 import Control.Monad.State
 import Control.Monad.Reader
 
+import Extension.Prelude (sortednub)
+
 import Text.Isar
 import Text.Dot (Dot)
 
@@ -110,7 +112,7 @@ class MarkupMonad m => PrettyMonad m where
   prettyTrivial :: TrivReason -> m Doc
   prettyMissing :: Sequent -> String -> m Doc
   prettySaturate :: Sequent -> m Doc
-  prettyReduceInjectivity :: Sequent -> m Doc
+  prettyReduceInjectivity :: m Doc -> m Doc
   prettyForwardContradiction :: m Doc -> m Doc
   prettyForwardResolution :: m Doc -> Sequent -> E.Mapping -> m Doc
   prettyNextCase :: m Doc
@@ -183,7 +185,6 @@ prettySequentParts (Sequent prem concl qualifier) = do
     ppPrem  <- prettyFacts prem
     ppConcl <- prettyFormula (eqsToMapping prem) concl
     return (ppPrem, qualifier, ppConcl)
-  where
 
 -- | Pretty-print a sequent qualifier.
 prettySequentQualifier :: PrettyMonad m => SequentQualifier -> m Doc
@@ -213,10 +214,10 @@ prettyProof thName prfConf (RuleApp se Saturate [prf]) =
     withProofSequent prf (prettySaturate se) $-$
     prettyProof thName (True, False) prf
 
-prettyProof thName prfConf (RuleApp se ReduceInjectivity [prf]) =
+prettyProof thName prfConf (RuleApp _ ReduceInjectivity [prf]) =
   withFactsMode prfConf $
-    withProofSequent prf (prettyReduceInjectivity se) $-$
-    prettyProof thName (True, False) prf
+    withProofSequent prf $
+      prettyReduceInjectivity $ prettyProof thName (True, False) prf
 
 --  A forward resolution that lead to no further proofs
 prettyProof _ prfConf (RuleApp se (ForwardResolution (thName, _) _) []) =
@@ -424,8 +425,39 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     nestShort' "(*" "*)" (text reason $-$ prettySequent se) <-> text "oops"
   prettySaturate _ =
     text "note_prefix_closed facts = facts"
-  prettyReduceInjectivity _ =
-    text "(* TODO: Reduce injectivity pretty printing *)"
+
+  -- NOTE: Proof script works only for two-party authentication.
+  prettyReduceInjectivity inner =
+      ask >>= pp
+    where
+      pp conf = vcat
+        [ lbrace
+        , nest 2 $ vcat
+          [ text "fix tid0 tid1"
+          , text "assume facts: \"?prems tid0\""
+          , text "have \"" <-> isaExists conf <> text "tid1. ?concs tid0 tid1\""
+          , text "proof -"
+          , nest 2 $ vcat
+            [ text "note_unified facts = facts"
+            , inner
+            ]
+          , text "qed"
+          ]
+        , rbrace
+        , text "note niagree = this"
+        , lbrace
+        , nest 2 $ vcat
+          [ text "fix i1 i2 j"
+          , text "assume \"?concs i1 j" <-> isaAnd conf <-> text "?concs i2 j\""
+          , text "note_unified facts = this"
+          , text "have \"i1 = i2\" using facts by simp"
+          ]
+        , rbrace
+        , text "note conc_inj = this"
+        , text "show ?thesis"
+        , text "  by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)"
+        ]
+
 
   prettyForwardContradiction thRef =
     kwBy <-> text "(fastsimp dest:" <-> thRef <-> text "intro: event_predOrdI)"
@@ -525,37 +557,41 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
 
   prettyTheorem th@(name, prf)
     | isAxiom th = emptyDoc
-    | otherwise  = case destTypingFormula (seConcl se) of
+    | otherwise  =  case destTypingFormula (seConcl se) of
         Just typ -> ppTypingLocale typ
-        Nothing  -> ppLemma
+        Nothing  -> ask >>= ppLemma
     where
-    p  = prfProto prf
-    se = prfSequent prf
-    ppPrf = prettyProof name (False, True) prf
+      p  = prfProto prf
+      se = prfSequent prf
+      ppPrf = prettyProof name (False, True) prf
 
-    -- pretty print a lemma
-    ppLemma = ppProp $-$ ppPrf
-      where
-      locale = "(in " ++ restrictedStateLocale (seProto $ prfSequent prf) ++ ") "
-      ppName = keyword "property" (text "lemma") <-> text (locale ++ name ++ ":")
-      ppProp = withProofSequent prf $
-        theoremDef th ppName $-$ nest 2 (prettySequent $ prfSequent prf)
-    -- pretty print a typing locale definition
-    ppTypingLocale typ = do
-      conf <- ask
-      vcat
-        [ keyword "property" (text "type_invariant") <->
-            text name <->
-            text "for" <-> text (protoName p)
-        , text "where \"" <> text name <-> text "= mk_typing" $$
-            nest 2 (pure $ isar conf typ) <> char '"'
-        , text ""
-        , keyword "property" (text "sublocale") <->
-            text (stateLocale p) <-> isaSublocale conf <-> text (typingLocale name)
-        , ppPrf
-        , text ""
-        , pure $ isaLongTermKeySecrecyProof p
-        ]
+      -- pretty print a lemma
+      ppLemma conf =
+          ppProp $-$ ppPrf
+        where
+          locale = "(in " ++ restrictedStateLocale (seProto $ prfSequent prf) ++ ") "
+          ppName = keyword "property" (text "lemma") <-> text (locale ++ name ++ ":")
+          ppProp = withProofSequent prf $ theoremDef th ppName $-$
+            case seQualifier se of
+              Standard  -> nest 2 (prettySequent se)
+              Injective -> nest 2 (pure $ isaInjectivitySequent conf se)
+
+      -- pretty print a typing locale definition
+      ppTypingLocale typ = do
+        conf <- ask
+        vcat
+          [ keyword "property" (text "type_invariant") <->
+              text name <->
+              text "for" <-> text (protoName p)
+          , text "where \"" <> text name <-> text "= mk_typing" $$
+              nest 2 (pure $ isar conf typ) <> char '"'
+          , text ""
+          , keyword "property" (text "sublocale") <->
+              text (stateLocale p) <-> isaSublocale conf <-> text (typingLocale name)
+          , ppPrf
+          , text ""
+          , pure $ isaLongTermKeySecrecyProof p
+          ]
 
   prettyTheoryDef name body =
     text "theory" <-> doubleQuotes (text name) $-$
@@ -566,6 +602,45 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     text "" $-$ text "end"
     where
     imports = ["../ESPLogic"]
+
+
+-- | Pretty-print an injectivity sequent. Works only for two-party
+-- authentication; i.e., sequents that have one TID in the premise and one
+-- additional, existentially quantified TID in the conclusion.
+isaInjectivitySequent :: IsarConf -> Sequent -> Doc
+isaInjectivitySequent conf se =
+    doubleQuotes (
+      vcat [ text "let"
+           , nest 2 (sep [text "prems =", nest 2 $ ppPrems <> semi])
+           , nest 2 (sep [text "concs =", nest 2 $ ppConcs])
+           , text "in" <->
+               isaExists conf <> text "f. inj_on f prems" <-> isaAnd conf <->
+               parens ( isaForall conf <> text "i. prems i" <->
+                        isaImplies conf <-> text "concs i (f i)" )
+           ]
+    ) $-$
+    text "(is \"let prems = ?prems; concs = ?concs in ?P prems concs\")"
+  where
+    premFormula = toFormula $ sePrem se
+    premTIDs    = sortednub $ formulaTIDs premFormula
+    premMapping = extendMapping premTIDs premFormula E.emptyMapping
+    ppPrems     = abstract premMapping premTIDs premFormula
+
+    (concTIDs0, concFormula) = dropTIDs [] $ seConcl se
+    concTIDs = premTIDs ++ filter (not . (`elem` premTIDs)) concTIDs0
+    concMapping = extendMapping concTIDs0 concFormula premMapping
+    ppConcs  = abstract concMapping concTIDs concFormula
+
+    abstract mapping tids fm = parens $ sep
+        [ isaLambda conf <> hsep (map (isar conf) tids) <> text "."
+        , nest 2 (isaFormula conf mapping fm)
+        ]
+
+    extendMapping tids fm mapping = foldr ($) mapping $
+        [ maybe id (E.addTIDRoleMapping tid) (findRole tid fm) | tid <- tids ]
+
+    dropTIDs tids (FExists (Left tid) fm) = dropTIDs (tid : tids) fm
+    dropTIDs tids fm                      = (reverse tids, fm)
 
 
 -- Slim Pretty Printing
@@ -618,7 +693,8 @@ instance MarkupMonad m => PrettyMonad (TaggedIdentityT SlimOutput m) where
   prettyMissing se reason =
     nestShort' "(*" "*)" (text reason $-$ prettySequent se)
   prettySaturate _ = keyword "proof" $ text "saturate"
-  prettyReduceInjectivity _ = keyword "proof" $ text "reduce_injectivity"
+  prettyReduceInjectivity inner =
+      keyword "proof" (text "reduce_injectivity") $-$ inner
   prettyForwardContradiction thRef = text "contradictory due to '" <> thRef <> text "'"
   prettyForwardResolution thRef _ mapping =
     keyword "proof" (text "resolve") <-> text "'" <> thRef <> ppMapping

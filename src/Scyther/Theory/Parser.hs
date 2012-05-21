@@ -601,7 +601,7 @@ nonceSecrecySequents proto =
                 | (PAVar v) <- S.toList . S.unions . map (subpatterns.stepPat) $ roleSteps role ]
         secrecySe constr i =
           ( (++("_"++roleName role++"_sec_"++getId i))
-          , Sequent prem (FAtom AFalse) Standard
+          , Sequent prem (FAtom (ABool False)) Standard
           )
           -- flip (Sequent proto) FFalse $ FFacts $
           -- insertEv (Learn (constr (LocalId (i,tid)))) $
@@ -675,7 +675,7 @@ secrecySequent proto = do
         Just Nothing      -> error "secrecySequent: secrecy claim is trivially true"
         Nothing           -> error "secrecySequent: failed to construct secrecy claim"
 
-  return $ Sequent prem (FAtom AFalse) Standard
+  return $ Sequent prem (FAtom (ABool False)) Standard
   where
   msgSet = braced $ sepBy pattern (kw COMMA)
 
@@ -856,7 +856,7 @@ rawFacts = foldl1 (<|>)
 
 -- | Parse the conclusion "False".
 falseConcl :: Parser s Formula
-falseConcl = doubleQuoted (string "False" *> pure (FAtom AFalse))
+falseConcl = doubleQuoted (string "False" *> pure (FAtom (ABool False)))
 
 -- | Parse a conclusion stating existence of some threads of a specific
 -- structure.

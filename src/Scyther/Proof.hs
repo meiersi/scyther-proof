@@ -133,13 +133,13 @@ byAssumption _ = fail $ "byAssumption: only work for standard sequents"
 
 -- | An order preferring typing conclusions and then false conclusions.
 reuseOrder :: Formula -> Formula -> Ordering
-reuseOrder (FAtom (ATyping typ1)) (FAtom (ATyping typ2)) = compare typ1 typ2
-reuseOrder (FAtom (ATyping _))    _                      = LT
-reuseOrder _                      (FAtom (ATyping _))    = GT
-reuseOrder (FAtom AFalse)         (FAtom AFalse)         = EQ
-reuseOrder (FAtom AFalse)         _                      = LT
-reuseOrder _                      (FAtom AFalse)         = GT
-reuseOrder f1                     f2                     = compare f1 f2
+reuseOrder (FAtom (ATyping typ1)) (FAtom (ATyping typ2))       = compare typ1 typ2
+reuseOrder (FAtom (ATyping _))    _                            = LT
+reuseOrder _                      (FAtom (ATyping _))          = GT
+reuseOrder (FAtom (ABool False))  (FAtom (ABool False))        = EQ
+reuseOrder (FAtom (ABool False))         _                     = LT
+reuseOrder _                      (FAtom (ABool False))        = GT
+reuseOrder f1                     f2                           = compare f1 f2
 
 
 -- | A generic proof strategy for proving sequents. Eagerly reuses lemmas in

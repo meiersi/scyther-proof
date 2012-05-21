@@ -22,7 +22,10 @@ module Text.Isar (
   , isaRBrack
   , isaMetaAll
   , isaExists
+  , isaForall
+  , isaLambda
   , isaAnd
+  , isaImplies
   , isaNotIn
   , isaIn
   , isaSubsetEq
@@ -50,14 +53,14 @@ import Extension.Prelude
 import Text.PrettyPrint.Class
 
 -- | The ISAR style to be used for output.
-data IsarStyle = 
-    PlainText 
+data IsarStyle =
+    PlainText
   | XSymbol
   deriving( Eq, Show )
 
 -- | The configuration to be used for output. Apart from the ISAR style, the
 -- configuration also stores the representation of the reachable state of the
--- protocol which we are reasoning about. 
+-- protocol which we are reasoning about.
 data IsarConf = IsarConf {
     isarStyle :: IsarStyle
   , isarTrace :: Doc        -- ^ The ISAR code of the trace
@@ -68,14 +71,14 @@ data IsarConf = IsarConf {
 
 -- | Default configuration: plaintext ISAR style and reachable state @(t,r,s)@.
 defaultIsarConf :: IsarConf
-defaultIsarConf = IsarConf PlainText (char 't') (char 'r') (char 's') 
+defaultIsarConf = IsarConf PlainText (char 't') (char 'r') (char 's')
 
 -- | Check if the plaintext style was chosen.
 isPlainStyle :: IsarConf -> Bool
 isPlainStyle = (PlainText ==) . isarStyle
 
 
--- | Values that can be output as ISAR code. 
+-- | Values that can be output as ISAR code.
 --
 -- Minimal definition: 'isar'
 class Isar a where
@@ -117,7 +120,7 @@ nestShort n lead finish body = sep [lead $$ nest n body, finish]
 
 -- | Nest document between two strings and indent body by @length lead + 1@.
 nestShort' :: Document d => String -> String -> d -> d
-nestShort' lead finish = 
+nestShort' lead finish =
   nestShort (length lead + 1) (text lead) (text finish)
 
 -- | Like 'nestShort' but doesn't print the lead and finish, if the document is
@@ -129,7 +132,7 @@ nestShortNonEmpty n lead finish body =
 -- | Like 'nestShort'' but doesn't print the lead and finish, if the document is
 -- empty.
 nestShortNonEmpty' :: Document d => String -> String -> d -> d
-nestShortNonEmpty' lead finish = 
+nestShortNonEmpty' lead finish =
   nestShortNonEmpty (length lead + 1) (text lead) (text finish)
 
 -- | Output text with a fixed width: if it is smaller then nothing happens,
@@ -138,7 +141,7 @@ fixedWidthText :: Document d => Int -> String -> d
 fixedWidthText n cs
   | length cs <= n  = text cs
   | otherwise = text as <> zeroWidthText bs
-  where 
+  where
   (as,bs) = splitAt n cs
 
 -- | Print string as symbol having width 1.
@@ -149,13 +152,13 @@ symbol = fixedWidthText 1
 -- separator.
 numbered :: Document d => d -> [d] -> d
 numbered _   [] = emptyDoc
-numbered vsep ds = 
+numbered vsep ds =
     foldr1 ($-$) $ intersperse vsep $ map pp $ zip [(1::Int)..] ds
   where
     n         = length ds
     nWidth    = length (show n)
     pp (i, d) = text (flushRight nWidth (show i)) <> d
-    
+
 -- | Number a list of documents with numbers terminated by "." and vertically
 -- separate using an empty line.
 numbered' :: Document d => [d] -> d
@@ -169,8 +172,8 @@ numbered' = numbered (text "") . map (text ". " <>)
 -- | Isabelle representation of the exeuction system state of our operational
 -- semantics.
 isaExecutionSystemState :: IsarConf -> Doc
-isaExecutionSystemState conf = 
-  parens . hcat . punctuate comma $ 
+isaExecutionSystemState conf =
+  parens . hcat . punctuate comma $
     [isarTrace conf, isarPool conf, isarSubst conf]
 
 
@@ -245,11 +248,29 @@ isaExists conf
   | isPlainStyle conf = text "? "
   | otherwise         = symbol "\\<exists>"
 
+-- | The forall symbol: @!@
+isaForall :: Document d => IsarConf -> d
+isaForall conf
+  | isPlainStyle conf = text "! "
+  | otherwise         = symbol "\\<forall>"
+
+-- | The lambda symbol: @%@
+isaLambda :: Document d => IsarConf -> d
+isaLambda conf
+  | isPlainStyle conf = text "% "
+  | otherwise         = symbol "\\<lambda>"
+
 -- | The logical and symbol: @&@
 isaAnd :: Document d => IsarConf -> d
 isaAnd conf
   | isPlainStyle conf = text "&"
   | otherwise         = symbol "\\<and>"
+
+-- | The logical and symbol: @-->@
+isaImplies :: Document d => IsarConf -> d
+isaImplies conf
+  | isPlainStyle conf = text "-->"
+  | otherwise         = symbol "\\<longrightarrow>"
 
 -- | The non-strict subset symbol.
 isaSubsetEq :: Document d => IsarConf -> d
@@ -291,7 +312,7 @@ logicIdent = text
 
 -- | A generic text command.
 genTextCmd :: String -> String -> Doc
-genTextCmd name content = 
+genTextCmd name content =
   sep [text name <> text "{*", nest 2 (fsep . map text $ words content), text "*}"]
 
 chapter = genTextCmd "chapter"

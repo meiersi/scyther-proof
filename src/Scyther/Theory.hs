@@ -305,7 +305,7 @@ classifyProperties toClassify = foldl classify (0,0,0) . thyItems
 
   -- | True, if the sequent implies 'FFalse'.
   isContradictionProp :: Sequent -> Bool
-  isContradictionProp = (FAtom AFalse ==) . seConcl
+  isContradictionProp = (FAtom (ABool False) ==) . seConcl
 
   -- | True, if the sequents conclusion contains an existentially quantified
   -- thread.

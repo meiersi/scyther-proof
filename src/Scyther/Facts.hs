@@ -11,7 +11,7 @@ module Scyther.Facts (
 -- * Facts
   , Facts
   , protocol
-  
+
   -- ** Construction
   , empty
   , freshTID
@@ -29,6 +29,7 @@ module Scyther.Facts (
   , proveAtom
   , proveFormula
   , toAtoms
+  , toFormula
   , nextTID
   , nextArbMsgId
   , quantifiedTIDs
@@ -45,7 +46,7 @@ module Scyther.Facts (
   , saturateFacts
   , exploitTypingFacts
   , exploitLongTermKeySecrecy
-  
+
   , splittableEqs
   , splitEqFacts
 
@@ -103,7 +104,7 @@ import qualified Scyther.Formula    as F
 ------------------------------------------------------------------------------
 
 -- | A conjunction of logical facts.
--- 
+--
 -- Invariants that hold for a value @facts = Facts _ evs evord co uc eqs@:
 --
 --   1. All facts are invariant under their corresponding substitution. This
@@ -132,7 +133,7 @@ data Facts = Facts {
    -- NOTE: The Maybe is used for facts that don't have a typing.
   , typeAnns       :: S.Set TypeAnn  -- ^ Type annotations on messages.
 
-  , covered        :: S.Set Message  -- ^ The messages that have already been used in a 
+  , covered        :: S.Set Message  -- ^ The messages that have already been used in a
                                      --   case distinction.
   , protocol       :: Protocol       -- ^ The protocol that the current state
                                      --   is a reachable state of.
@@ -147,7 +148,7 @@ data Facts = Facts {
 -- well-typedness claim are present. Note that there may be quantifiers and
 -- covered goals.
 nullFacts :: Facts -> Bool
-nullFacts facts = 
+nullFacts facts =
   S.null (events facts) &&
   S.null (eventOrd facts) &&
   S.null (compromised facts) &&
@@ -170,19 +171,19 @@ empty = Facts S.empty S.empty S.empty S.empty E.empty S.empty S.empty Nothing S.
 --
 -- Uses 'fail' for error reporting.
 setProtocol :: Monad m => Protocol -> Facts -> m Facts
-setProtocol proto facts 
+setProtocol proto facts
   | proto == protocol facts = return facts
-  | otherwise = fail $ "setProtocol: '" ++ show proto ++ "' /= '" 
-                                        ++ show (protocol facts) ++ "'" 
+  | otherwise = fail $ "setProtocol: '" ++ show proto ++ "' /= '"
+                                        ++ show (protocol facts) ++ "'"
 
--- | Set the typing. 
+-- | Set the typing.
 --
 -- PRE: There mustn't be a different existing typing.
 --
 -- Uses 'fail' for error reporting.
 setTyping :: Monad m => Typing -> Facts -> m Facts
 setTyping typ facts = case optTyping facts of
-  Just typ' | typ /= typ' -> fail $ "setTyping: '" ++ show typ ++ "' /= '" 
+  Just typ' | typ /= typ' -> fail $ "setTyping: '" ++ show typ ++ "' /= '"
                                                    ++ show typ' ++ "'"
   _                       -> return $ facts { optTyping = Just typ }
 
@@ -198,23 +199,23 @@ eqsToMapping = Mapping . equalities
 -- `fail` is called in the given monad.
 quantifyTID :: Monad m => TID -> Facts -> m Facts
 quantifyTID tid facts
-  | null (tidQuantified facts tid) = 
+  | null (tidQuantified facts tid) =
       fail $ "quantifyTID: " ++ show tid ++ " already quantified."
-  | otherwise               = 
+  | otherwise               =
       return $ facts { tidQuantifiers = S.insert tid $ tidQuantifiers facts }
 
 -- | Tries to quantify the given agent identifier. If it is already quantified
 -- `fail` is called in the given monad.
 quantifyArbMsgId :: Monad m => ArbMsgId -> Facts -> m Facts
 quantifyArbMsgId aid facts
-  | null (arbMsgIdQuantified facts aid) = 
+  | null (arbMsgIdQuantified facts aid) =
       fail $ "quantifyArbMsgId: " ++ show aid ++ " already quantified."
-  | otherwise                   = 
+  | otherwise                   =
       return $ facts { amQuantifiers = S.insert aid $ amQuantifiers facts }
 
 -- | Get a fresh TID and the updated set of facts.
 freshTID ::  Facts -> (TID, Facts)
-freshTID facts = 
+freshTID facts =
   (tid, facts { tidQuantifiers = S.insert tid $ tidQuantifiers facts })
   where tid = nextTID facts
 
@@ -260,7 +261,7 @@ mapCertified f (Cert x) = Cert (f x)
 
 -- | Check if a TID is quantified in these facts
 tidQuantified :: Facts -> TID -> CertResult
-tidQuantified facts tid = 
+tidQuantified facts tid =
     certErrorIf (tid `S.notMember` tidQuantifiers facts) $
         "unquantified tid: " ++ show tid
 
@@ -299,7 +300,7 @@ evOrdQuantified facts (e1, e2) = evQuantified facts e1 >< evQuantified facts e2
 
 -- | Check if all logical variables in a type annotation are quantified.
 typeAnnQuantified :: Facts -> TypeAnn -> CertResult
-typeAnnQuantified facts (m, _, tid) = 
+typeAnnQuantified facts (m, _, tid) =
     msgQuantified facts m >< tidQuantified facts tid
 
 -- | Check if an equality contains only quantified logical variables.
@@ -312,11 +313,11 @@ anyEqQuantified facts eq = case eq of
     E.AVarEq (av1, av2)   -> avarQuantified facts av1 >< avarQuantified facts av2
     E.MVarEq (mv, m)      -> mvarQuantified facts mv >< msgQuantified facts m
     E.MsgEq (m1, m2)      -> msgQuantified facts m1 >< msgQuantified facts m2
-  
+
 -- | Check if an atom contains only quantified logical variables.
 atomQuantified :: Facts -> Atom -> CertResult
 atomQuantified facts atom = case atom of
-  AFalse       -> certSuccess
+  ABool _      -> certSuccess
   AEq eq       -> anyEqQuantified facts eq
   AEv ev       -> evQuantified    facts ev
   AEvOrd ord   -> evOrdQuantified facts ord
@@ -329,9 +330,9 @@ atomQuantified facts atom = case atom of
 
 -- | Certification of a value with respect to a check and a morphism required
 -- to establish the required invariants in the context of a set of facts.
-certify :: Show a => (Facts -> a -> CertResult) -> (Facts -> a -> b) 
+certify :: Show a => (Facts -> a -> CertResult) -> (Facts -> a -> b)
         -> Facts -> a -> Cert b
-certify check conv facts x = 
+certify check conv facts x =
     case check facts x of
         []   -> x'
         -- FIXME: Somehow bidirectional shared keys lead in some cases to an
@@ -339,8 +340,8 @@ certify check conv facts x =
         -- dealt with proofs that failed (i.e., attackable security
         -- properties). Therfore, we have not yet debugged this to its full
         -- extent.
-        errs -> trace 
-            (unlines $ 
+        errs -> trace
+            (unlines $
                 ("warning: internal check failed for '" ++ show x ++ "' because of") :
                 (map ("  "++) $ errs)
              )
@@ -438,8 +439,8 @@ threadRole tid = E.threadRole tid . equalities
 -- This operation is logically safe iff there are no references to the mapped
 -- logical variables outside the facts.
 trimQuantifiers :: Facts -> Facts
-trimQuantifiers facts = facts { 
-    equalities = eqs'  
+trimQuantifiers facts = facts {
+    equalities = eqs'
   , tidQuantifiers = S.filter (`notElem` tids) $ tidQuantifiers facts
   , amQuantifiers = S.filter (`notElem` aids) $ amQuantifiers facts
   }
@@ -463,7 +464,7 @@ solve ueqs facts = do
     , covered        = S.map (E.substMsg eqs)     (covered facts)
     }
 
-    
+
 -- Compromised agents
 ---------------------
 
@@ -497,7 +498,7 @@ insertLearn m = insertEv (mapCertified Learn m)
 
 -- | Inserts an event order fact.
 insertEvOrd :: Cert (Event, Event) -> Facts -> Facts
-insertEvOrd ord prems = 
+insertEvOrd ord prems =
   prems { eventOrd = S.insert (certified ord) (eventOrd prems) }
 
 -- | Delete an event order fact.
@@ -533,7 +534,8 @@ conjoinAtoms atoms facts0 = foldM conjoinAtom (Just facts0) atoms
   where
   conjoinAtom Nothing      _    = return Nothing
   conjoinAtom (Just facts) atom = case certified $ certAtom facts atom of
-    AFalse       -> return Nothing
+    ABool False  -> return Nothing
+    ABool True   -> return (Just facts)
     -- FIXME: repeated calls to solve may be a bit expensive due to duplicated
     -- work of 'removeTrivialFacts'.
     AEq eq       -> return        $ solve [Cert eq] facts
@@ -552,8 +554,8 @@ conjoinAtoms atoms facts0 = foldM conjoinAtom (Just facts0) atoms
 -- | Inserts an event order fact and both event facts implied by the presence
 -- of this event oder fact.
 insertEvOrdAndEvs :: Cert (Event, Event) -> Facts -> Facts
-insertEvOrdAndEvs ord = 
-  insertEv (mapCertified fst ord) . 
+insertEvOrdAndEvs ord =
+  insertEv (mapCertified fst ord) .
   insertEv (mapCertified snd ord) . insertEvOrd ord
 
 -- | Insert all non-trivial events implied by the given event.
@@ -570,7 +572,7 @@ insertEvOrdNonTrivial ord prems = case certified ord of
   _             -> insertEvOrdAndEvs ord prems
   where
   insertLearnBefore to p m = insertEvOrdAndEvs (Cert (Learn m, to)) p
-  
+
 -- | Insert an executed role step and all non-trivial facts implied by the
 -- Input rule.
 insertStepInputClosed :: Cert (TID, RoleStep) -> Facts -> Facts
@@ -600,7 +602,7 @@ insertEvSaturated ev = case certified ev of
   (Step tid step) -> insertStepPrefixClosed (Cert (tid, step))
 
 -- | Derive all non-trivial facts implied by the splitting rules and remove
--- remove trivial facts.
+-- trivial facts.
 removeTrivialFacts :: Facts -> Facts
 removeTrivialFacts = execState $ do
   evs <- S.toList <$> gets events
@@ -633,8 +635,8 @@ saturateFacts = execState $ do
 --
 -- Is equal to 'mzero' in case the facts don't contain a typing.
 exploitTypingFacts :: MonadPlus m => Facts -> m Facts
-exploitTypingFacts facts0 = return facts0 -- TODO: implement this check. 
-  {- cf. the one for weak atomicity below: 
+exploitTypingFacts facts0 = return facts0 -- TODO: implement this check.
+  {- cf. the one for weak atomicity below:
   do
     -- WeaklyAtomic -> foldl' weaklyAtomic facts0 . E.getMVarEqs . equalities $ facts0
   where
@@ -644,11 +646,11 @@ exploitTypingFacts facts0 = return facts0 -- TODO: implement this check.
     weaklyAtomic facts (MVar (LocalId (i, tid)), m       ) =
       case threadRole tid facts of
         Nothing -> error $ "exploitTypingFacts: no role assigned to '"++show tid++"'"
-        Just role -> 
+        Just role ->
           case find (S.member i . stepFMV) (roleSteps role) of
-            Nothing   -> 
+            Nothing   ->
               error $ "exploitTypingFacts: variable '"++show i++"' does not occur in role."
-            Just step -> 
+            Just step ->
               insertEvOrdNonTrivial (Cert (Learn m, Step tid step)) facts
   -}
 
@@ -673,7 +675,7 @@ getTyping = maybe mzero return . optTyping
 -- NOTE: This is not the same as trying to prove the atom AFalse under these
 -- premises. The checks are separated due to efficiency reasons.
 proveFalse :: Facts -> Bool
-proveFalse prems = 
+proveFalse prems =
     not (S.null (compromised prems `S.intersection` uncompromised prems)) ||
     any noAgent (S.toList (compromised prems)) ||
     cyclic (eventOrd prems)
@@ -694,7 +696,7 @@ proveAtom facts = checkAtom . certified . certAtom facts
   where
   -- PRE: atom is fully substituted
   checkAtom atom = case atom of
-    AFalse               -> False
+    ABool b              -> b
     AEq eq               -> E.reflexive eq
     AEv (Learn m)        -> all checkLearn (splitNonTrivial m)
     AEv ev               -> ev `S.member` events facts
@@ -709,12 +711,12 @@ proveAtom facts = checkAtom . certified . certAtom facts
   checkLearn m          = Learn m `S.member` events facts
   checkLearnBefore to m = before (eventOrd facts) (Learn m) to
 
-  hasType (m0, ty0, tid0) = 
+  hasType (m0, ty0, tid0) =
       go m0 ty0
     where
       go (MAVar _)     (AgentT)        = True
       go (MConst i)    (ConstT i')     = i == i'
-      go (MFresh (Fresh (LocalId (i, tid)))) (NonceT role i') = 
+      go (MFresh (Fresh (LocalId (i, tid)))) (NonceT role i') =
           i == i' && threadRole tid facts == Just role
       go (MHash m)     (HashT ty)      = go m ty
       go (MEnc m1 m2)  (EncT ty1 ty2)  = go m1 ty1 && go m2 ty2
@@ -728,7 +730,7 @@ proveAtom facts = checkAtom . certified . certAtom facts
           (m', ty', tid') <- S.toList $ typeAnns facts
           guard (m == m')
           return $ (ty', tid') `subType` (ty, tid0)
-      
+
   -- ty `subType` ty' holds iff every instance of ty is also an instance of ty'.
   subType (ty0, tid) (ty'0, tid') =
       go ty0 ty'0
@@ -792,6 +794,13 @@ toAtoms facts = mconcat [
   , AHasType <$> S.toList   (typeAnns      facts)
   ]
 
+-- | Represent the facts as a formula.
+toFormula :: Facts -> Formula
+toFormula facts = case toAtoms facts of
+    []    -> FAtom (ABool True)
+    atoms -> foldr1 FConj (map FAtom atoms)
+
+
 ------------------------------------------------------------------------------
 -- Chain Rule Application
 ------------------------------------------------------------------------------
@@ -802,9 +811,9 @@ toAtoms facts = mconcat [
 --      set of events.
 openMessages :: Facts -> [Message]
 openMessages prems = nub $ filter okGoal $ catMaybes
-  [ case e of Learn m -> Just m; _ -> Nothing 
+  [ case e of Learn m -> Just m; _ -> Nothing
   | e <- S.toList $ events prems `S.difference` S.map snd (eventOrd prems) ]
-  where 
+  where
   okGoal (MMVar _)   = False
   okGoal (MArbMsg _) = False
   okGoal (MAsymPK _) = False
@@ -813,12 +822,12 @@ openMessages prems = nub $ filter okGoal $ catMaybes
 
 -- | Sort open messages ascending with respect to the maximal thread id.
 oldestOpenMessages :: Facts -> [Message]
-oldestOpenMessages prems = 
+oldestOpenMessages prems =
   map fst . sortOn snd . mapMaybe score $ ms
   where
   ms = openMessages prems
   co = compromised prems
-  ltkLocalIds (MAsymSK m@(MAVar a)) 
+  ltkLocalIds (MAsymSK m@(MAVar a))
     | m `S.member` co                      = []
     | otherwise                            = [getAVar a]
   ltkLocalIds (MSymK ma@(MAVar a) mb@(MAVar b))
@@ -843,7 +852,7 @@ data ChainRuleState = ChainRuleState
 
 type ChainRuleM = StateT ChainRuleState []
 
--- | Add a fragment of the case name. 
+-- | Add a fragment of the case name.
 addCaseFragment :: String -> ChainRuleM ()
 addCaseFragment name = modify $ \crs -> crs { crsCaseName = crsCaseName crs ++ [name] }
 
@@ -866,13 +875,13 @@ setFinalEq eq = modify $ \crs -> crs { crsFinalEq = Just eq }
 -- try to unify the two messages in the context of the current facts;
 -- this function will always succeed, but the facts may be Nothing
 unify :: Message -> Message -> ChainRuleM ()
-unify m m' 
+unify m m'
   | m == m'   = return () -- performance optimization
   | otherwise = do
       crs <- get
-      maybe mzero (modifyFacts . const) $ 
+      maybe mzero (modifyFacts . const) $
         solve [certAnyEq (crsFacts crs) $ E.MsgEq (m', m)] (crsFacts crs)
-  
+
 -- | Get a fresh thread identifier and update the facts accordingly
 getFreshTID :: ChainRuleM TID
 getFreshTID = do
@@ -880,7 +889,7 @@ getFreshTID = do
   modifyFacts (const facts)
   addNewVar (Left tid)
   return tid
-  
+
 -- | Get a fresh thread arbitrary-message id and update the facts accordingly
 getFreshAMID :: ChainRuleM ArbMsgId
 getFreshAMID = do
@@ -891,13 +900,13 @@ getFreshAMID = do
 
 -- | Add a type annotation.
 addTypeAnn :: TypeAnn -> ChainRuleM ()
-addTypeAnn tya = modifyFacts $ 
+addTypeAnn tya = modifyFacts $
     \facts -> insertTypeAnn (certTypeAnn facts tya) facts
 
 -- | Delete the given type annotation. Logically, this means forgetting
 -- the corresponding assumption.
 deleteTypeAnn :: TypeAnn -> ChainRuleM ()
-deleteTypeAnn tya = modifyFacts $ 
+deleteTypeAnn tya = modifyFacts $
     \facts -> facts { typeAnns = S.delete tya (typeAnns facts) }
 
 -- | Add a type annotation in expanded form. Expansion stops at SumT types
@@ -912,13 +921,13 @@ addExpandedTypeAnn (m, ty0, tid) = do
     expand :: ChainRuleM Message -> Type -> ChainRuleM Message
     expand mkV AgentT          = do
         v <- mkV
-        addTypeAnn (v, AgentT, tid) 
+        addTypeAnn (v, AgentT, tid)
         return v
     expand _ (NonceT role n) = do
         nTid <- getFreshTID
         modifyFacts $ insertRole nTid role
         return $ MFresh (Fresh (LocalId (n, nTid)))
-    
+
     expand mkV ty@(SumT _ _) = do
         v <- mkV
         addTypeAnn (v, ty, tid)
@@ -939,7 +948,7 @@ addExpandedTypeAnn (m, ty0, tid) = do
 
     arb :: ChainRuleM Message
     arb = MArbMsg <$> getFreshAMID
-      
+
 -- | Get the type annotation of a message.
 --
 -- PRE: The message must be normalized with respect to the current facts.
@@ -965,10 +974,10 @@ numberCases cases = (`evalState` M.empty) . forM cases $ \ crs -> do
 extractCase :: [E.AnyEq] -> ChainRuleState -> Maybe ((String, [Either TID ArbMsgId]), Facts)
 extractCase delayedEqs0 crs = do
   let facts0 = crsFacts crs
-      unmappedTID tid 
+      unmappedTID tid
         | substTID facts0 tid == tid = return (Left tid)
         | otherwise                  = mzero
-      unmappedAMID aid 
+      unmappedAMID aid
         | substAMID facts0 aid == MArbMsg aid = return (Right aid)
         | otherwise                           = mzero
 
@@ -1025,12 +1034,12 @@ chainRuleFacts (MConst _)  _ = error $ "chainRuleFacts: application to global co
 chainRuleFacts (MInvKey _) _ = error $ "chainRuleFacts: application to symbolically inverted keys not supported."
 chainRuleFacts (MAsymPK _) _ = error $ "chainRuleFacts: no support for public keys."
 chainRuleFacts (MTup _ _)  _ = error $ "chainRuleFacts: no support for tuples."
-chainRuleFacts m      facts0 
+chainRuleFacts m      facts0
   | proveAtom facts0 (F.AEv (Learn m)) = assembleCases `liftM` getTyping facts0
   | otherwise = error $ "chainRuleFacts: could not prove that '" ++ show m ++ "' is known to the intruder."
   where
-  assembleCases typ = 
-      mapMaybe (extractCase delayedEqs) . numberCases . 
+  assembleCases typ =
+      mapMaybe (extractCase delayedEqs) . numberCases .
       flip execStateT (ChainRuleState [] [] facts1 Nothing) $ (
         initialIntruderKnowledge m
         `mplus`
@@ -1055,10 +1064,10 @@ chainRuleFacts m      facts0
       \facts -> foldl' insertSingle facts prev
     where
       insertSingle p prevEv = insertEvOrdNonTrivial (certEvOrd p (prevEv, ev)) p
-  
+
   -- enumerate chainRuleFacts starting from the given role
   roleChains :: Typing -> TID -> Role -> ChainRuleM ()
-  roleChains typ tid role = do 
+  roleChains typ tid role = do
       modifyFacts $ insertRole tid role
       addCaseFragment $ roleName role
       msum . map stepChains $ roleSteps role
@@ -1072,7 +1081,7 @@ chainRuleFacts m      facts0
           mapM_ annotateMVarType $ S.toList $ patFMV pt
           msgChains [(Step tid step)] (inst tid pt)
         where
-          -- annotating message variables with their type 
+          -- annotating message variables with their type
           annotateMVarType mv =
               case M.lookup (mv, role) typ of
                 Nothing -> error $ "stepChains: no type provided for '"++show v++"'"
@@ -1105,8 +1114,8 @@ chainRuleFacts m      facts0
           msgChains prev v@(MMVar _)   = do
             addCaseFragment (msgName v)
             typChains prev v
-          
-          msgChains prev m'@(MEnc m1 m2) = 
+
+          msgChains prev m'@(MEnc m1 m2) =
             do insertPrevious prev (Learn m')
                ( do -- trace ("msgChains: unify " ++ show m' ++ " =?= " ++ show m) (return ())
                     addCaseFragment $ msgName m'
@@ -1120,7 +1129,7 @@ chainRuleFacts m      facts0
             insertPrevious prev (Learn m')
             addCaseFragment $ msgName m'
             -- here we have to unify, as Isabelle is also doing it early
-            unify m' m          
+            unify m' m
 
           -- the m' is an atomic message: just unify and be done with it.
           msgChains prev m' = do
@@ -1136,7 +1145,7 @@ chainRuleFacts m      facts0
               then msgChains prev v'
               else do
                 tya <- getTypeAnn v
-                case tya of 
+                case tya of
                   (_,tyaTy,tyaTid) -> case tyaTy of
                     KnownT _     -> mzero -- protocol wellformedness checks that KnownT implies cyclicity
                     AgentT       -> mzero -- we already know the agent names
@@ -1158,7 +1167,7 @@ chainRuleFacts m      facts0
 
 -- | Equalities that can be splitted.
 splittableEqs :: Facts -> [MsgEq]
-splittableEqs facts = 
+splittableEqs facts =
     do eq@(MShrK _ _, MShrK _ _) <- getPostEqs $ equalities facts
        guard (not $ uncurry (==) eq)
        return eq
@@ -1172,7 +1181,7 @@ splitEqFacts (MShrK a b, MShrK x y) facts =
   where
     addEqs eqs = solve (map (certAnyEq facts) eqs) facts
 
-splitEqFacts eq _ = 
+splitEqFacts eq _ =
     error $ "splitEqFacts: cannot split equality '" ++ show eq ++ "'"
 
 
@@ -1215,7 +1224,7 @@ freeVariableMappings from to = do
 
 -- | Apply the mapping of agent and thread equalities to the facts.
 --
--- TODO: Improve error handling. Currently, 'error' is called if the facts 
+-- TODO: Improve error handling. Currently, 'error' is called if the facts
 -- are contradictory after the substitution.
 applyMapping :: Mapping -> Facts -> Facts
 applyMapping mapping facts0 = case newFacts of
@@ -1232,11 +1241,11 @@ applyMapping mapping facts0 = case newFacts of
      quantifyTIDs facts = foldM qTID facts $ S.toList $ tidQuantifiers facts0
      quantifyAIDs facts = foldM qAID facts $ S.toList $ amQuantifiers facts0
 
-     addAtoms = conjoinAtoms atoms 
+     addAtoms = conjoinAtoms atoms
      atoms = map (F.substAtom (getMappingEqs mapping)) . toAtoms $ facts0
 
      extractArbMsgId (MArbMsg aid) = aid
-     extractArbMsgId m             = error $ 
+     extractArbMsgId m             = error $
         "applyMapping: arbitrary-message id mapped to '" ++ show m ++ "'"
 
 
@@ -1260,7 +1269,7 @@ ppSet ppElem = map ppElem . S.toList
 ----------
 
 -- | Pretty print the facts in Isar format.
-isaFacts :: IsarConf -> Facts 
+isaFacts :: IsarConf -> Facts
          -> ([Doc],[Doc],[Doc]) -- ^ Quantified variables, representable facts, and non-representable facts
 isaFacts conf facts =
     ( ppSet (isar conf) (tidQuantifiers facts) ++
@@ -1271,7 +1280,7 @@ isaFacts conf facts =
       ppSet (isaEventOrd conf (Mapping eqs)) (eventOrd facts) ++
       ppSet (isaEvent    conf (Mapping eqs)) (events facts)
     , map (isar conf) nonReprEqs
-    ) 
+    )
     where
     eqs = equalities facts
     (reprEqs, nonReprEqs) = partition isReprEq $ E.toAnyEqs eqs
@@ -1295,21 +1304,21 @@ sptFacts facts =
     , (map (sptTypeAnn (`threadRole` facts)) $ S.toList $ typeAnns facts) ++
       map sptAnyEq nonReprEqs ++
       (map ppCovered $ S.toList $ covered facts)
-    ) 
+    )
     where
     eqs = equalities facts
     (reprEqs, nonReprEqs) = partition isReprEq $ E.toAnyEqs eqs
 
     ppCovered m = text "covered" <> parens (sptMessage m)
-    ppComprInfo setName set 
+    ppComprInfo setName set
       | S.null set = mzero
       | otherwise  = return . fsep $
-          (text setName <> lparen : (map (nest 2) . punctuate comma) 
+          (text setName <> lparen : (map (nest 2) . punctuate comma)
             (ppSet sptMessage set)) ++ [rparen]
 
 {-
 sptSimpleFacts :: Facts -> Doc
-sptSimpleFacts facts = case sptFacts facts of 
+sptSimpleFacts facts = case sptFacts facts of
     (ds1, ds2, ds3) -> vcat $ map vcat [ds1, [text ""], ds2, [text ""], ds3]
 -}
 
@@ -1321,7 +1330,7 @@ transitiveChains = sortOn head . foldl' insertEdge []
   findChain sel x cs = case break ((x ==) . sel) cs of
       (_,[])                   -> (cs, [x])
       (cs1, c:cs2) -> (cs1 ++ cs2, c)
-  insertEdge chains0 (from,to) = 
+  insertEdge chains0 (from,to) =
     let (chains1, prefix) = findChain last from chains0
         (chains2, suffix) = findChain head to   chains1
     in (prefix ++ suffix) : chains2

@@ -15,6 +15,7 @@ module Scyther.Formula (
   , isTypingFormula
   , destTypingFormula
   , atomTIDs
+  , formulaTIDs
   , findRole
 
 -- * Pretty Printing
@@ -48,7 +49,7 @@ import Scyther.Typing
 
 -- | A representable logical atom.
 data Atom =
-    AFalse                  -- ^ 'False' in Isabelle.
+    ABool Bool              -- ^ 'False' and 'True' in Isabelle.
   | AEq AnyEq               -- ^ An equality
   | AEv Event               -- ^ An event must have happened.
   | AEvOrd (Event, Event)   -- ^ An event order.
@@ -61,7 +62,7 @@ data Atom =
   deriving( Eq, Show, Ord, Data, Typeable )
 
 -- | A representable logical formula. Currently these are monotonic formula.
-data Formula = 
+data Formula =
     FAtom Atom
   | FConj Formula Formula
   | FExists (Either TID ArbMsgId) Formula
@@ -81,7 +82,7 @@ destTypingFormula _                     = mzero
 
 -- | Relabel quantified TIDs according to the given list of labels.
 relabelTIDs :: [TID] -> Formula -> Formula
-relabelTIDs tids0 formula = 
+relabelTIDs tids0 formula =
   runReader (evalStateT (go formula) tids0) (Mapping E.empty)
   where
   go (FAtom atom) = FAtom <$> ((substAtom . getMappingEqs) <$> ask <*> pure atom)
@@ -90,7 +91,7 @@ relabelTIDs tids0 formula =
     tids <- get
     case tids of
       []         -> error "relabelTIDs: out of labels"
-      tid':tids' -> do 
+      tid':tids' -> do
          put tids'
          FExists (Left tid') <$> local (addTIDMapping tid tid') (go inner)
   go (FExists q@(Right _) inner) = FExists q <$> go inner
@@ -98,7 +99,7 @@ relabelTIDs tids0 formula =
 
 -- | Compute the threads associated to the given atom.
 atomTIDs :: Atom -> [TID]
-atomTIDs AFalse         = mzero
+atomTIDs (ABool _)      = mzero
 atomTIDs (ATyping _)    = mzero
 atomTIDs (AReachable _) = mzero
 atomTIDs (AEv    e)     = evTIDs e
@@ -107,18 +108,25 @@ atomTIDs (ACompr m)     = msgTIDs m
 atomTIDs (AUncompr m)   = msgTIDs m
 atomTIDs (AHasType tya) = typeAnnTIDs tya
 atomTIDs (AEq eq)       = anyEqTIDs eq
-    
+
+-- | Compute the free thread variables of the given formula.
+formulaTIDs :: Formula -> [TID]
+formulaTIDs (FAtom atom)           = atomTIDs atom
+formulaTIDs (FConj f1 f2)          = formulaTIDs f1 ++ formulaTIDs f2
+formulaTIDs (FExists (Left tid) f) = filter (tid /=) $ formulaTIDs f
+formulaTIDs (FExists (Right _)  f) =                   formulaTIDs f
+
 
 -- Substitution
 ---------------
 
 -- | Substitute all variables in an atom.
--- 
+--
 -- NOTE: A 'HasType' atom will only have its thread identifier substituted, but
 -- not the whole message variable.
 substAtom :: Equalities -> Atom -> Atom
 substAtom eqs atom = case atom of
-  AFalse       -> atom
+  ABool _      -> atom
   AEq eq       -> AEq      $ substAnyEq   eqs eq
   AEv ev       -> AEv      $ substEv      eqs ev
   AEvOrd ord   -> AEvOrd   $ substEvOrd   eqs ord
@@ -140,9 +148,9 @@ hasQuantifiers = isNothing . conjunctionToAtoms
 -- 'fail' for error reporting.
 conjunctionToAtoms :: MonadPlus m => Formula -> m [Atom]
 conjunctionToAtoms (FAtom a)     = return [a]
-conjunctionToAtoms (FConj f1 f2) = 
+conjunctionToAtoms (FConj f1 f2) =
   (++) `liftM` conjunctionToAtoms f1 `ap` conjunctionToAtoms f2
-conjunctionToAtoms _             = 
+conjunctionToAtoms _             =
   fail "conjunctionToAtoms: existential quantifier encountered."
 
 -- | Split all toplevel conjunctions.
@@ -188,17 +196,18 @@ sptUncompr m = text "uncompromised" <> parens (sptMessage m)
 -- | Pretty print an atom in Isar format.
 isaAtom :: IsarConf -> Mapping -> Atom -> Doc
 isaAtom conf mapping atom = case atom of
-    AFalse            -> text "False"
+    ABool False       -> text "False"
+    ABool True        -> text "True"
     AEq eq            -> ppIsar eq
     AEv ev            -> isaEvent    conf mapping ev
     AEvOrd ord        -> isaEventOrd conf mapping ord
     ACompr av         -> isaCompr   conf av
     AUncompr av       -> isaUncompr conf av
-    AHasType (m,ty,i) -> ppIsar m <-> isaIn conf <-> 
-                         isar conf ty <-> ppIsar i <-> 
+    AHasType (m,ty,i) -> ppIsar m <-> isaIn conf <->
+                         isar conf ty <-> ppIsar i <->
                          isaExecutionSystemState conf
     ATyping _         -> text "well-typed"
-    AReachable p      -> 
+    AReachable p      ->
       text "(t,r,s)" <-> isaIn conf <-> text "reachable" <-> text (protoName p)
   where
     ppIsar :: Isar a => a -> Doc
@@ -208,13 +217,14 @@ isaAtom conf mapping atom = case atom of
 -- | Pretty print an atom in security protocol theory format.
 sptAtom :: Mapping -> Atom -> Doc
 sptAtom mapping atom = case atom of
-    AFalse         -> text "False"
+    ABool False    -> text "False"
+    ABool True     -> text "True"
     AEq eq         -> sptAnyEq eq
     AEv ev         -> sptEvent    mapping ev
     AEvOrd (e1,e2) -> sptEventOrd mapping [e1,e2]
     ACompr av      -> sptCompr   av
     AUncompr av    -> sptUncompr av
-    AHasType tya   -> sptTypeAnn (const Nothing) tya 
+    AHasType tya   -> sptTypeAnn (const Nothing) tya
     ATyping typ    -> sptTyping typ
     AReachable p   -> text "reachable" <-> text (protoName p)
 
@@ -225,7 +235,7 @@ isaFormula conf = pp
   where
     ppIsar :: Isar a => a -> Doc
     ppIsar = isar conf
-    
+
     pp m (FAtom atom)  = isaAtom conf m atom
     pp m (FConj f1 f2) = sep [pp m f1 <-> isaAnd conf, pp m f2]
     pp m (FExists v f) = parens $

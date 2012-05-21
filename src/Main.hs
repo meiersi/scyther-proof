@@ -30,7 +30,7 @@ import System.Environment
 import System.Process
 
 import System.Console.CmdArgs.Text
-import System.Console.CmdArgs.Explicit 
+import System.Console.CmdArgs.Explicit
 
 import Extension.Prelude
 
@@ -77,7 +77,7 @@ htmlVersionStr = concat
     , ", ETH Zurich, 2009-2012"
     ]
   where
-    link href name = 
+    link href name =
         "<a href=\"" ++ href ++ "\" target=\"new\">" ++ name ++ "</a>"
 
 -- | Line width to use.
@@ -122,11 +122,11 @@ withArguments argMode io = do
       | argExists "version" as = putStrLn versionStr
       | otherwise              = io as
 
-    
+
 ------------------------------------------------------------------------------
 -- Argument Parsing
 ------------------------------------------------------------------------------
- 
+
 data PrintMode =
     SPTheory       -- ^ Output as a security protocol theory.
   | IsarXSymbol    -- ^ Output as an Isabelle theory using XSymbol symbols.
@@ -139,7 +139,7 @@ setupMainMode = do
     examplePath  <- getDataFileName "examples"
     readmePath   <- getDataFileName "isabelle/README"
     isabellePath <- esplTheoryDir
-    return $ 
+    return $
       ( defaultMode programName
           "Automatic generation of machine-checked proofs for security protocols."
           [ "Additional information:"
@@ -157,7 +157,7 @@ setupMainMode = do
       )
       { modeCheck      = upd "mode" "translate"
       , modeArgs       = Just $ flagArg (upd "inFile") "FILES"
-      , modeGroupFlags = Group 
+      , modeGroupFlags = Group
           { groupUnnamed =
               [ flagNone ["first", "f"] (addArg "strategy" "first")
                   "Return the first found proof."
@@ -234,14 +234,14 @@ setupMainMode = do
               ]
           }
       }
-  where 
+  where
     upd a v = Right . addArg a v
     addEmpty a = addArg a ""
 
     defaultMode name help helpSuffix = Mode
         { modeGroupModes = toGroup []
-        , modeNames      = [name] 
-        , modeValue      = [] 
+        , modeNames      = [name]
+        , modeValue      = []
         , modeCheck      = upd "mode" name
         , modeReform     = const Nothing-- no reform possibility
         , modeHelp       = help
@@ -250,7 +250,7 @@ setupMainMode = do
         , modeGroupFlags = toGroup [] -- no flags
         }
 
-    outputFlags = 
+    outputFlags =
       [ flagOpt "" ["output","o"] (upd "outFile") "FILE" "Output file"
       , flagOpt "" ["Output","O"] (upd "outDir") "DIR"  "Output directory"
       ]
@@ -262,7 +262,7 @@ errHelpExit msg = do
   mainMode <- setupMainMode
   putStrLn $ "error: " ++ msg
   putStrLn $ ""
-  putStrLn $ showText (Wrap 100) 
+  putStrLn $ showText (Wrap 100)
            $ helpText HelpFormatDefault mainMode
   exitFailure
 
@@ -292,7 +292,7 @@ translate as = do
 
 
 -- | Execute a translation.
-translateWorker :: Arguments 
+translateWorker :: Arguments
                 -> FilePath     -- ^ Path to HTML template file.
                 -> MVar (T.Table String) -- ^ Empty MVar for building the report.
                 -> IO ()
@@ -301,9 +301,9 @@ translateWorker as templateFile reportVar
   | otherwise                        = do
       -- check required tools
       when (not dryRun && html)     (ensureGraphVizDot dotTool)
-      when (rebuildLogic || (not dryRun && isabelle)) 
+      when (rebuildLogic || (not dryRun && isabelle))
           (ensureIsabelleESPL rebuildLogic isabelleTool)
-      
+
       -- translate all input files and ensure report is written with a special
       -- interrupted marker when an exception like Ctrl-C happened
       unless (n <= 1)  (putInfoLn $ "processing "++show n++" files:")
@@ -331,9 +331,9 @@ translateWorker as templateFile reportVar
     ---------------
     dryRun     = outFile == "" && outDir == ""
     reportFile = fromMaybe "" $ findArg "report"  as
-    outFile    = fromMaybe "" $ findArg "outFile" as 
-    outDir     = fromMaybe "" $ findArg "outDir"  as 
-    
+    outFile    = fromMaybe "" $ findArg "outFile" as
+    outDir     = fromMaybe "" $ findArg "outDir"  as
+
 
     -- automatically generate the filename for output
     mkAutoPath :: FilePath -> String -> FilePath
@@ -343,7 +343,7 @@ translateWorker as templateFile reportVar
 
     mkOutPath :: FilePath  -- ^ Input file name.
               -> FilePath  -- ^ Output file name.
-    mkOutPath inFile = 
+    mkOutPath inFile =
       case outFile of
         ""   -> case outDir of
                   ""  -> error "outPath: undefined in dry-run mode"
@@ -366,7 +366,7 @@ translateWorker as templateFile reportVar
     -- protocol composition
     -----------------------
     composeProtos :: Theory -> Theory
-    composeProtos 
+    composeProtos
       | argExists "composeParallel" as = composeParallel
       | otherwise                      = id
 
@@ -380,7 +380,7 @@ translateWorker as templateFile reportVar
         Nothing -> io
         Just t  -> do
             res <- timeout (t * 1000000) io
-            case res of 
+            case res of
               Nothing -> do
                 updateReport (T.appendCell $ "timeout: "++show maxTime++"s")
                 throw CustomTimeout
@@ -403,15 +403,15 @@ translateWorker as templateFile reportVar
     reportNewRow = updateReport T.newRow >> putInfoLn ""
 
     reportNumber :: Show a => String -> a -> IO ()
-    reportNumber header x = 
+    reportNumber header x =
       updateReport (T.headerLastCell header . T.alignLastCell T.AlignRight. T.appendCell (show x))
 
     reportString :: String -> String -> IO ()
-    reportString header msg = 
+    reportString header msg =
       updateReport (T.headerLastCell header . T.appendCell msg)
-  
+
     updateReport :: (T.Table String -> T.Table String) -> IO ()
-    updateReport 
+    updateReport
       | null reportFile = const $ return () -- no report will be produced => don't update it
       | otherwise       = modifyMVar_ reportVar . (return .)
 
@@ -420,7 +420,7 @@ translateWorker as templateFile reportVar
       reportNumber "#chain rules"         nChains
       reportNumber "#forward resolutions" nForward
       reportNumber "#missing proofs"      nMissing
-      where 
+      where
       (nChains, nForward, nMissing) = getProofSize s
 
     reportProperties :: Theory -> IO ()
@@ -447,7 +447,7 @@ translateWorker as templateFile reportVar
             ]
       return . concat $ [
           "\n\n"
-        , header 
+        , header
         , "\n"
         , T.toLaTeX (filter (/='\t')) table
         ]
@@ -457,7 +457,7 @@ translateWorker as templateFile reportVar
       ""  -> return ()
       "-" -> mkReport >>= putStrLn
       _   -> mkReport >>= appendFile reportFile
-    
+
     -- HTML generation
     ------------------
     generateHtml :: FilePath -- ^ Input file
@@ -475,14 +475,14 @@ translateWorker as templateFile reportVar
         , giTemplate    = templateFile
         , giOutDir      = mkOutPath inFile
         , giMarkup      = thyToDoc printMode thy
-        , giProofScript = 
-            \outPath -> renderDoc . runIdentity . 
+        , giProofScript =
+            \outPath -> renderDoc . runIdentity .
                         thyToDoc (ensureIsabellePrintMode printMode) $
                         adaptTheoryName outPath thy
         , giCmdLine     = cmdLine
         , giDotTool     = dotTool
-        , giIsabelle    = 
-            if isabelle  
+        , giIsabelle    =
+            if isabelle
               then Just $ checkTheoryFile isabelleTool isabelleThreads 0 "ESPL"
               else Nothing
         }
@@ -495,7 +495,7 @@ translateWorker as templateFile reportVar
     makeOverview | overview  = protocolsOnly -- theoryOverview
                  | otherwise = id
       where
-      protocolsOnly (Theory name items) = 
+      protocolsOnly (Theory name items) =
         Theory name [x | x@(ThyProtocol _) <- items ]
 
     thyToOverviewDoc :: Theory -> Isar.Doc
@@ -508,9 +508,9 @@ translateWorker as templateFile reportVar
         reportString "Revision" =<< getSvnRevision inFile
         thy <- (makeOverview . ensureUniqueRoleNames) `liftM` parseTheory inFile
         reportProperties thy
-        return . 
+        return .
           removeHiddenItems .
-          proveThy . 
+          proveThy .
           composeProtos .
           addMissingTypingInvariants .
           -- if no reuse is done, then remove the hidden items before proving
@@ -532,18 +532,19 @@ translateWorker as templateFile reportVar
     reuseSelector = case findArg "reuse" as of
       Just "none"    -> mkReuse $ const False
       Just "secrecy" -> mkReuse $ \th ->
-        (complete $ thmProof th) && (FAtom AFalse == seConcl (thmSequent th))
+                            (complete $ thmProof th) &&
+                            (FAtom (ABool False) == seConcl (thmSequent th))
       _              -> mkReuse $ (complete . thmProof)
       where
       mkReuse thmSel se th
-        | isTypingFormula $ seConcl se = 
+        | isTypingFormula $ seConcl se =
             -- we do not support reusing in typing proofs
             -- because the ISAR pretty printer cannot handle it yet correctly.
             False
-        | otherwise                    = 
+        | otherwise                    =
             -- type invariants and axioms are always reused
             isAxiom th || (isTypingFormula . seConcl $ thmSequent th) || thmSel th
-    
+
     minimizer :: Proof -> Proof
     minimizer | noMinimize = id
               | otherwise  = minimizeProof
@@ -554,22 +555,22 @@ translateWorker as templateFile reportVar
         Just "shortest" -> allClaims $ shortestProof bound oldestOpenMessages
         _               -> id
       where
-        allClaims prover0 = 
+        allClaims prover0 =
             proveSequents reuseSelector prover
           where
             prover toReuse se = fmap minimizer $
-               (do guard (not noAttackSearch && bound == Nothing) 
+               (do guard (not noAttackSearch && bound == Nothing)
                    -- TODO: Make attack search respect bound.
                    existsPossibleAttack oldestOpenMessages toReuse se
-               `mplus` 
+               `mplus`
                prover0 toReuse se)
-       
+
 
     -- Theory output
     ----------------
     noGeneration = argExists "noGeneration" as
     html         = argExists "html"         as
-    isabelle     = argExists "isabelle"     as 
+    isabelle     = argExists "isabelle"     as
     width        = maybe lineWidth read $ findArg "charsPerLine" as
 
     isabelleThreads :: Maybe Int
@@ -587,7 +588,7 @@ translateWorker as templateFile reportVar
 
     thyToDoc :: MarkupMonad m => PrintMode -> Theory -> m Isar.Doc
     thyToDoc pmode thy0 = case pmode of
-      SPTheory    -> runTaggedIdentityT SlimOutput thyDoc 
+      SPTheory    -> runTaggedIdentityT SlimOutput thyDoc
       IsarXSymbol -> runReaderT thyDoc (Isar.defaultIsarConf { Isar.isarStyle = Isar.XSymbol })
       IsarASCII   -> runReaderT thyDoc Isar.defaultIsarConf
       where
@@ -603,7 +604,7 @@ translateWorker as templateFile reportVar
     renderDoc = Isar.renderStyle (Isar.style { Isar.lineLength = width })
 
     thyToString :: Theory -> String
-    thyToString 
+    thyToString
       | html      = renderDoc . evalHtmlMarkup . thyToDoc printMode
       -- | fol       = render . tptpProblem . toTPTP
       | overview  = renderDoc . thyToOverviewDoc
@@ -612,7 +613,7 @@ translateWorker as templateFile reportVar
 
     writeThyFile :: FilePath -> Theory -> IO ()
     writeThyFile outPath thy = do
-      if not noGeneration 
+      if not noGeneration
         then do
           tGen <- execWithTimeout . timed_ . writeFile outPath .
                   thyToString $ adaptTheoryName outPath thy
@@ -640,7 +641,7 @@ translateWorker as templateFile reportVar
               mapM_ (putInfo . ('\t':)) ["CHECK FAILED", show tCheck, show msg]
               reportString "Isabelle Status" "check failed"
               reportString "Isabelle Message" (show msg)
-        else 
+        else
           return ()
 
     -- Translate one theory file
@@ -650,7 +651,7 @@ translateWorker as templateFile reportVar
     -- writeThyFile. I didn't do this once, which cost me quite some
     -- debugging time.
     processThy :: FilePath -> Theory -> IO ()
-    processThy inFile thy 
+    processThy inFile thy
       | dryRun    = putStrLn (thyToString thy)
       | html      = do
           generateHtml inFile thy
@@ -691,7 +692,7 @@ commandLine prog args = concat $ intersperse " " $ prog : args
 
 -- | Read the SVN revision of the given file using the SVN command.
 getSvnRevision :: FilePath -> IO String
-getSvnRevision file = 
+getSvnRevision file =
   handle handler $ do
     (_, info, _) <- readProcessWithExitCode "svn" ["info",file] []
     return $ maybe "unversioned"
@@ -703,7 +704,7 @@ getSvnRevision file =
 
 -- | Read the cpu info using a call to cat /proc/cpuinfo
 getCpuModel :: IO String
-getCpuModel = 
+getCpuModel =
   handle handler $ do
     (_, info, _) <- readProcessWithExitCode "cat" ["/proc/cpuinfo"] []
     return $ maybe errMsg
@@ -717,7 +718,7 @@ getCpuModel =
 
 -- | Test if a process is executable and check its response. This is used to
 -- determine the versions and capabilities of tools that we depend on.
-testProcess :: (String -> String -> Either String String) 
+testProcess :: (String -> String -> Either String String)
                               -- ^ Analysis of stdout, stderr. Use 'Left' to report error.
             -> String         -- ^ Test description to display.
             -> FilePath       -- ^ Process to start
@@ -739,7 +740,7 @@ testProcess check testName prog args inp = do
 
         case exitCode of
             ExitFailure code -> errMsg $ "failed with exit code " ++ show code
-            ExitSuccess      -> 
+            ExitSuccess      ->
               case check out err of
                 Left msg     -> errMsg msg
                 Right msg    -> do putStrLn msg
@@ -805,16 +806,16 @@ ensureIsabelleESPL rebuild isabelle = do
       putStrLn "---"
       putStrLn "Attempting to build ESPL logic (this may take several minutes):"
       theoryDir <- esplTheoryDir
-      let isamake args = 
+      let isamake args =
             runProcess isabelle ("make" :args) (Just theoryDir) Nothing Nothing Nothing Nothing
               >>= waitForProcess
       exitCode <- isamake ["clean"] >> isamake []
       case exitCode of
         ExitSuccess -> putStrLn "Sucess! :-)\n---"
-        ExitFailure code -> putStrLn $ unlines 
+        ExitFailure code -> putStrLn $ unlines
             [ "  Logic building failed with code: " ++ show code
             , "  Proof checking is likely not to work."
             , "  To investigate the problem try manually loading/building the theories in"
             , "    '" ++ theoryDir ++ "'"
             ]
-      
+
