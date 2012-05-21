@@ -31,6 +31,8 @@ protocol isoiec_9798_2_1_udkey
        1. A -> B: A, B, Text2, {'isoiec_9798_2_1_enc_1', TNA, Text1 }k(A,B)
 }
 
+// Here we dont get any injective agreement, as there could be two B thread
+// receiving the same message from one A.
 property (of isoiec_9798_2_1_udkey)
   B_non_injective_agreement: 
     niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
@@ -56,8 +58,8 @@ protocol isoiec_9798_2_2_udkey
 }
 
 property (of isoiec_9798_2_2_udkey)
-  B_non_injective_agreement: 
-    niagree(B_2[A,B,RB,Text2] -> A_2[A,B,RB,Text2], {A, B})
+  B_injective_agreement: 
+    iagree(B_2[A,B,RB,Text2] -> A_2[A,B,RB,Text2], {A, B})
 
 
 
@@ -83,6 +85,10 @@ protocol isoiec_9798_2_3_udkey
        2. B -> A: B, A, Text4, {'isoiec_9798_2_3_enc_2', TNB, Text3 }k(B,A)
 }
 
+// NOTE: We do not get injective agreement here, in neither direction. The
+// problem is the same as in isoiec_9798_2_1_bdkey. However, we are missing
+// the opportunity to strengthen the property for A, as we could just embed
+// TNA in the message sent from B.
 properties (of isoiec_9798_2_3_udkey)
   A_non_injective_agreement: 
     niagree(A_2[A,B,TNB,Text3] -> B_2[A,B,TNB,Text3], {A, B})
@@ -118,11 +124,11 @@ protocol isoiec_9798_2_4_udkey
 }
 
 properties (of isoiec_9798_2_4_udkey)
-  A_non_injective_agreement: 
-    niagree(A_3[A,B,RA,RB,Text2,Text4] -> B_3[A,B,RA,RB,Text2,Text4], {A, B})
+  A_injective_agreement: 
+    iagree(A_3[A,B,RA,RB,Text2,Text4] -> B_3[A,B,RA,RB,Text2,Text4], {A, B})
 
-  B_non_injective_agreement: 
-    niagree(B_2[A,B,RA,RB,Text2] -> A_2[A,B,RA,RB,Text2], {A, B})
+  B_injective_agreement: 
+    iagree(B_2[A,B,RA,RB,Text2] -> A_2[A,B,RA,RB,Text2], {A, B})
 
 
 /******************************************************************************
@@ -173,14 +179,22 @@ properties (of isoiec_9798_2_5_udkey)
   //   (a) we also verify agreement on the freshness data TNa, TNb
   //   (b) we also verify agreement with the trusted third party
   //
-  A_non_injective_agreement_B: 
-    niagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
+  A_injective_agreement_B: 
+    iagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
 
+  // Injectivity agreement does not hold. See
+  //
+  // NO injective agreement can be proven. There may be several B-threads
+  // communicating with the same A-thread! Checking the 'TNb' timestamp in
+  // later steps could be used to remove this problem, up to the clock
+  // resolution.
   B_non_injective_agreement_A: 
     niagree(B_3[A,B,P,Kab,TNa,Text5] -> A_3[A,B,P,Kab,TNa,Text5], {A, B, P})
 
-  A_non_injective_agreement_P: 
-    niagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
+  A_injective_agreement_P: 
+    iagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
+
+  // No injective agreement, as the TTP does not receive any message from 'B'.
   B_non_injective_agreement_P: 
     niagree(B_3[A,B,P,Kab,TNp,Text2] -> P_2[A,B,P,Kab,TNp,Text2], {A, B, P})
 
@@ -233,16 +247,16 @@ properties (of isoiec_9798_2_6_udkey)
   //   (a) we also verify agreement on the freshness data 
   //   (b) we also verify agreement with the trusted third party
   //
-  A_non_injective_agreement_B: 
-    niagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
+  A_injective_agreement_B: 
+    iagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
 
-  B_non_injective_agreement_A: 
-    niagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
+  B_injective_agreement_A: 
+    iagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
 
-  A_non_injective_agreement_P: 
-    niagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
+  A_injective_agreement_P: 
+    iagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
 
-  B_non_injective_agreement_P: 
-    niagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
+  B_injective_agreement_P: 
+    iagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
 
 end

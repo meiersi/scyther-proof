@@ -55,10 +55,9 @@ protocol isoiec_9798_4_2_bdkey
                   h(('CCF', k[A,B]), ('isoiec_9798_4_2_ccf_2', Rb, B, Text2))
 }
 
-// Does hold injectively.
 properties (of isoiec_9798_4_2_bdkey)
-  B_non_injective_agreement:
-    niagree(B_2[A,B,Rb,Text2] -> A_2[A,B,Rb,Text2], {A, B})
+  B_injective_agreement:
+    iagree(B_2[A,B,Rb,Text2] -> A_2[A,B,Rb,Text2], {A, B})
 
 
 /******************************************************************************
@@ -115,13 +114,12 @@ protocol isoiec_9798_4_4_bdkey
                   h(('CCF', k[A,B]), ('isoiec_9798_4_4_ccf_3', Rb, Ra, Text4))
 }
 
-// Both properties also hold injectively.
 properties (of isoiec_9798_4_4_bdkey)
-  A_non_injective_agreement:
-    niagree(A_3[A,B,Ra,Rb,Text2,Text4] -> B_3[A,B,Ra,Rb,Text2,Text4], {A, B})
+  A_injective_agreement:
+    iagree(A_3[A,B,Ra,Rb,Text2,Text4] -> B_3[A,B,Ra,Rb,Text2,Text4], {A, B})
 
-  B_non_injective_agreement:
-    niagree(B_2[A,B,Ra,Rb,Text2] -> A_2[A,B,Ra,Rb,Text2], {A, B})
+  B_injective_agreement:
+    iagree(B_2[A,B,Ra,Rb,Text2] -> A_2[A,B,Ra,Rb,Text2], {A, B})
 
 
 end

@@ -1,4 +1,4 @@
-/* 
+/*
  * Modeled from ISO/IEC 9798-2
  * Modeler: Cas Cremers, Dec. 2010
  * Ported to scyther-proof: Simon Meier, Feb. 2011
@@ -33,10 +33,10 @@ protocol isoiec_9798_2_1_bdkey
        1. A -> B: A, B, Text2, {'isoiec_9798_2_1_enc_1', TNA, B, Text1 }k[A,B]
 }
 
-// NOTE: Here we won't get any injective agreement, as there could be two B
-// thread receiving the same message from one A.
+// Here we dont get any injective agreement, as there could be two B thread
+// receiving the same message from one A.
 property (of isoiec_9798_2_1_bdkey)
-  B_non_injective_agreement: 
+  B_non_injective_agreement:
     niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
 
 
@@ -61,10 +61,9 @@ protocol isoiec_9798_2_2_bdkey
        2. A -> B: A, B, Text3, {'isoiec_9798_2_2_enc_2', RB, B, Text2}k[B,A]
 }
 
-// NOTE: Here we could prove injective agreement.
 property (of isoiec_9798_2_2_bdkey)
-  B_non_injective_agreement: 
-    niagree(B_2[A,B,RB,Text2] -> A_2[A,B,RB,Text2], {A, B})
+  B_injective_agreement:
+    iagree(B_2[A,B,RB,Text2] -> A_2[A,B,RB,Text2], {A, B})
 
 
 
@@ -97,10 +96,10 @@ protocol isoiec_9798_2_3_bdkey
 // the opportunity to strengthen the property for A, as we could just embed
 // TNA in the message sent from B.
 properties (of isoiec_9798_2_3_bdkey)
-  A_non_injective_agreement: 
+  A_non_injective_agreement:
     niagree(A_2[A,B,TNB,Text3] -> B_2[A,B,TNB,Text3], {A, B})
 
-  B_non_injective_agreement: 
+  B_non_injective_agreement:
     niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
 
 
@@ -129,13 +128,12 @@ protocol isoiec_9798_2_4_bdkey
        3. B -> A: B, A, Text5, {'isoiec_9798_2_4_enc_2', RB, RA, Text4 }k[A,B]
 }
 
-// NOTE: We can prove injective agreement in both directions.
 properties (of isoiec_9798_2_4_bdkey)
-  A_non_injective_agreement: 
-    niagree(A_3[A,B,RA,RB,Text2,Text4] -> B_3[A,B,RA,RB,Text2,Text4], {A, B})
+  A_injective_agreement:
+    iagree(A_3[A,B,RA,RB,Text2,Text4] -> B_3[A,B,RA,RB,Text2,Text4], {A, B})
 
-  B_non_injective_agreement: 
-    niagree(B_2[A,B,RA,RB,Text2] -> A_2[A,B,RA,RB,Text2], {A, B})
+  B_injective_agreement:
+    iagree(B_2[A,B,RA,RB,Text2] -> A_2[A,B,RA,RB,Text2], {A, B})
 
 
 /******************************************************************************
@@ -178,8 +176,6 @@ protocol isoiec_9798_2_5_bdkey
        4. B -> A: B, A, Text8, { 'isoiec_9798_2_5_enc_4', TNb, A, Text7 }Kab
 }
 
-// NOTE: All the authentication properties except B_non_injective_agreement_P
-// also hold injectively.
 properties (of isoiec_9798_2_5_bdkey)
   P_secret_Kab: secret(P, -, Kab, {A, B, P})
   A_secret_Kab: secret(A, 2, Kab, {A, B, P})
@@ -189,15 +185,20 @@ properties (of isoiec_9798_2_5_bdkey)
   //   (a) we also verify agreement on the freshness data TNa, TNb
   //   (b) we also verify agreement with the trusted third party
   //
-  A_non_injective_agreement_B: 
-    niagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
+  A_injective_agreement_B:
+    iagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
 
-  B_non_injective_agreement_A: 
+  // Injective agreement does not hold. See
+  // isoiec_9798_2_5_special_TTP_bdkey for more information.
+  B_non_injective_agreement_A:
     niagree(B_3[A,B,P,Kab,TNa,Text5] -> A_3[A,B,P,Kab,TNa,Text5], {A, B, P})
 
-  A_non_injective_agreement_P: 
-    niagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
-  B_non_injective_agreement_P: 
+  A_injective_agreement_P:
+    iagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
+
+  // Injective agreement does not hold. See
+  // isoiec_9798_2_5_special_TTP_bdkey for more information.
+  B_non_injective_agreement_P:
     niagree(B_3[A,B,P,Kab,TNp,Text2] -> P_2[A,B,P,Kab,TNp,Text2], {A, B, P})
 
 
@@ -231,37 +232,36 @@ protocol isoiec_9798_2_6_bdkey
             -> A: P, A, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, A, B, Text4}k[A,P]
                              , TokenPA_for_B
 
-  text_4.   -> A: Text6, Text7   
+  text_4.   -> A: Text6, Text7
        4. A ->  : A, B, Text7, P, TokenPA_for_B
                                 , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
             -> B: A, B, Text7, P, {'isoiec_9798_2_6_enc_3_2', Rb, Kab, A, B, Text3}k[B,P]
                                 , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
-       
+
   text_5.   -> B: Text8, Text9
        5. B -> A: B, A, Text9, {'isoiec_9798_2_6_enc_5', Rb, Rpa, Text8}Kab
 }
 
-// NOTE: All the authentication properties also hold injectively.
 properties (of isoiec_9798_2_6_bdkey)
   P_secret_Kab: secret(P, -, Kab, {A, B, P})
   A_secret_Kab: secret(A, 3, Kab, {A, B, P})
   B_secret_Kab: secret(B, 4, Kab, {A, B, P})
 
   // Agreement properties strengthened with respect to Cas Cremers' models:
-  //   (a) we also verify agreement on the freshness data 
+  //   (a) we also verify agreement on the freshness data
   //   (b) we also verify agreement with the trusted third party
   //
-  A_non_injective_agreement_B: 
-    niagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
+  A_injective_agreement_B:
+    iagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
 
-  B_non_injective_agreement_A: 
-    niagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
+  B_injective_agreement_A:
+    iagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
 
-  A_non_injective_agreement_P: 
-    niagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
+  A_injective_agreement_P:
+    iagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
 
-  B_non_injective_agreement_P: 
-    niagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
+  B_injective_agreement_P:
+    iagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
 
 
 /******************************************************************************
@@ -313,8 +313,6 @@ axiom (of isoiec_9798_2_5_special_TTP_bdkey) different_actors_A_P:
   imply
     "False"
 
-// NOTE: All the authentication properties except B_non_injective_agreement_P
-// also hold injectively.
 properties (of isoiec_9798_2_5_special_TTP_bdkey)
   P_secret_Kab: secret(P, -, Kab, {A, B, P})
   A_secret_Kab: secret(A, 2, Kab, {A, B, P})
@@ -323,22 +321,28 @@ properties (of isoiec_9798_2_5_special_TTP_bdkey)
   // Agreement properties strengthened with respect to Cas Cremers' models:
   //   (a) we also verify agreement on the freshness data TNa, TNb
   //   (b) we also verify agreement with the trusted third party
-  // 
+  //
   // Note: If no axiom dependency is noted for a property below, then it can
   //       be proven without the axiom.
-  
-  A_non_injective_agreement_B: 
-    niagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
 
-  // depends on 'different_actors_A_P'
-  B_non_injective_agreement_A: 
+  A_injective_agreement_B:
+    iagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
+
+  // Depends on 'different_actors_A_P'
+  //
+  // NO injective agreement can be proven. There may be several B-threads
+  // communicating with the same A-thread! Checking the 'TNb' timestamp in
+  // later steps could be used to remove this problem, up to the clock
+  // resolution.
+  B_non_injective_agreement_A:
     niagree(B_3[A,B,P,Kab,TNa,Text5] -> A_3[A,B,P,Kab,TNa,Text5], {A, B, P})
 
   // depends on 'different_actors_A_P'
-  A_non_injective_agreement_P: 
-    niagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
+  A_injective_agreement_P:
+    iagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
 
-  B_non_injective_agreement_P: 
+  // No injective agreement, as the TTP does not receive any message from 'B'.
+  B_non_injective_agreement_P:
     niagree(B_3[A,B,P,Kab,TNp,Text2] -> P_2[A,B,P,Kab,TNp,Text2], {A, B, P})
 
 
@@ -373,12 +377,12 @@ protocol isoiec_9798_2_6_special_TTP_bdkey
             -> A: P, A, Text5, {'isoiec_9798_2_6_special_TTP_enc_3_1', Ra, Kab, B, Text4}k[A,P]
                              , TokenPA_for_B
 
-  text_4.   -> A: Text6, Text7   
+  text_4.   -> A: Text6, Text7
        4. A ->  : A, B, Text7, P, TokenPA_for_B
                                 , {'isoiec_9798_2_6_special_TTP_enc_4', Rpa, Rb, Text6}Kab
             -> B: A, B, Text7, P, {'isoiec_9798_2_6_special_TTP_enc_3_2', Rb, Kab, A, Text3}k[B,P]
                                 , {'isoiec_9798_2_6_special_TTP_enc_4', Rpa, Rb, Text6}Kab
-       
+
   text_5.   -> B: Text8, Text9
        5. B -> A: B, A, Text9, {'isoiec_9798_2_6_special_TTP_enc_5', Rb, Rpa, Text8}Kab
 }
@@ -399,33 +403,32 @@ axiom (of isoiec_9798_2_6_special_TTP_bdkey) different_actors_B_P:
   imply
     "False"
 
-// NOTE: All the authentication properties also hold injectively.
 properties (of isoiec_9798_2_6_special_TTP_bdkey)
   P_secret_Kab: secret(P, -, Kab, {A, B, P})
   A_secret_Kab: secret(A, 3, Kab, {A, B, P})
   B_secret_Kab: secret(B, 4, Kab, {A, B, P})
 
   // Agreement properties strengthened with respect to Cas Cremers' models:
-  //   (a) we also verify agreement on the freshness data 
+  //   (a) we also verify agreement on the freshness data
   //   (b) we also verify agreement with the trusted third party
-  // 
+  //
   // Note: If no axiom dependency is noted for a property below, then it can
   //       be proven without the axiom.
 
   // depends on 'different_actors_B_P' and 'different_actors_A_P'
-  A_non_injective_agreement_B: 
-    niagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
+  A_injective_agreement_B:
+    iagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
 
   // depends on 'different_actors_B_P' and 'different_actors_A_P'
-  B_non_injective_agreement_A: 
-    niagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
+  B_injective_agreement_A:
+    iagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
 
   // depends on 'different_actors_A_P
-  A_non_injective_agreement_P: 
-    niagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
+  A_injective_agreement_P:
+    iagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
 
   // depends on 'different_actors_B_P
-  B_non_injective_agreement_P: 
-    niagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
+  B_injective_agreement_P:
+    iagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
 
 end

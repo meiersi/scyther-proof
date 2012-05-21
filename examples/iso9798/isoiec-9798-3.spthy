@@ -61,11 +61,10 @@ protocol isoiec_9798_3_2
                   sign{'isoiec_9798_3_2_sig_2', Ra, Rb, B, Text2 }pk(A)
 }
 
-// Injective authentication.
 properties (of isoiec_9798_3_2)
   // Note: for this agreement property the identity B must not be dropped
-  B_non_injective_agreement: 
-    niagree(B_2[A,B,Ra,Rb,Text2] -> A_2[A,B,Ra,Rb,Text2], {A})
+  B_injective_agreement: 
+    iagree(B_2[A,B,Ra,Rb,Text2] -> A_2[A,B,Ra,Rb,Text2], {A})
 
 
 /****************************************************************************
@@ -131,15 +130,14 @@ protocol isoiec_9798_3_4
                   sign{'isoiec_9798_3_4_sig_2', RB, RA, A, Text4 }pk(B)
 }
 
-// Both properties also hold injectively.
 properties (of isoiec_9798_3_4)
   // The identity A in Step 3 is required for this property to hold.
-  A_non_injective_agreement: 
-    niagree(A_3[A,B,RA,RB,Text2,Text4] -> B_3[A,B,RA,RB,Text2,Text4], {A,B})
+  A_injective_agreement: 
+    iagree(A_3[A,B,RA,RB,Text2,Text4] -> B_3[A,B,RA,RB,Text2,Text4], {A,B})
 
   // The identity B in Step 2 is required for this property to hold.
-  B_non_injective_agreement: 
-    niagree(B_2[A,B,RA,RB,Text2] -> A_2[A,B,RA,RB,Text2], {A})
+  B_injective_agreement: 
+    iagree(B_2[A,B,RA,RB,Text2] -> A_2[A,B,RA,RB,Text2], {A})
 
 
 /****************************************************************************
@@ -172,15 +170,14 @@ protocol isoiec_9798_3_5
                   sign{'isoiec_9798_3_5_sig_2', RA, RB, B, Text3 }pk(A)
 }
 
-// Both properties also hold injectively.
 properties (of isoiec_9798_3_5)
   // The identity A in Step 3 is required for this property to hold.
-  A_non_injective_agreement: 
-    niagree(A_3[A,B,RA,RB,Text5] -> B_3[A,B,RA,RB,Text5], {B})
+  A_injective_agreement: 
+    iagree(A_3[A,B,RA,RB,Text5] -> B_3[A,B,RA,RB,Text5], {B})
 
   // The identity B in Step 4 is required for this property to hold.
-  B_non_injective_agreement: 
-    niagree(B_4[A,B,RA,RB,Text3,Text5] -> A_4[A,B,RA,RB,Text3,Text5], {A,B})
+  B_injective_agreement: 
+    iagree(B_4[A,B,RA,RB,Text3,Text5] -> A_4[A,B,RA,RB,Text3,Text5], {A,B})
 
 
 /****************************************************************************
@@ -249,8 +246,8 @@ protocol isoiec_9798_3_6_1
 // All properties except hold injectively. NOTE: Investigate this
 // authentication "flaw" between Ra5 and Ra in role 'B'.
 properties (of isoiec_9798_3_6_1)
-  A_non_injective_agreement: 
-    niagree(A_5[A,B,Ra,Rb,Text2] -> B_2[A,B,Ra,Rb,Text2], {B, T})
+  A_injective_agreement: 
+    iagree(A_5[A,B,Ra,Rb,Text2] -> B_2[A,B,Ra,Rb,Text2], {B, T})
 
   // Possible authentication FLAW:
   //   We do NOT get agreement on Ra because the standard does not require B to
@@ -258,17 +255,17 @@ properties (of isoiec_9798_3_6_1)
   //   one in Step 2.
   //
   // FIXME: What are the consequences?
-  B_non_injective_agreement: 
-    niagree(B_5[A,B,Ra5,Rb,Text8] -> A_5[A,B,Ra,Rb,Text8], {A, T})
+  B_injective_agreement: 
+    iagree(B_5[A,B,Ra5,Rb,Text8] -> A_5[A,B,Ra,Rb,Text8], {A, T})
 
   // We additionally verify agreement of A and B with the TTP T.
-  A_non_injective_agreement_T: 
-    niagree(A_5[B,T,Rpa,pkB  ,Text6] -> 
-            T_4[B,T,Rpa,pk(B),Text6], {T})
+  A_injective_agreement_T: 
+    iagree(A_5[B,T,Rpa,pkB  ,Text6] -> 
+           T_4[B,T,Rpa,pk(B),Text6], {T})
 
-  B_non_injective_agreement_T: 
-    niagree(B_5[A,T,Rb,pkA  ,Text5] -> 
-            T_4[A,T,Rb,pk(A),Text5], {T})
+  B_injective_agreement_T: 
+    iagree(B_5[A,T,Rb,pkA  ,Text5] -> 
+           T_4[A,T,Rb,pk(A),Text5], {T})
 
 
 
@@ -346,11 +343,10 @@ protocol isoiec_9798_3_6_2
                   sign{'isoiec_9798_3_6_opt_2_sig_5', Rb, Ra5, B, A, Text8}pkA
 }
 
-// All properties also hold injectively.
 properties (of isoiec_9798_3_6_2)
   // Note that we do not get agreement on T!
-  A_non_injective_agreement: 
-    niagree(A_5[A,B,Ra,Rb,Text2] -> B_2[A,B,Ra,Rb,Text2], {B, T})
+  A_injective_agreement: 
+    iagree(A_5[A,B,Ra,Rb,Text2] -> B_2[A,B,Ra,Rb,Text2], {B, T})
 
   // Possible authentication FLAW:
   //   We do NOT get agreement on Ra because the standard does not require B to
@@ -358,17 +354,17 @@ properties (of isoiec_9798_3_6_2)
   //   one in Step 2.
   //
   // FIXME: What are the consequences?
-  B_non_injective_agreement: 
-    niagree(B_5[A,B,Ra5,Rb,Text8] -> A_5[A,B,Ra,Rb,Text8], {A, T})
+  B_injective_agreement: 
+    iagree(B_5[A,B,Ra5,Rb,Text8] -> A_5[A,B,Ra,Rb,Text8], {A, T})
 
   // We additionally verify agreement of A and B with the TTP T
-  A_non_injective_agreement_T: 
-    niagree(A_5[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text5] -> 
-            T_4[A,B,T,Rpa,Rb,pk(A),pk(B),Text5], {T})
+  A_injective_agreement_T: 
+    iagree(A_5[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text5] -> 
+           T_4[A,B,T,Rpa,Rb,pk(A),pk(B),Text5], {T})
 
-  B_non_injective_agreement_T: 
-    niagree(B_5[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text5] -> 
-            T_4[A,B,T,Rpa,Rb,pk(A),pk(B),Text5], {T})
+  B_injective_agreement_T: 
+    iagree(B_5[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text5] -> 
+           T_4[A,B,T,Rpa,Rb,pk(A),pk(B),Text5], {T})
 
 
 
@@ -429,20 +425,19 @@ protocol isoiec_9798_3_7_1
 
 }
 
-// All properties also hold injectively.
 properties (of isoiec_9798_3_7_1)
   // Note that we do not get agreement on T!
-  A_non_injective_agreement: 
-    niagree(A_5[A,B,Ra,Rb,Text8] -> B_5[A,B,Ra,Rb,Text8], {B, T})
+  A_injective_agreement: 
+    iagree(A_5[A,B,Ra,Rb,Text8] -> B_5[A,B,Ra,Rb,Text8], {B, T})
 
-  B_non_injective_agreement: 
-    niagree(B_4[A,B,Ra,Rb,Text6] -> A_4[A,B,Ra,Rb,Text6], {A, T})
+  B_injective_agreement: 
+    iagree(B_4[A,B,Ra,Rb,Text6] -> A_4[A,B,Ra,Rb,Text6], {A, T})
 
   // We additionally verify agreement of A and B with the TTP T
-  A_non_injective_agreement_T: 
-    niagree(A_3[B,T,Rpa,pkB,Text4] -> T_3[B,T,Rpa,pk(B),Text4], {T})
-  B_non_injective_agreement_T: 
-    niagree(B_4[A,T,Rb,pkA,Text3] -> T_3[A,T,Rb,pk(A),Text3], {T})
+  A_injective_agreement_T: 
+    iagree(A_3[B,T,Rpa,pkB,Text4] -> T_3[B,T,Rpa,pk(B),Text4], {T})
+  B_injective_agreement_T: 
+    iagree(B_4[A,T,Rb,pkA,Text3] -> T_3[A,T,Rb,pk(A),Text3], {T})
 
 
 
@@ -515,22 +510,21 @@ protocol isoiec_9798_3_7_2
 
 }
 
-// All properties also hold injectively.
 properties (of isoiec_9798_3_7_2)
-  A_non_injective_agreement: 
-    niagree(A_5[A,B,Ra,Rb,Text8] -> B_5[A,B,Ra,Rb,Text8], {B, T})
+  A_injective_agreement: 
+    iagree(A_5[A,B,Ra,Rb,Text8] -> B_5[A,B,Ra,Rb,Text8], {B, T})
 
-  B_non_injective_agreement: 
-    niagree(B_4[A,B,Ra,Rb,Text6] -> A_4[A,B,Ra,Rb,Text6], {A, T})
+  B_injective_agreement: 
+    iagree(B_4[A,B,Ra,Rb,Text6] -> A_4[A,B,Ra,Rb,Text6], {A, T})
 
   // We additionally verify agreement of A and B with the TTP T
-  A_non_injective_agreement_T: 
-    niagree(A_4[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text3] -> 
-            T_3[A,B,T,Rpa,Rb,pk(A),pk(B),Text3], {T})
+  A_injective_agreement_T: 
+    iagree(A_4[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text3] -> 
+           T_3[A,B,T,Rpa,Rb,pk(A),pk(B),Text3], {T})
 
-  B_non_injective_agreement_T: 
-    niagree(B_4[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text3] -> 
-            T_3[A,B,T,Rpa,Rb,pk(A),pk(B),Text3], {T})
+  B_injective_agreement_T: 
+    iagree(B_4[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text3] -> 
+           T_3[A,B,T,Rpa,Rb,pk(A),pk(B),Text3], {T})
 
 
 
