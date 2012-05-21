@@ -153,8 +153,11 @@ genericProof :: MonadPlus m
              -> m Proof
 genericProof chainRuleMarker goals rawRules se0 =
   case reduceInjectivity se0 of
-    Just se1 -> (RuleApp se0 ReduceInjectivity . return) `liftM`
-                (genericProof chainRuleMarker goals rawRules se1)
+    Just (Left err)  ->
+       return $ Missing se0 ("failed to reduce injectivity: " ++ err) True
+    Just (Right se1) ->
+       (RuleApp se0 ReduceInjectivity . return) `liftM`
+       (genericProof chainRuleMarker goals rawRules se1)
     Nothing  -> case saturate se0 of
       Just se1 -> (RuleApp se0 Saturate . return) `liftM` prove se1
       Nothing  ->                                         prove se0
@@ -268,7 +271,9 @@ checkProof se0 prf0 = evalStateT (go prf0) se0
   go (RuleApp _ ReduceInjectivity [prf]) = do
     se <- get
     case reduceInjectivity se of
-      Just se' -> (RuleApp se ReduceInjectivity . return) <$> (put se' >> go prf)
+      Just (Right se') ->
+          (RuleApp se ReduceInjectivity . return) <$> (put se' >> go prf)
+      Just _           -> mzero
       Nothing  -> go prf
   go (RuleApp _ Saturate [prf]) = do
     se <- get

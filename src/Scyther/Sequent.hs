@@ -25,6 +25,9 @@ import Data.Data
 
 import Control.Arrow
 import Control.Monad
+import Control.Applicative
+
+import Extension.Prelude (sortednub)
 
 import qualified Scyther.Equalities as E
 import Scyther.Facts
@@ -201,11 +204,43 @@ frule rule state = do
 
 -- | Try to prove an 'Injective' sequent by reducing it to its non-injective
 -- counterpart.
-reduceInjectivity :: Sequent -> Maybe Sequent
-reduceInjectivity se = do
-  guard (seQualifier se == Injective)
-  -- FIXME: Check validity of reduction
-  return (se { seQualifier = Standard })
+reduceInjectivity :: Sequent -> Maybe (Either String Sequent)
+reduceInjectivity se
+  | seQualifier se /= Injective = Nothing
+  -- We have an injective sequent => we must reduce it or report a failure to
+  -- reduce it.
+  | otherwise                   = Just $
+      case sortednub $ formulaTIDs $ toFormula $ sePrem se of
+        [premTID] -> case decomposeConcl $ seConcl se of
+          Just (concTID, atoms) ->
+            if check premTID concTID atoms
+              then Right (se { seQualifier = Standard })
+              else Left "conclusion does not immediatly entail injectivity"
+          Nothing -> Left $
+            "only works for conclusions of the form '? tid. ato1 & ... & atoN'"
+        premTIDs  -> Left $
+            "too few/many thread identifiers in premises " ++ show premTIDs
+  where
+    decomposeConcl (FExists (Left tid) fm) = (,) tid <$> conjunctionToAtoms fm
+    decomposeConcl _                       = Nothing
+
+    -- check that conclusion entails equality of premise TIDs
+    check premTID0 concTID atoms =
+        case E.solve (rawEqs0 ++ rawEqs1) E.empty of
+          Just eqs -> E.substTID eqs premTID0 == E.substTID eqs premTID1
+          _        -> False
+      where
+        premTID1 = 1 + max premTID0 concTID
+
+        rawEqs0 = [ eq | AEq eq <- atoms ]
+        rawEqs1 = map rename rawEqs0
+
+        rename = E.substAnyEq $ E.getMappingEqs $
+            E.addTIDMapping premTID0 premTID1 E.emptyMapping
+
+
+
+
 
 -- | Try to saturate a sequent, if possible and leading to new facts.
 saturate :: MonadPlus m => Sequent -> m Sequent

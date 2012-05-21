@@ -527,25 +527,24 @@ insertTypeAnn tya prems =
 --
 -- PRE: The atom must pass certification under the given facts.
 --
--- PRE: The atom must not be a 'AHasTyp' or a 'ATyping' atom, as they are not
--- representable by 'Facts'
 conjoinAtoms :: Monad m => [Atom] -> Facts -> m (Maybe Facts)
-conjoinAtoms atoms facts0 = foldM conjoinAtom (Just facts0) atoms
+conjoinAtoms atoms facts0 =
+    foldM conjoinAtom (Just facts0) atoms
   where
-  conjoinAtom Nothing      _    = return Nothing
-  conjoinAtom (Just facts) atom = case certified $ certAtom facts atom of
-    ABool False  -> return Nothing
-    ABool True   -> return (Just facts)
-    -- FIXME: repeated calls to solve may be a bit expensive due to duplicated
-    -- work of 'removeTrivialFacts'.
-    AEq eq       -> return        $ solve [Cert eq] facts
-    AEv ev       -> return . Just $ insertEvNonTrivial (Cert ev) facts
-    AEvOrd ord   -> return . Just $ insertEvOrdNonTrivial (Cert ord) facts
-    ACompr m     -> return . Just $ compromise m facts
-    AUncompr m   -> return . Just $ uncompromise m facts
-    AReachable p -> Just `liftM` setProtocol p facts
-    ATyping typ  -> Just `liftM` setTyping typ facts
-    AHasType tya -> return . Just $ insertTypeAnn (Cert tya) facts
+    conjoinAtom Nothing      _    = return Nothing
+    conjoinAtom (Just facts) atom = case certified $ certAtom facts atom of
+      ABool False  -> return Nothing
+      ABool True   -> return (Just facts)
+      -- FIXME: repeated calls to solve may be a bit expensive due to duplicated
+      -- work of 'removeTrivialFacts'.
+      AEq eq       -> return        $ solve [Cert eq] facts
+      AEv ev       -> return . Just $ insertEvNonTrivial (Cert ev) facts
+      AEvOrd ord   -> return . Just $ insertEvOrdNonTrivial (Cert ord) facts
+      ACompr m     -> return . Just $ compromise m facts
+      AUncompr m   -> return . Just $ uncompromise m facts
+      AReachable p -> Just `liftM` setProtocol p facts
+      ATyping typ  -> Just `liftM` setTyping typ facts
+      AHasType tya -> return . Just $ insertTypeAnn (Cert tya) facts
 
 
 -- Combined construction and application of inference rules
