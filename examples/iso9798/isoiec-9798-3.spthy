@@ -238,8 +238,7 @@ protocol isoiec_9798_3_6_1
 
             -> B: A, B, Text9, T,
                   sign{'isoiec_9798_3_6_opt_1_sig_4_2', Rb, A, pkA, Text5}pk(T),
-                  // Note: the standard does not require to check that 'Ra5 = Ra'!
-                  sign{'isoiec_9798_3_6_opt_1_sig_5', Rb, Ra5, B, A, Text8}pkA
+                  sign{'isoiec_9798_3_6_opt_1_sig_5', Rb, Ra, B, A, Text8}pkA
 }
 
 // All properties except hold injectively. NOTE: Investigate this
@@ -248,14 +247,8 @@ properties (of isoiec_9798_3_6_1)
   A_injective_agreement:
     iagree(A_5[A,B,Ra,Rb,Text2] -> B_2[A,B,Ra,Rb,Text2], {B, T})
 
-  // Possible authentication FLAW:
-  //   We do NOT get agreement on Ra because the standard does not require B to
-  //   check its occurence in the signature from Step 5 to be equal with the
-  //   one in Step 2.
-  //
-  // FIXME: What are the consequences?
   B_injective_agreement:
-    iagree(B_5[A,B,Ra5,Rb,Text8] -> A_5[A,B,Ra,Rb,Text8], {A, T})
+    iagree(B_5[A,B,Ra,Rb,Text8] -> A_5[A,B,Ra,Rb,Text8], {A, T})
 
   // We additionally verify agreement of A and B with the TTP T.
   A_injective_agreement_T:
@@ -335,8 +328,7 @@ protocol isoiec_9798_3_6_2
             -> B: A, B, Rpa, Text9, T,
                   sign{'isoiec_9798_3_6_opt_2_sig_4',
                        Rpa, Rb, A, pkA, B, pkB, Text5 }pk(T),
-                  // Note: the standard does not require to check that 'Ra5 = Ra'!
-                  sign{'isoiec_9798_3_6_opt_2_sig_5', Rb, Ra5, B, A, Text8}pkA
+                  sign{'isoiec_9798_3_6_opt_2_sig_5', Rb, Ra, B, A, Text8}pkA
 }
 
 properties (of isoiec_9798_3_6_2)
@@ -344,14 +336,8 @@ properties (of isoiec_9798_3_6_2)
   A_injective_agreement:
     iagree(A_5[A,B,Ra,Rb,Text2] -> B_2[A,B,Ra,Rb,Text2], {B, T})
 
-  // Possible authentication FLAW:
-  //   We do NOT get agreement on Ra because the standard does not require B to
-  //   check its occurence in the signature from Step 5 to be equal with the
-  //   one in Step 2.
-  //
-  // FIXME: What are the consequences?
   B_injective_agreement:
-    iagree(B_5[A,B,Ra5,Rb,Text8] -> A_5[A,B,Ra,Rb,Text8], {A, T})
+    iagree(B_5[A,B,Ra,Rb,Text8] -> A_5[A,B,Ra,Rb,Text8], {A, T})
 
   // We additionally verify agreement of A and B with the TTP T
   A_injective_agreement_T:
