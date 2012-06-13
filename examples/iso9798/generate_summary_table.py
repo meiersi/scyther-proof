@@ -11,14 +11,18 @@ Author: Cas Cremers
 Date:   June 2012
 """
 
-def get_files():
+def get_files(filt=None):
     import os
 
     flo = []
     fl = os.listdir(".")
     for fn in fl:
         if fn.endswith(".spthy"):
-            flo.append(fn)
+            if filt == None:
+                flo.append(fn)
+            else:
+                if filt in fn:
+                    flo.append(fn)
     return flo
 
 def latex_name(pn):
@@ -139,7 +143,7 @@ def parse_file(table,fn):
             if protname.startswith(boring):
                 protname = protname[len(boring):]
 
-            table[protname] = {}
+            table[protname] = []
             print "Found protocol", protname
 
         elif l.startswith("niagree") or l.startswith("iagree"):
@@ -147,18 +151,20 @@ def parse_file(table,fn):
             if protname == None:
                 print "Hmm, no protocol for this claim. Weird."
             else:
-                claim = (l.split("(")[0]).strip()
+                claimname = (l.split("(")[0]).strip()
                 roles = l.split("_")
                 r1 = roles[0][-1]
                 r2 = roles[1][-1]
                 l1 = l.find("[")
                 l2 = l.find("]")
                 args = l[l1+1:l2]
-                table[protname]["src"] = l
-                table[protname]["claim"] = claim
-                table[protname]["r1"] = r1
-                table[protname]["r2"] = r2
-                table[protname]["args"] = args.split(",")
+                claim = {}
+                claim["src"] = l
+                claim["claim"] = claimname
+                claim["r1"] = r1
+                claim["r2"] = r2
+                claim["args"] = args.split(",")
+                table[protname].append(claim)
 
     fp.close()
     return table
@@ -169,24 +175,34 @@ def latex_table(table):
     """
     k = sorted(table.keys())
     res = "\\begin{tabular}{@{}lclcl@{}}\n"
+    res += "\\toprule \n"
     res += "Repaired protocol & Role & Property & With & Data \\\\ \n"
-    res += "\\hline \n"
+    res += "\\midrule \n"
     for pn in k:
-        res += "%s & " % (latex_name(pn))
-        dt = table[pn]
-        res += "$%s$ & " % (dt["r1"])
-        res += latex_claim(dt["claim"], dt["r2"], dt["args"])
-        res += " \\\\ \n"
+        name = latex_name(pn)
+        for claim in table[pn]:
+            res += "%s & " % (name)
+            name = ""       # Makes for a cleaner table by removing duplicates
+            res += "$%s$ & " % (claim["r1"])
+            res += latex_claim(claim["claim"], claim["r2"], claim["args"])
+            res += " \\\\ \n"
 
-    res += "\\hline \n"
+    res += "\\bottomrule \n"
     res += "\\end{tabular}\n"
     return res
 
 
 def main():
+    """
+    ./generate_summary_table.py [outputfile] [partfilter]
+    """
     import sys
 
-    fl = get_files()
+    if len(sys.argv) >= 3:
+        fl = get_files(filt=sys.argv[2])
+    else:
+        fl = get_files()
+
     table = {}
     for fn in fl:
         print fn
