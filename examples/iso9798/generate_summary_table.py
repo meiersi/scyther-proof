@@ -1,4 +1,15 @@
 #!/usr/bin/env python
+"""
+Generate a summary latex table with all the authentication claims in the .spthy
+theory files in this directory.
+
+WARNING: There are no checks that the claims are *correct*, and the user of the
+resulting table is responsible for checking that all these claims actually are
+successfully proven by scyther-proof.
+
+Author: Cas Cremers
+Date:   June 2012
+"""
 
 def get_files():
     import os
@@ -23,28 +34,78 @@ def latex_name(pn):
     if dt[2] == "bdkey":
         return latex
     if dt[2] == "udkey":
-        return latex + " (UDK)"
+        return latex + " (\\UnidirectionalKeys)"
+
     args = ",".join(dt[2:])
+
+    if "special" in args:
+        return "%s (\\DisjointRoles)" % (latex)
     if args in ["1","2"]:
-        args = "Option %s" % (args)
+        args = "Opt. %s" % (args)
+    
     return "%s (%s)" % (latex, args)
 
-def latex_claim(txt,r2,args):
 
-    largs = []
-    for it in args:
-        if len(it) <= 1:
-            largs.append(it)
+def latex_arg(x):
+    """
+    Clean up an argument for use in math mode.
+    """
+    arg = x.strip()
+    sub = ""
+    if not arg.startswith("Text"):
+        arg = arg.upper()
+
+    # Special case
+    if arg == "RPA":
+        return "R'_A"
+
+    # Determine subscript
+    cnt = 0
+    for i in range(1,len(arg)):
+        if arg[len(arg)-i] in ["A","B","P"]:
+            cnt += 1
         else:
-            largs.append("\\mathit{%s}" % (it.strip()))
+            break
+    if cnt > 0:
+        sub = arg[-cnt:]
+        arg = arg[:-cnt]
+    
+    # Finally, mathit if needed
+    if len(arg) > 2:
+        arg = "\\mathit{%s}" % (arg)
+    if len(sub) > 2:
+        sub = "\\mathit{%s}" % (sub)
+
+    if len(sub) == 0:
+        return arg
+    else:
+        return "%s_{%s}" % (arg,sub)
+
+
+def latex_args(args):
+    """
+    Clean up a list of arguments for use in math mode.
+    """
+    largs = []
+    for x in args:
+        largs.append(latex_arg(x))
     ltargs = "$%s$" % (", ".join(largs))
+    return ltargs
+
+
+def latex_claim(txt,r2,args):
+    """
+    Return a three-column version (property, with, data) for a latex table
+    """
+
+    ltargs = latex_args(args)
 
     if txt == "iagree":
-        return "Injective agreement with $%s$ on %s" % (r2,ltargs)
+        return "Injective agreement & $%s$ & %s" % (r2,ltargs)
     elif txt == "niagree":
-        return "Non-injective agreement with $%s$ on %s" % (r2,ltargs)
+        return "Non-injective agreement & $%s$ & %s" % (r2,ltargs)
     else:
-        return "%s $%s$ (%s)" % (txt,r2,ltargs)
+        return "%s & $%s$ & %s" % (txt,r2,ltargs)
 
 def parse_file(table,fn):
     """
@@ -107,8 +168,8 @@ def latex_table(table):
     Turn the previous table into latex
     """
     k = sorted(table.keys())
-    res = "\\begin{tabular}{lll}\n"
-    res += "Protocol & Role & Property \\\\ \n"
+    res = "\\begin{tabular}{@{}lclcl@{}}\n"
+    res += "Repaired protocol & Role & Property & With & Data \\\\ \n"
     res += "\\hline \n"
     for pn in k:
         res += "%s & " % (latex_name(pn))
