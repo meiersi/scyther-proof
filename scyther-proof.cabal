@@ -96,7 +96,7 @@ extra-source-files:
   .ghci
   interactive-only-src/Paths_scyther_proof.hs
   src/Scyther/Theory/Lexer.x_src_only
-  README
+  README.md
   CHANGES
 
 
