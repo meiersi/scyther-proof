@@ -1,10 +1,9 @@
-The scyther-proof security protocol verification tool.
-======================================================
+README: The scyther-proof security protocol verification tool
+=============================================================
 
 Author: Simon Meier <simon.meier@inf.ethz.ch>
 
-Creation Date: 13/05/2011
-Last Updated:  28/06/2012
+Creation Date: 13/05/2011  --  Last Updated:  28/06/2012
 
 
 1. Introduction
@@ -15,7 +14,7 @@ Last Updated:  28/06/2012
   protocol models that were verified using scyther-proof. In particular, these
   examples include models for all of our repaired versions of the protocols
   from the ISO/IEC-9798 authentication standard. (In the source distribution
-  of scyther-proof they can be found at 'data/examples/iso9798'.)
+  of scyther-proof they can be found at `data/examples/iso9798`.)
 
   In the following sections,  we give step by step instructions to get the
   whole system working and we explain the usage of our tools and provide
@@ -40,9 +39,9 @@ Last Updated:  28/06/2012
     cabal install
 
   in the root directory of this source code package. This will use the
-  Haskell's deployment tool 'cabal-install' to download all missing libraries
+  Haskell's deployment tool `cabal-install` to download all missing libraries
   from Hackage, the central Haskell library repository and install the
-  'scyther-proof' executable in the default installation location of
+  `scyther-proof` executable in the default installation location of
   cabal-install.  The installation location is printed at the end of the build
   process.
 
@@ -57,46 +56,46 @@ Last Updated:  28/06/2012
 2.2 Installing the Isabelle/HOL theories
 ----------------------------------------
 
-    Download and install full Isabelle2009-1 according to the installation
-    instructions at
+Download and install full Isabelle2009-1 according to the installation
+instructions at
 
-        http://isabelle.in.tum.de/website-Isabelle2009-1/download_x86-linux.html
+    http://isabelle.in.tum.de/website-Isabelle2009-1/download_x86-linux.html
 
-    The first time you call 'scyther-proof' with the '--isabelle' flag it will
-    build the logic image of the Isabelle/HOL theories formalizing the security
-    protocol verification theory underlying scyther-proof.
+The first time you call `scyther-proof` with the `--isabelle` flag it will
+build the logic image of the Isabelle/HOL theories formalizing the security
+protocol verification theory underlying `scyther-proof`.
 
-    For enabling interactive processing of theory files based using our
-    extensions to Isabelle's ISAR proof language use one of the following two
-    variants.
+For enabling interactive processing of theory files based using our
+extensions to Isabelle's ISAR proof language use one of the following two
+variants.
 
-      Variant a: Brute Force
-      ----------------------
+Variant a: Brute Force
+----------------------
 
-          Overwrite the standard Emacs keywords file
+Overwrite the standard Emacs keywords file
 
-              $ISABELLE_HOME/etc/isar-keywords.el
+    $ISABELLE_HOME/etc/isar-keywords.el
 
-          with the Emacs keywords file provided with the ESPL distribution.
+with the Emacs keywords file provided with the ESPL distribution.
 
-              $SCYTHER_PROOF_HOME/isabelle/src/isar-keywords.el
+    $SCYTHER_PROOF_HOME/isabelle/src/isar-keywords.el
 
-          This is needed in order to make the new ISAR keywords "role",
-          "protocol", "sources", and "prefix_close" available in the Emacs
-          frontend.
+This is needed in order to make the new ISAR keywords `role`,
+`protocol`, `sources`, and `prefix_close` available in the Emacs
+frontend.
 
 
-      Variant b: Elegance
-      -------------------
+Variant b: Elegance
+-------------------
 
-          A more elegant way is to copy the keywords file provided with our
-          distribution to
+A more elegant way is to copy the keywords file provided with our
+distribution to
 
-              $ISABELLE_HOME/etc/isar-keywords-ESPL.el
+    $ISABELLE_HOME/etc/isar-keywords-ESPL.el
 
-          and start Isabelle using the -k switch as follows.
+and start Isabelle using the -k switch as follows.
 
-              isabelle emacs -k ESPL <your-theory-file.thy>
+    isabelle emacs -k ESPL <your-theory-file.thy>
 
 
 
@@ -162,5 +161,5 @@ Last Updated:  28/06/2012
 `Happy Proving :)`
 
 In case of questions do not hesistate to contact me at
-iridcode@gmail.com
+iridcode@gmail.com.
 
