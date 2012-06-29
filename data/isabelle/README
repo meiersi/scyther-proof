@@ -1,11 +1,10 @@
-======================================================================
-README for the scyther-proof security protocol verification tool
-======================================================================
+The scyther-proof security protocol verification tool.
+======================================================
 
 Author: Simon Meier <simon.meier@inf.ethz.ch>
 
 Creation Date: 13/05/2011
-Updated:       02/04/2012
+Last Updated:  28/06/2012
 
 
 1. Introduction
@@ -32,10 +31,10 @@ Updated:       02/04/2012
   You need a working Haskell environment that provides a version of GHC from
   7.0.x to 7.4.x and the 'cabal install' tool. The simplest way to get such an
   environment is to download and install the Haskell Platform package for your
-  OS. 
-  
+  OS.
+
     http://hackage.haskell.org/platform/
-  
+
   Then call
 
     cabal install
@@ -47,15 +46,15 @@ Updated:       02/04/2012
   cabal-install.  The installation location is printed at the end of the build
   process.
 
-  Call 
-    
+  Call
+
     scyther-proof
 
   without any arguments to get an overview of the arguments supported and the
   paths to the examples and the Isabelle/HOL theories.
 
 
-3.2 Installing the Isabelle/HOL theories
+2.2 Installing the Isabelle/HOL theories
 ----------------------------------------
 
     Download and install full Isabelle2009-1 according to the installation
@@ -75,11 +74,11 @@ Updated:       02/04/2012
       ----------------------
 
           Overwrite the standard Emacs keywords file
-      
+
               $ISABELLE_HOME/etc/isar-keywords.el
-     
+
           with the Emacs keywords file provided with the ESPL distribution.
-      
+
               $SCYTHER_PROOF_HOME/isabelle/src/isar-keywords.el
 
           This is needed in order to make the new ISAR keywords "role",
@@ -99,7 +98,7 @@ Updated:       02/04/2012
 
               isabelle emacs -k ESPL <your-theory-file.thy>
 
-    
+
 
 3. Usage
 ========
@@ -159,9 +158,9 @@ Updated:       02/04/2012
 
 
 ***
-* Happy Proving :-)
-*
-* In case of questions do not hesistate to contact me at
-* simon.meier@inf.ethz.ch
-***
+
+** Happy Proving :-) **
+
+In case of questions do not hesistate to contact me at
+iridcode@gmail.com
 
