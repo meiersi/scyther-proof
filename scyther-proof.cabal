@@ -166,4 +166,7 @@ executable scyther-proof
 
         Scyther.GoalFlow
 
+source-repository head
+  type:     git
+  location: https://github.com/meiersi/scyther-proof.git
 
