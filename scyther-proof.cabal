@@ -1,6 +1,6 @@
 build-type:         Simple
 name:               scyther-proof
-version:            0.4.1.0
+version:            0.5.0.0
 license:            GPL
 license-file:       LICENSE
 category:           Security, Theorem Provers
@@ -79,12 +79,12 @@ data-files:
   examples/iso9798/isabelle-parallel-proofs/*.thy
   examples/experimental/ExponentialBlowup.spthy
 
-  isabelle/AUTHORS  
-  isabelle/document/root.tex  
-  isabelle/IsaMakefile  
-  isabelle/Makefile  
-  isabelle/README  
-  isabelle/ROOT.ML  
+  isabelle/AUTHORS
+  isabelle/document/root.tex
+  isabelle/IsaMakefile
+  isabelle/Makefile
+  isabelle/README
+  isabelle/ROOT.ML
   isabelle/src/isar-keywords.el
   isabelle/src/*.thy
   isabelle/src/ESPLogic/*.thy
@@ -106,19 +106,19 @@ flag threaded
 
 executable scyther-proof
     build-depends:
-        base          == 4.*    , 
-        array         >= 0.3   && < 0.5 , 
+        base          == 4.*    ,
+        array         >= 0.3   && < 0.5 ,
         containers    >= 0.4.2 && < 0.5 ,
         safe          >= 0.2   && < 0.4 ,
-                      
+
         mtl           == 2.0.*  ,
-        
+
         cmdargs       >= 0.6.8 && < 0.7 ,
         filepath      >= 1.2   && < 1.4 ,
         directory     >= 1.0   && < 1.3 ,
-        process       == 1.1.*  , 
+        process       == 1.1.*  ,
         time          >= 1.1   && < 1.3 ,
-        
+
         parsec        == 3.1.*  ,
         pretty        >= 1.0   && < 1.2 ,
         tagsoup       == 0.12.*  ,
@@ -134,7 +134,7 @@ executable scyther-proof
 
     other-modules:
         Extension.Prelude
-        Data.Color 
+        Data.Color
         Data.Table
         Data.DAG.Simple
         Data.UnionFind

@@ -1,3 +1,7 @@
+* 0.5.0.0
+    - implemented proof generation for injective agreement
+    - fixed bug in unification of inverse-key constructors
+
 * 0.4.1.0 Bugfixes and dropped export of library
     - widen 'pretty' dependency
     - update package description
@@ -35,6 +39,6 @@
     - Changed lexer to also recognize `!'
 
 * 0.3.0 First public version
-  
+
     Aligned with paper submission for CCS'11: Provably repairing the ISO-9798
     authentication protocols.
