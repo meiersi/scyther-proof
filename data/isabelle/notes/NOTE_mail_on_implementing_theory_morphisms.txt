@@ -1,0 +1,204 @@
+Received: from xsmtp1.ethz.ch ([82.130.70.13]) by EX5.d.ethz.ch with Microsoft SMTPSVC(6.0.3790.4675);
+	 Mon, 10 May 2010 09:32:32 +0200
+Received: from vphil1.ethz.ch ([129.132.202.247]) by xsmtp1.ethz.ch with Microsoft SMTPSVC(6.0.3790.4675);
+	 Mon, 10 May 2010 09:32:32 +0200
+Received: from mail-out1.informatik.tu-muenchen.de ([131.159.0.8])
+	by vphil1.ethz.ch with esmtp (Exim 4.69)
+	(envelope-from <isabelle-dev-bounces@mailbroy.informatik.tu-muenchen.de>)
+	id 1OBNTZ-0004Ct-E4
+	for simon.meier@inf.ethz.ch; Mon, 10 May 2010 09:32:32 +0200
+Received: from localhost (scanbroy [10.46.146.16])
+	by mailbroy.informatik.tu-muenchen.de (Postfix) with ESMTP id 17A414079B776;
+	Mon, 10 May 2010 09:32:24 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new using ClamAV at
+	mailbroy.informatik.tu-muenchen.de
+Received: from mailbroy.informatik.tu-muenchen.de ([10.46.146.15])
+	by localhost (mailbroy.informatik.tu-muenchen.de [10.46.146.16]) (amavisd-new, port 10024)
+	with ESMTP id F469iV0opgxz; Mon, 10 May 2010 09:32:23 +0200 (CEST)
+Received: from mailmanbroy.informatik.tu-muenchen.de (mailmanbroy [10.46.146.17])
+	by mailbroy.informatik.tu-muenchen.de (Postfix) with ESMTP id A615F4079B778;
+	Mon, 10 May 2010 09:32:23 +0200 (CEST)
+Received: from [10.46.146.17] (localhost [127.0.0.1])
+	by mailmanbroy.informatik.tu-muenchen.de (Postfix) with ESMTP id 933C4510C2C49;
+	Mon, 10 May 2010 09:32:23 +0200 (CEST)
+X-Original-To: isabelle-dev@mailmanbroy.informatik.tu-muenchen.de
+Delivered-To: isabelle-dev@mailmanbroy.informatik.tu-muenchen.de
+Received: from mailbroy.informatik.tu-muenchen.de (mailbroy [10.46.146.15])
+	by mailmanbroy.informatik.tu-muenchen.de (Postfix) with ESMTP id
+	3FF08510C2C49
+	for <isabelle-dev@mailmanbroy.informatik.tu-muenchen.de>;
+	Mon, 10 May 2010 09:32:22 +0200 (CEST)
+Received: by mailbroy.informatik.tu-muenchen.de (Postfix)
+	id 227524079B77A; Mon, 10 May 2010 09:32:22 +0200 (CEST)
+Delivered-To: isabelle-dev@mailbroy.informatik.tu-muenchen.de
+Received: from localhost (scanbroy [10.46.146.16])
+	by mailbroy.informatik.tu-muenchen.de (Postfix) with ESMTP id
+	1E17A4079B779 for <isabelle-dev@mailbroy.informatik.tu-muenchen.de>;
+	Mon, 10 May 2010 09:32:22 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new using ClamAV at
+	mailbroy.informatik.tu-muenchen.de
+Received: from mailbroy.informatik.tu-muenchen.de ([10.46.146.15])
+	by localhost (mailbroy.informatik.tu-muenchen.de [10.46.146.16])
+	(amavisd-new, port 10024) with ESMTP id ekABl4TryBCU
+	for <isabelle-dev@mailbroy.informatik.tu-muenchen.de>;
+	Mon, 10 May 2010 09:32:21 +0200 (CEST)
+Received: from [131.159.46.58] (macbroy15.informatik.tu-muenchen.de
+	[131.159.46.58])
+	by mailbroy.informatik.tu-muenchen.de (Postfix) with ESMTPSA id
+	D9AF14079B775 for <isabelle-dev@mailbroy.informatik.tu-muenchen.de>;
+	Mon, 10 May 2010 09:32:21 +0200 (CEST)
+Message-ID: <4BE7B691.9090206@informatik.tu-muenchen.de>
+Date: Mon, 10 May 2010 09:32:33 +0200
+From: Florian Haftmann <florian.haftmann@informatik.tu-muenchen.de>
+Organization: TU =?ISO-8859-1?Q?M=FCnchen=2C_Lehrstuhl_Software_and?=
+	=?ISO-8859-1?Q?_Systems_Engineering?=
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US;
+	rv:1.9.1.9) Gecko/20100423 Thunderbird/3.0.4
+MIME-Version: 1.0
+To: isabelle-dev@mailbroy.informatik.tu-muenchen.de
+References: <s2hcc2478ab1005091348w58e58490l7e6adbbe80a68b0e@mail.gmail.com>
+In-Reply-To: <s2hcc2478ab1005091348w58e58490l7e6adbbe80a68b0e@mail.gmail.com>
+X-Enigmail-Version: 1.0.1
+Subject: Re: [isabelle-dev] Bug in linordered_ring_less_cancel_factor simproc
+X-BeenThere: isabelle-dev@mailbroy.informatik.tu-muenchen.de
+X-Mailman-Version: 2.1.13
+Precedence: list
+List-Id: Isabelle Developer List
+	<isabelle-dev.mailbroy.informatik.tu-muenchen.de>
+List-Unsubscribe: <https://mailmanbroy.informatik.tu-muenchen.de/mailman/options/isabelle-dev>,
+	<mailto:isabelle-dev-request@mailbroy.informatik.tu-muenchen.de?subject=unsubscribe>
+List-Archive: <https://mailmanbroy.informatik.tu-muenchen.de/pipermail/isabelle-dev>
+List-Post: <mailto:isabelle-dev@mailbroy.informatik.tu-muenchen.de>
+List-Help: <mailto:isabelle-dev-request@mailbroy.informatik.tu-muenchen.de?subject=help>
+List-Subscribe: <https://mailmanbroy.informatik.tu-muenchen.de/mailman/listinfo/isabelle-dev>,
+	<mailto:isabelle-dev-request@mailbroy.informatik.tu-muenchen.de?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============1762438070216582374=="
+Sender: isabelle-dev-bounces@mailbroy.informatik.tu-muenchen.de
+Errors-To: isabelle-dev-bounces@mailbroy.informatik.tu-muenchen.de
+X-Virus-Scanned: ClamAV using ClamSMTP
+X-Filter-Node: vphil1.ethz.ch
+X-Spam-Level:  
+X-Spam-Status: hits=-0.0 tests=T_RP_MATCHES_RCVD
+X-Spam-Flag: NO
+Return-Path: isabelle-dev-bounces@mailbroy.informatik.tu-muenchen.de
+X-OriginalArrivalTime: 10 May 2010 07:32:32.0554 (UTC) FILETIME=[F3E6B0A0:01CAF012]
+
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--===============1762438070216582374==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig65876F9A8A0C81CCD5651D5B"
+
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig65876F9A8A0C81CCD5651D5B
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+Hi Brian,
+
+> Here is the changeset that introduced the "aconv" test:
+> http://isabelle.in.tum.de/repos/isabelle/rev/7cdcc9dd95cb
+>
+> I'm not sure why the "aconv" test is there, so I don't want to remove
+> it myself. Could someone else please look into this?
+
+The aconv has already been present previously:
+http://isabelle.in.tum.de/repos/isabelle/rev/7cdcc9dd95cb#l8.15
+
+The numeral simprocs (like more arithemtic matter) are, more or less, a
+mess.  We don't even know how relevant they are nowadays.  So, if no
+complaint arises to remove the aconv test and no problems occur, it
+could be the best option to drop it.
+
+> After some investigation, I have concluded that the problem has to do
+> with Arith_Data.prove_conv.
+> Arith_Data.prove_conv is
+> called to move the common term to the left, so it matches the rules
+> mult_less_cancel_left_pos or mult_less_cancel_left_neg.
+
+This is a worthwhile observation -- if you like you could document this
+in a rename of prove_conv to, say, prove_common_leftmost.
+
+> Also, we really need to have some proper regression tests for
+> simprocs. Currently the only tests for these simprocs are in a
+> commented-out (!) section of Tools/numeral_simprocs.ML.
+
+Sound like a potential candidate for a HOL/ex theory.
+
+> First of all, the ML antiquotation @{simproc
+> linordered_ring_less_cancel_factor simproc} doesn't work. Why? The
+> simproc is listed by name when I ask ProofGeneral to print out the
+> simpset. With no way to refer to the existing simproc from ML, I had
+> to cut-and-paste a copy of all the simproc ML code in order to test it
+> individually.
+
+This antiquotation only works for new-style named simprocs, which the
+numeral simprocs are definitely not.
+
+This is a good place for some general observations concerning this matter=
+=2E
+
+a) The state-of-the art for implementing domain-specific proof
+procedures in Isabelle is described in Context aware Calculation and
+Deduction by Chaieb and Wenzel,
+http://www4.in.tum.de/~chaieb/pubs/pdf/morphism.pdf.  Unfortunately,
+AFAIK this has not spread wider than the Groebner bases stuff (indeed
+the currently emering Semiring_Normalizer theory is a good example, I
+think).
+
+b) The current numeral representation is a matter on its own (I supppose
+you know very well).
+
+c) The whole look-and-feel of these simprocs is very odd nowadays
+(functor instantiation, global magic etc.)
+
+d) It is not clear how far those simprocs are (or could) subsumed by
+more advanced proof procedures.
+
+Doing it right would mean to investigate d) first, understanding a),
+implementing the necessary simporcs using a), thus solving c), and
+perhaps pave the way for tackling b) in the end.  So far no body was
+adventurous enough to start this ;-)
+
+
+Hope this helps,
+	Florian
+
+--=20
+
+Home:
+http://www.in.tum.de/~haftmann
+
+PGP available:
+http://home.informatik.tu-muenchen.de/haftmann/pgp/florian_haftmann_at_in=
+formatik_tu_muenchen_de
+
+
+--------------enig65876F9A8A0C81CCD5651D5B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAkvntpYACgkQZEASYmKQGuHOTwCg1dEWz4HtKxngI0GotlUf9Swe
+eY8AoI4znF36VYWEm1c6Frc2LHVRhl+F
+=q0AI
+-----END PGP SIGNATURE-----
+
+--------------enig65876F9A8A0C81CCD5651D5B--
+
+--===============1762438070216582374==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+Isabelle-dev mailing list
+Isabelle-dev@mailbroy.informatik.tu-muenchen.de
+https://mailmanbroy.informatik.tu-muenchen.de/mailman/listinfo/isabelle-dev
+
+--===============1762438070216582374==--

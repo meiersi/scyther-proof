@@ -1,0 +1,102 @@
+On Wed, 16 Dec 2009, Makarius wrote:
+
+> Ich kann noch ein paar Tips anhand Deiner Sourcen geben, die habe ich aber im Moment nicht zur Hand.
+
+Hier noch ein paar Anmerkungen zu den Sourcen.
+
+
+** espl_utils.ML
+
+* local_standard': Das ist nicht wirklich "local", da es tfrees und frees einfach global generalisiert.  Überhaupt ist Drule.standard trotz des irreführenden Namens schon seit Jahren praktisch legacy.  Der Wechsel zwischen "fixed" und "arbitrary" Variablen funktioniert üblicherweise über export/import im Proof.context; siehe hierzu auch die Operationen in src/Pure/variable.ML (und assumption.ML).  Die wesentlichen Ideen dahinter werden in Kapitel 4 des Isar implementation manual kurz erklärt.
+
+* symmetric_HOL_def ist offenbar unbenutzt, dennoch einige Hinweise:
+
+  . exception THM besser ohne den Text matchen, da sich sowas im Laufe der
+    Jahre gelegentlich mal ändert, man hier aber keine statische ML
+    Überprüfung hat.
+
+  . Drule.zero_var_indexes wird nur in Ausnahmefällen "ganz aussen"
+    verwendet.  In meinem "symmetric" attribute
+    src/Pure/Isar/calculation.ML kommt es allerdings auch vor, was man als
+    Randfall betrachten kann.
+
+    Übrigends kann letzteres auch HOL Gleichheit behandeln, da die
+    entsprechenden Regeln als "sym" deklariert sind.  Wenn man lediglich
+    den Effekt von "fold" bekommen möchte, kann man auch versuchen mit
+    LocalDefs.meta_rewrite_rule zuerst eine Pure Gleichung zu produzieren
+    und dann mit Thm.symmetric diese nochmal wenden. (I.A. ist
+    Rückwärtsanwendung von definierenden Gleichungen aber etwas fragil.)
+
+
+** espl_definitions.ML
+
+* ProofContext.get_thms unter Programmkontrolle ist generell etwas fragil. Hier werden Namespace Zugriffe aufgelöst -- das Verhalten kann schnell diffus werden.  Üblicherweise hinterlegt man in einem Teil seines Tools die Daten in einem privaten Bereich (Generic_Data) und holt sie später dort wieder heraus.  Dieses Prinzip ist aber bei local_theory etwas knifflig, da man seine Daten über beliebige Morphismen hinweg pflegen muss.
+
+In src/Pure/Isar/spec_rules.ML ist ein fragmetarisches Beispiel für Datenhaltung in local_theory targets.  Siehe insbesondere "get" und "add" (die "global" Varianten sind wie immer etwas nostalgisch und verstellen den Blick auf das Wesentliche).  Bei "get" bekommt man hier einfach den gesamten Datenbestand, aus dem man sich seinen gewünschten Inhalt wieder herauspicken muss.  Siehe hierzu auch das Papier Chaieb-Wenzel von Calculemus 2006.
+
+* Specification.definition: Hier evtl. direkt Local_Theory.define verwenden, welches unter Programmkontrolle meist einfacher ist.
+
+
+*** espl_method.ML
+
+* structure SourcesRuleData: normalerweise privat halten und nur abstrakte Zugriffe exportieren.  Bei "get" meist auf Basis von Proof.context, bei updates meist gleich als attribute (siehe auch Thm.declaration_attribute).
+
+* sourcesP: Übrigends haben wir seit einiger Zeit type parser und type context_parser zur besseren Lesbarkeit der ML Signaturen.
+
+* "Message.msg...": evtl. noch mehr @{const_name ...} antiquotations.
+
+* space_explode "." etc. ist mir unklar.  Evtl. helfen einige Operationen aus src/Pure/long_name.ML, sofern es sich tatsächlich um Manipulation von vollen internen Namen handelt (consts etc.).  Normalerweise kommt man aber meist ohne Analyse der Feinstruktur von intern erzeugten Namen aus.
+
+* handle _ => sollte man *nie* verwenden.  Gründe:
+
+  (1) Allgemeine Unklarheit, was hier tatsächlich gehandelt wird.
+      Manchmal schreiben Leute dann irgendwelche Kommentare hin, die aber
+      spätestens nach ein paar Monaten nicht mehr stimmen.
+
+  (2) In Isabelle/ML (Poly/ML oder SML/NJ) werden spontane Ereignisse über
+      eine Interrupt exception im user code ausgelöst.  D.h. externer
+      Abbruch (auch time out, out of memory) würde bei "handle _"
+      stillschweigend absorbiert werden, mit völlig unklarem Ergebnis.
+
+Man kann notfalls auch die Kombinatoren "try" oder "can" verwenden, wenn man wirklich unspezifisch handeln möchte -- Interrupt wird hier durchgelassen.
+
+* mk_sources: Diese Funktion "hat keinen Kontext".  Es wird lediglich im alten Stil ein clasimpset hereingereicht und auch das globale Hintergrund-Theoriezertifikat des Theorems betrachtet (für cterm_of, was aber völlig OK ist).  Irgendwelche darüber hinaus gehenden kontextsensitiven Operationen sind aber hier nicht möglich.  Z.B. wird bei P = thesis stillschweigend angenommen, dass die Variable "thesis" nirgendwo anders schon verwendet wird.  Später kommt dann auch noch das globale local_standard' und ein ProofContext.init, welches einen leeren (globalen) Kontext aus dem Nichts erfindet.
+
+Wie bekommt man nun den "richtigen" Kontext?  Einfach "per Induktion über die Struktur der Sourcen".  Oder anders gesagt man reicht ihn einfach entsprechend als Argument durch -- mit gelegentlicher monotoner Erweiterung des Inhalts.  Also etwa so:
+
+fun mk_sources_elim ctxt case_th =
+  let
+    val thy = ProofContext.theory_of ctxt; (*project down to global certificate*)
+    val cert = Thm.cterm_of thy;  (*certification is more or less the only
+        legitimate operation involving the background thy*)
+
+    val (cs, ss) = Clasimp.clasimpset_of ctxt;  (*proper local clasimpset*)
+
+    val case_t = Thm.prop_of case_th;
+
+    val ctxt' = Variable.declare_term case_t ctxt;
+    (*ctxt' knows your term syntactically*)
+
+    val ([thesis], ctxt'') = Variable.variant_fixes ["thesis"] ctxt';
+    (*ctxt'' contains an officially fixed variable, derived from proposed
+      name "thesis"*)
+    (*thesis refers to a fresh name, wrt. the current context*)
+  in
+     ...
+     ProofContext.export ctxt'' ctxt ...  (*instead of local_standard'*)
+     ...
+  end;
+
+etc.
+
+"Der Kontext" ist gewissermassen die universale Hilfstruktur zum systematischen formalen Schließen in Isar (auch in ML tools).
+
+* sources_elim_attrib: Simplifier.get_ss (und Classical.get_cs) liefern lediglich den rohen Inhalt, der jedoch nicht "aktiv" geschaltet ist.  Aus historischen Gründen sind simpset und claset zunächst getrennt vom universalen Proof.context, werden aber durch Tricks praktisch damit gleichgesetzt (siehe auch Simplifier.the_context).  In user code verlangt man am besten immer einen vollen Proof.context, und verwendet dann simpset_of bzw. claset_of für jene alten Tools, die das immer noch so wollen.
+
+* sources_tac: bei known_thm müsste facts' stets leer sein -- es sind nur die "prems" der in Goal.prove angegebene "assumes".
+
+* Noch sources_tac: die Sonderbehandlung von "unnamed", "fake", "ik0" oder auch "i_" sieht etwas merkwürdig aus.  Über den Kontext kann man sich jederzeit frische Namen erfinden lassen, abgeleitet aus gegebenen Teilstücken.  Siehe hierzu wieder src/Pure/variable.ML
+
+
+    Makarius
+

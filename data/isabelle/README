@@ -1,0 +1,167 @@
+======================================================================
+README for the scyther-proof security protocol verification tool
+======================================================================
+
+Author: Simon Meier <simon.meier@inf.ethz.ch>
+
+Creation Date: 13/05/2011
+Updated:       02/04/2012
+
+
+1. Introduction
+===============
+
+  Every distribution of the scyther-proof tool contains a copy of the
+  Isabelle/HOL theories formalizing its verification theory and a copy of the
+  protocol models that were verified using scyther-proof. In particular, these
+  examples include models for all of our repaired versions of the protocols
+  from the ISO/IEC-9798 authentication standard. (In the source distribution
+  of scyther-proof they can be found at 'data/examples/iso9798'.)
+
+  In the following sections,  we give step by step instructions to get the
+  whole system working and we explain the usage of our tools and provide
+  further information (e.g., building documentation).
+
+
+2. Installation instructions
+============================
+
+2.1 Installing scyther-proof
+----------------------------
+
+  You need a working Haskell environment that provides a version of GHC from
+  7.0.x to 7.4.x and the 'cabal install' tool. The simplest way to get such an
+  environment is to download and install the Haskell Platform package for your
+  OS. 
+  
+    http://hackage.haskell.org/platform/
+  
+  Then call
+
+    cabal install
+
+  in the root directory of this source code package. This will use the
+  Haskell's deployment tool 'cabal-install' to download all missing libraries
+  from Hackage, the central Haskell library repository and install the
+  'scyther-proof' executable in the default installation location of
+  cabal-install.  The installation location is printed at the end of the build
+  process.
+
+  Call 
+    
+    scyther-proof
+
+  without any arguments to get an overview of the arguments supported and the
+  paths to the examples and the Isabelle/HOL theories.
+
+
+3.2 Installing the Isabelle/HOL theories
+----------------------------------------
+
+    Download and install full Isabelle2009-1 according to the installation
+    instructions at
+
+        http://isabelle.in.tum.de/website-Isabelle2009-1/download_x86-linux.html
+
+    The first time you call 'scyther-proof' with the '--isabelle' flag it will
+    build the logic image of the Isabelle/HOL theories formalizing the security
+    protocol verification theory underlying scyther-proof.
+
+    For enabling interactive processing of theory files based using our
+    extensions to Isabelle's ISAR proof language use one of the following two
+    variants.
+
+      Variant a: Brute Force
+      ----------------------
+
+          Overwrite the standard Emacs keywords file
+      
+              $ISABELLE_HOME/etc/isar-keywords.el
+     
+          with the Emacs keywords file provided with the ESPL distribution.
+      
+              $SCYTHER_PROOF_HOME/isabelle/src/isar-keywords.el
+
+          This is needed in order to make the new ISAR keywords "role",
+          "protocol", "sources", and "prefix_close" available in the Emacs
+          frontend.
+
+
+      Variant b: Elegance
+      -------------------
+
+          A more elegant way is to copy the keywords file provided with our
+          distribution to
+
+              $ISABELLE_HOME/etc/isar-keywords-ESPL.el
+
+          and start Isabelle using the -k switch as follows.
+
+              isabelle emacs -k ESPL <your-theory-file.thy>
+
+    
+
+3. Usage
+========
+
+
+3.1 scyther-proof
+------------
+
+
+  Usage Example
+  -------------
+
+  You can now execute the 'scyther-proof' binary without any arguments to get a
+  list of the available flags. A simple example usage is (assuming
+  'scyther-proof' is in the PATH).
+
+    scyther-proof $EXAMPLE_DIR/classic/NS_Public.spthy --shortest
+
+  This will parse the NSL protocol modeled in the 'nsl.spthy' file and output
+  all specified security properties together with the proof with the fewest
+  number of chain rule applications to stdout.
+
+  In order to generate an Isabelle proof script two additional options need to
+  be added
+
+    scyther-proof $EXAMPLE_DIR/classic/NS_Public.spthy --shortest --output=nsl_cert.thy --ASCII
+
+  The first one specifies the output file and the second one instructs
+  scyther-proof to use Isabelle's ASCII notation as the output format.
+
+
+  To build the source code documentation you can use the call
+
+    cabal configure; cabal haddock
+
+  which will use cabal-install and Haskell's source code documentation tool
+  'haddock' to build the source code documentation. The location of this
+  documentation is again output on the command line.
+
+
+3.2 The Isabelle/HOL theories
+-----------------------------
+
+   In the directory output by scyther-proof, load the Tutorial on interactive
+   proof construction using the following commands
+
+        cd <theory-dir-output-by-scytherproof>/src
+	isabelle emacs Tutorial.thy
+
+    or if you've chosen the elegant variant
+
+	isabelle emacs -k ESPL Tutorial.thy
+
+   Note that in many case the easiest way to start with constructing
+   machine-checked proofs interactively is to use a proof script generated by
+   scyther-proof.
+
+
+***
+* Happy Proving :-)
+*
+* In case of questions do not hesistate to contact me at
+* simon.meier@inf.ethz.ch
+***
+
