@@ -218,7 +218,7 @@ where "isoiec_9798_3_6_1_B =
                            sMV ''pkA'', sMV ''Text5''
                         |>
                         ( PAsymPK ( sMV ''T'' ) ),
-                  PSign <| sC ''isoiec_9798_3_6_opt_1_sig_5'', sN ''Rb'', sMV ''Ra5'',
+                  PSign <| sC ''isoiec_9798_3_6_opt_1_sig_5'', sN ''Rb'', sMV ''Ra'',
                            sAV ''B'', sMV ''A'', sMV ''Text8''
                         |>
                         ( sMV ''pkA'' )
@@ -302,7 +302,7 @@ where "isoiec_9798_3_6_2_B =
                            sMV ''A'', sMV ''pkA'', sAV ''B'', sMV ''pkB'', sMV ''Text5''
                         |>
                         ( PAsymPK ( sMV ''T'' ) ),
-                  PSign <| sC ''isoiec_9798_3_6_opt_2_sig_5'', sN ''Rb'', sMV ''Ra5'',
+                  PSign <| sC ''isoiec_9798_3_6_opt_2_sig_5'', sN ''Rb'', sMV ''Ra'',
                            sAV ''B'', sMV ''A'', sMV ''Text8''
                         |>
                         ( sMV ''pkA'' )
@@ -522,8 +522,6 @@ where "isoiec_9798_3_composed_typing = mk_typing
   , ((isoiec_9798_3_6_2_B, ''Ra''), (KnownT isoiec_9798_3_6_2_B_1))
   , ((isoiec_9798_3_7_1_B, ''Ra''), (KnownT isoiec_9798_3_7_1_B_4))
   , ((isoiec_9798_3_7_2_B, ''Ra''), (KnownT isoiec_9798_3_7_2_B_4))
-  , ((isoiec_9798_3_6_1_B, ''Ra5''), (KnownT isoiec_9798_3_6_1_B_5))
-  , ((isoiec_9798_3_6_2_B, ''Ra5''), (KnownT isoiec_9798_3_6_2_B_5))
   , ((isoiec_9798_3_2_A, ''Rb''), (KnownT isoiec_9798_3_2_A_1))
   , ((isoiec_9798_3_6_1_A, ''Rb''), (KnownT isoiec_9798_3_6_1_A_2))
   , ((isoiec_9798_3_6_1_T, ''Rb''), (KnownT isoiec_9798_3_6_1_T_3))
@@ -1089,12 +1087,6 @@ proof -
     show ?case using facts
     by (fastsimp intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_3_6_1_B_5_Ra5 t r s tid0) note facts = this
-    then interpret state: isoiec_9798_3_composed_typing_state t r s
-      by unfold_locales auto
-    show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
-  next
     case (isoiec_9798_3_6_1_B_5_T t r s tid0) note facts = this
     then interpret state: isoiec_9798_3_composed_typing_state t r s
       by unfold_locales auto
@@ -1327,12 +1319,6 @@ proof -
     by (fastsimp intro: event_predOrdI split: if_splits)
   next
     case (isoiec_9798_3_6_2_B_text_2_Text3 t r s tid0) note facts = this
-    then interpret state: isoiec_9798_3_composed_typing_state t r s
-      by unfold_locales auto
-    show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
-  next
-    case (isoiec_9798_3_6_2_B_5_Ra5 t r s tid0) note facts = this
     then interpret state: isoiec_9798_3_composed_typing_state t r s
       by unfold_locales auto
     show ?case using facts
@@ -1862,33 +1848,53 @@ proof -
   qed (insert facts, fastsimp+)?
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_2_B_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_2_B"
-    "RLKR(s(AV ''A'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_2_B_2 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_2_A &
-        ( tid1, isoiec_9798_3_2_A_2 ) : steps t &
-        {| s(AV ''A'' tid1), s(MV ''B'' tid1), LN ''Ra'' tid1, s(MV ''Rb'' tid1),
-           s(MV ''Text2'' tid1)
-        |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Ra'' tid0),
-                LN ''Rb'' tid0, s(MV ''Text2'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_2_B_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_2_B &
+          RLKR(s(AV ''A'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_2_B_2 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_2_A &
+          ( tid1, isoiec_9798_3_2_A_2 ) : steps t &
+          {| s(AV ''A'' tid1), s(MV ''B'' tid1), LN ''Ra'' tid1, s(MV ''Rb'' tid1),
+             s(MV ''Text2'' tid1)
+          |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Ra'' tid0),
+                  LN ''Rb'' tid0, s(MV ''Text2'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_2_sig_2'', s(MV ''Ra'' tid0), LN ''Rb'' tid0,
-                          s(AV ''B'' tid0), s(MV ''Text2'' tid0)
-                       |}
-                       ( SK ( s(AV ''A'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_2_A_2_enc tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_2_sig_2'', s(MV ''Ra'' tid0), LN ''Rb'' tid0,
+                              s(AV ''B'' tid0), s(MV ''Text2'' tid0)
+                           |}
+                           ( SK ( s(AV ''A'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_2_A_2_enc tid1) note_unified facts = this facts
+        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
 lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_3_A_non_injective_agreement:
@@ -1949,183 +1955,387 @@ proof -
   qed (insert facts, fastsimp+)?
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_4_A_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_4_A"
-    "RLKR(s(AV ''A'' tid0)) ~: reveals t"
-    "RLKR(s(MV ''B'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_4_A_3 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_4_B &
-        ( tid1, isoiec_9798_3_4_B_3 ) : steps t &
-        {| s(AV ''A'' tid1), s(AV ''B'' tid1), s(MV ''RA'' tid1), LN ''RB'' tid1,
-           s(MV ''Text2'' tid1), s(MV ''Text4'' tid1)
-        |} = {| s(AV ''A'' tid0), s(MV ''B'' tid0), LN ''RA'' tid0,
-                s(MV ''RB'' tid0), s(MV ''Text2'' tid0), s(MV ''Text4'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_4_A_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_4_A &
+          RLKR(s(AV ''A'' tid0)) ~: reveals t &
+          RLKR(s(MV ''B'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_4_A_3 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_4_B &
+          ( tid1, isoiec_9798_3_4_B_3 ) : steps t &
+          {| s(AV ''A'' tid1), s(AV ''B'' tid1), s(MV ''RA'' tid1), LN ''RB'' tid1,
+             s(MV ''Text2'' tid1), s(MV ''Text4'' tid1)
+          |} = {| s(AV ''A'' tid0), s(MV ''B'' tid0), LN ''RA'' tid0,
+                  s(MV ''RB'' tid0), s(MV ''Text2'' tid0), s(MV ''Text4'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_4_sig_2'', s(MV ''RB'' tid0), LN ''RA'' tid0,
-                          s(AV ''A'' tid0), s(MV ''Text4'' tid0)
-                       |}
-                       ( SK ( s(MV ''B'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_4_B_3_enc tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_4_sig_1'', LN ''RA'' tid0, LN ''RB'' tid1,
-                            s(AV ''B'' tid1), s(MV ''Text2'' tid1)
-                         |}
-                         ( SK ( s(AV ''A'' tid0) ) ) ")
-      case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
-    next
-      case (isoiec_9798_3_4_A_2_enc tid2) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_4_sig_2'', s(MV ''RB'' tid0), LN ''RA'' tid0,
+                              s(AV ''A'' tid0), s(MV ''Text4'' tid0)
+                           |}
+                           ( SK ( s(MV ''B'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_4_B_3_enc tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_4_sig_1'', LN ''RA'' tid0, LN ''RB'' tid1,
+                                s(AV ''B'' tid1), s(MV ''Text2'' tid1)
+                             |}
+                             ( SK ( s(AV ''A'' tid0) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        next
+          case (isoiec_9798_3_4_A_2_enc tid2) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_4_B_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_4_B"
-    "RLKR(s(AV ''A'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_4_B_2 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_4_A &
-        ( tid1, isoiec_9798_3_4_A_2 ) : steps t &
-        {| s(AV ''A'' tid1), s(MV ''B'' tid1), LN ''RA'' tid1, s(MV ''RB'' tid1),
-           s(MV ''Text2'' tid1)
-        |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''RA'' tid0),
-                LN ''RB'' tid0, s(MV ''Text2'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_4_B_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_4_B &
+          RLKR(s(AV ''A'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_4_B_2 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_4_A &
+          ( tid1, isoiec_9798_3_4_A_2 ) : steps t &
+          {| s(AV ''A'' tid1), s(MV ''B'' tid1), LN ''RA'' tid1, s(MV ''RB'' tid1),
+             s(MV ''Text2'' tid1)
+          |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''RA'' tid0),
+                  LN ''RB'' tid0, s(MV ''Text2'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_4_sig_1'', s(MV ''RA'' tid0), LN ''RB'' tid0,
-                          s(AV ''B'' tid0), s(MV ''Text2'' tid0)
-                       |}
-                       ( SK ( s(AV ''A'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_4_A_2_enc tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_4_sig_1'', s(MV ''RA'' tid0), LN ''RB'' tid0,
+                              s(AV ''B'' tid0), s(MV ''Text2'' tid0)
+                           |}
+                           ( SK ( s(AV ''A'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_4_A_2_enc tid1) note_unified facts = this facts
+        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_5_A_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_5_A"
-    "RLKR(s(AV ''B'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_5_A_3 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_5_B &
-        ( tid1, isoiec_9798_3_5_B_3 ) : steps t &
-        {| s(MV ''A'' tid1), s(AV ''B'' tid1), s(MV ''RA'' tid1), LN ''RB'' tid1,
-           s(MV ''Text5'' tid1)
-        |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), LN ''RA'' tid0,
-                s(MV ''RB'' tid0), s(MV ''Text5'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_5_A_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_5_A &
+          RLKR(s(AV ''B'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_5_A_3 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_5_B &
+          ( tid1, isoiec_9798_3_5_B_3 ) : steps t &
+          {| s(MV ''A'' tid1), s(AV ''B'' tid1), s(MV ''RA'' tid1), LN ''RB'' tid1,
+             s(MV ''Text5'' tid1)
+          |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), LN ''RA'' tid0,
+                  s(MV ''RB'' tid0), s(MV ''Text5'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_5_sig_1'', s(MV ''RB'' tid0), LN ''RA'' tid0,
-                          s(AV ''A'' tid0), s(MV ''Text5'' tid0)
-                       |}
-                       ( SK ( s(AV ''B'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_5_B_3_enc tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_5_sig_1'', s(MV ''RB'' tid0), LN ''RA'' tid0,
+                              s(AV ''A'' tid0), s(MV ''Text5'' tid0)
+                           |}
+                           ( SK ( s(AV ''B'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_5_B_3_enc tid1) note_unified facts = this facts
+        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_5_B_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_5_B"
-    "RLKR(s(AV ''B'' tid0)) ~: reveals t"
-    "RLKR(s(MV ''A'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_5_B_4 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_5_A &
-        ( tid1, isoiec_9798_3_5_A_4 ) : steps t &
-        {| s(AV ''A'' tid1), s(AV ''B'' tid1), LN ''RA'' tid1, s(MV ''RB'' tid1),
-           s(MV ''Text3'' tid1), s(MV ''Text5'' tid1)
-        |} = {| s(MV ''A'' tid0), s(AV ''B'' tid0), s(MV ''RA'' tid0),
-                LN ''RB'' tid0, s(MV ''Text3'' tid0), s(MV ''Text5'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_5_B_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_5_B &
+          RLKR(s(AV ''B'' tid0)) ~: reveals t &
+          RLKR(s(MV ''A'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_5_B_4 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_5_A &
+          ( tid1, isoiec_9798_3_5_A_4 ) : steps t &
+          {| s(AV ''A'' tid1), s(AV ''B'' tid1), LN ''RA'' tid1, s(MV ''RB'' tid1),
+             s(MV ''Text3'' tid1), s(MV ''Text5'' tid1)
+          |} = {| s(MV ''A'' tid0), s(AV ''B'' tid0), s(MV ''RA'' tid0),
+                  LN ''RB'' tid0, s(MV ''Text3'' tid0), s(MV ''Text5'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_5_sig_2'', s(MV ''RA'' tid0), LN ''RB'' tid0,
-                          s(AV ''B'' tid0), s(MV ''Text3'' tid0)
-                       |}
-                       ( SK ( s(MV ''A'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_5_A_4_enc tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_5_sig_1'', LN ''RB'' tid0, LN ''RA'' tid1,
-                            s(AV ''A'' tid1), s(MV ''Text5'' tid1)
-                         |}
-                         ( SK ( s(AV ''B'' tid0) ) ) ")
-      case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
-    next
-      case (isoiec_9798_3_5_B_3_enc tid2) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_5_sig_2'', s(MV ''RA'' tid0), LN ''RB'' tid0,
+                              s(AV ''B'' tid0), s(MV ''Text3'' tid0)
+                           |}
+                           ( SK ( s(MV ''A'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_5_A_4_enc tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_5_sig_1'', LN ''RB'' tid0, LN ''RA'' tid1,
+                                s(AV ''A'' tid1), s(MV ''Text5'' tid1)
+                             |}
+                             ( SK ( s(AV ''B'' tid0) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        next
+          case (isoiec_9798_3_5_B_3_enc tid2) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_1_A_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_6_1_A"
-    "RLKR(s(AV ''B'' tid0)) ~: reveals t"
-    "RLKR(s(AV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_6_1_A_5 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_6_1_B &
-        ( tid1, isoiec_9798_3_6_1_B_2 ) : steps t &
-        {| s(MV ''A'' tid1), s(AV ''B'' tid1), s(MV ''Ra'' tid1), LN ''Rb'' tid1,
-           s(MV ''Text2'' tid1)
-        |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), LN ''Ra'' tid0,
-                s(MV ''Rb'' tid0), s(MV ''Text2'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_1_A_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_6_1_A &
+          RLKR(s(AV ''B'' tid0)) ~: reveals t &
+          RLKR(s(AV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_6_1_A_5 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_6_1_B &
+          ( tid1, isoiec_9798_3_6_1_B_2 ) : steps t &
+          {| s(MV ''A'' tid1), s(AV ''B'' tid1), s(MV ''Ra'' tid1), LN ''Rb'' tid1,
+             s(MV ''Text2'' tid1)
+          |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), LN ''Ra'' tid0,
+                  s(MV ''Rb'' tid0), s(MV ''Text2'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''check_4'',
-                          {| LC ''isoiec_9798_3_6_opt_1_sig_2'', s(AV ''B'' tid0), LN ''Ra'' tid0,
-                             s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
-                          |},
-                          Enc {| LC ''isoiec_9798_3_6_opt_1_sig_2'', s(AV ''B'' tid0),
-                                 LN ''Ra'' tid0, s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
-                              |}
-                              ( inv(s(MV ''pkB'' tid0)) )
-                       |}
-                       ( LN ''check_nonce_4'' tid0 ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis proof(sources! " LN ''check_nonce_4'' tid0 ")
-    qed (insert facts, fastsimp+)?
-  next
-    case (isoiec_9798_3_6_1_A_check_4_out_enc tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_6_opt_1_sig_2'', s(AV ''B'' tid0),
-                            LN ''Ra'' tid0, s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
-                         |}
-                         ( inv(s(MV ''pkB'' tid0)) ) ")
-      case fake note_unified facts = this facts
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''check_4'',
+                              {| LC ''isoiec_9798_3_6_opt_1_sig_2'', s(AV ''B'' tid0), LN ''Ra'' tid0,
+                                 s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
+                              |},
+                              Enc {| LC ''isoiec_9798_3_6_opt_1_sig_2'', s(AV ''B'' tid0),
+                                     LN ''Ra'' tid0, s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
+                                  |}
+                                  ( inv(s(MV ''pkB'' tid0)) )
+                           |}
+                           ( LN ''check_nonce_4'' tid0 ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis proof(sources! " LN ''check_nonce_4'' tid0 ")
+        qed (insert facts, fastsimp+)?
+      next
+        case (isoiec_9798_3_6_1_A_check_4_out_enc tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_6_opt_1_sig_2'', s(AV ''B'' tid0),
+                                LN ''Ra'' tid0, s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
+                             |}
+                             ( inv(s(MV ''pkB'' tid0)) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis proof(sources! "
+                           Enc {| LC ''isoiec_9798_3_6_opt_1_sig_4_1'', LN ''Rpa'' tid0,
+                                  s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text6'' tid0)
+                               |}
+                               ( SK ( s(AV ''T'' tid0) ) ) ")
+            case fake note_unified facts = this facts
+            thus ?thesis by (fastsimp dest!: ltk_secrecy)
+          next
+            case (isoiec_9798_3_6_1_T_4_enc tid1) note_unified facts = this facts
+            thus ?thesis by (fastsimp dest!: ltk_secrecy)
+          qed (insert facts, fastsimp+)?
+        next
+          case (isoiec_9798_3_6_1_B_2_enc tid1) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
+qed
+
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_1_B_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_6_1_B &
+          RLKR(s(MV ''A'' tid0)) ~: reveals t &
+          RLKR(s(MV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_6_1_B_5 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_6_1_A &
+          ( tid1, isoiec_9798_3_6_1_A_5 ) : steps t &
+          {| s(AV ''A'' tid1), s(AV ''B'' tid1), LN ''Ra'' tid1, s(MV ''Rb'' tid1),
+             s(MV ''Text8'' tid1)
+          |} = {| s(MV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Ra'' tid0),
+                  LN ''Rb'' tid0, s(MV ''Text8'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
+proof -
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_6_opt_1_sig_4_2'', LN ''Rb'' tid0,
+                              s(MV ''A'' tid0), s(MV ''pkA'' tid0), s(MV ''Text5'' tid0)
+                           |}
+                           ( SK ( s(MV ''T'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_6_1_T_4_enc_1 tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_6_opt_1_sig_5'', LN ''Rb'' tid0,
+                                s(MV ''Ra'' tid0), s(AV ''B'' tid0), s(MV ''A'' tid0),
+                                s(MV ''Text8'' tid0)
+                             |}
+                             ( SK ( s(MV ''A'' tid0) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        next
+          case (isoiec_9798_3_6_1_A_5_enc tid2) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
+qed
+
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_1_A_injective_agreement_T:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_6_1_A &
+          RLKR(s(AV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_6_1_A_5 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_6_1_T &
+          ( tid1, isoiec_9798_3_6_1_T_4 ) : steps t &
+          {| s(MV ''B'' tid1), s(AV ''T'' tid1), s(MV ''Rpa'' tid1),
+             PK ( s(MV ''B'' tid1) ), s(MV ''Text6'' tid1)
+          |} = {| s(AV ''B'' tid0), s(AV ''T'' tid0), LN ''Rpa'' tid0,
+                  s(MV ''pkB'' tid0), s(MV ''Text6'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
+proof -
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
       thus ?thesis proof(sources! "
                        Enc {| LC ''isoiec_9798_3_6_opt_1_sig_4_1'', LN ''Rpa'' tid0,
                               s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text6'' tid0)
@@ -2135,639 +2345,835 @@ proof -
         thus ?thesis by (fastsimp dest!: ltk_secrecy)
       next
         case (isoiec_9798_3_6_1_T_4_enc tid1) note_unified facts = this facts
-        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
       qed (insert facts, fastsimp+)?
-    next
-      case (isoiec_9798_3_6_1_B_2_enc tid1) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_1_B_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_6_1_B"
-    "RLKR(s(MV ''A'' tid0)) ~: reveals t"
-    "RLKR(s(MV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_6_1_B_5 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_6_1_A &
-        ( tid1, isoiec_9798_3_6_1_A_5 ) : steps t &
-        {| s(AV ''A'' tid1), s(AV ''B'' tid1), LN ''Ra'' tid1, s(MV ''Rb'' tid1),
-           s(MV ''Text8'' tid1)
-        |} = {| s(MV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Ra5'' tid0),
-                LN ''Rb'' tid0, s(MV ''Text8'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_1_B_injective_agreement_T:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_6_1_B &
+          RLKR(s(MV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_6_1_B_5 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_6_1_T &
+          ( tid1, isoiec_9798_3_6_1_T_4 ) : steps t &
+          {| s(MV ''A'' tid1), s(AV ''T'' tid1), s(MV ''Rb'' tid1),
+             PK ( s(MV ''A'' tid1) ), s(MV ''Text5'' tid1)
+          |} = {| s(MV ''A'' tid0), s(MV ''T'' tid0), LN ''Rb'' tid0,
+                  s(MV ''pkA'' tid0), s(MV ''Text5'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_6_opt_1_sig_4_2'', LN ''Rb'' tid0,
-                          s(MV ''A'' tid0), s(MV ''pkA'' tid0), s(MV ''Text5'' tid0)
-                       |}
-                       ( SK ( s(MV ''T'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_6_1_T_4_enc_1 tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_6_opt_1_sig_5'', LN ''Rb'' tid0,
-                            s(MV ''Ra5'' tid0), s(AV ''B'' tid0), s(MV ''A'' tid0),
-                            s(MV ''Text8'' tid0)
-                         |}
-                         ( SK ( s(MV ''A'' tid0) ) ) ")
-      case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
-    next
-      case (isoiec_9798_3_6_1_A_5_enc tid2) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_6_opt_1_sig_4_2'', LN ''Rb'' tid0,
+                              s(MV ''A'' tid0), s(MV ''pkA'' tid0), s(MV ''Text5'' tid0)
+                           |}
+                           ( SK ( s(MV ''T'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_6_1_T_4_enc_1 tid1) note_unified facts = this facts
+        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_1_A_non_injective_agreement_T:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_6_1_A"
-    "RLKR(s(AV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_6_1_A_5 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_6_1_T &
-        ( tid1, isoiec_9798_3_6_1_T_4 ) : steps t &
-        {| s(MV ''B'' tid1), s(AV ''T'' tid1), s(MV ''Rpa'' tid1),
-           PK ( s(MV ''B'' tid1) ), s(MV ''Text6'' tid1)
-        |} = {| s(AV ''B'' tid0), s(AV ''T'' tid0), LN ''Rpa'' tid0,
-                s(MV ''pkB'' tid0), s(MV ''Text6'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_2_A_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_6_2_A &
+          RLKR(s(AV ''B'' tid0)) ~: reveals t &
+          RLKR(s(AV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_6_2_A_5 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_6_2_B &
+          ( tid1, isoiec_9798_3_6_2_B_2 ) : steps t &
+          {| s(MV ''A'' tid1), s(AV ''B'' tid1), s(MV ''Ra'' tid1), LN ''Rb'' tid1,
+             s(MV ''Text2'' tid1)
+          |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), LN ''Ra'' tid0,
+                  s(MV ''Rb'' tid0), s(MV ''Text2'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_6_opt_1_sig_4_1'', LN ''Rpa'' tid0,
-                          s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text6'' tid0)
-                       |}
-                       ( SK ( s(AV ''T'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_6_1_T_4_enc tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
-qed
-
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_1_B_non_injective_agreement_T:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_6_1_B"
-    "RLKR(s(MV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_6_1_B_5 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_6_1_T &
-        ( tid1, isoiec_9798_3_6_1_T_4 ) : steps t &
-        {| s(MV ''A'' tid1), s(AV ''T'' tid1), s(MV ''Rb'' tid1),
-           PK ( s(MV ''A'' tid1) ), s(MV ''Text5'' tid1)
-        |} = {| s(MV ''A'' tid0), s(MV ''T'' tid0), LN ''Rb'' tid0,
-                s(MV ''pkA'' tid0), s(MV ''Text5'' tid0)
-             |})"
-proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_6_opt_1_sig_4_2'', LN ''Rb'' tid0,
-                          s(MV ''A'' tid0), s(MV ''pkA'' tid0), s(MV ''Text5'' tid0)
-                       |}
-                       ( SK ( s(MV ''T'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_6_1_T_4_enc_1 tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
-qed
-
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_2_A_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_6_2_A"
-    "RLKR(s(AV ''B'' tid0)) ~: reveals t"
-    "RLKR(s(AV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_6_2_A_5 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_6_2_B &
-        ( tid1, isoiec_9798_3_6_2_B_2 ) : steps t &
-        {| s(MV ''A'' tid1), s(AV ''B'' tid1), s(MV ''Ra'' tid1), LN ''Rb'' tid1,
-           s(MV ''Text2'' tid1)
-        |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), LN ''Ra'' tid0,
-                s(MV ''Rb'' tid0), s(MV ''Text2'' tid0)
-             |})"
-proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''check_4'',
-                          {| {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
-                                s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
-                                s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
-                             |},
-                             Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''check_4'',
+                              {| {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
                                     s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
                                     s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
-                                 |}
-                                 ( SK ( s(AV ''T'' tid0) ) )
-                          |},
-                          {| LC ''isoiec_9798_3_6_opt_2_sig_2'', s(AV ''B'' tid0), LN ''Ra'' tid0,
-                             s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
-                          |},
-                          Enc {| LC ''isoiec_9798_3_6_opt_2_sig_2'', s(AV ''B'' tid0),
-                                 LN ''Ra'' tid0, s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
-                              |}
-                              ( inv(s(MV ''pkB'' tid0)) )
-                       |}
-                       ( LN ''check_nonce_4'' tid0 ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis proof(sources! " LN ''check_nonce_4'' tid0 ")
-    qed (insert facts, fastsimp+)?
-  next
-    case (isoiec_9798_3_6_2_A_check_4_out_enc tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_6_opt_2_sig_2'', s(AV ''B'' tid0),
-                            LN ''Ra'' tid0, s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
-                         |}
-                         ( inv(s(MV ''pkB'' tid0)) ) ")
-      case fake note_unified facts = this facts
+                                 |},
+                                 Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
+                                        s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
+                                        s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
+                                     |}
+                                     ( SK ( s(AV ''T'' tid0) ) )
+                              |},
+                              {| LC ''isoiec_9798_3_6_opt_2_sig_2'', s(AV ''B'' tid0), LN ''Ra'' tid0,
+                                 s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
+                              |},
+                              Enc {| LC ''isoiec_9798_3_6_opt_2_sig_2'', s(AV ''B'' tid0),
+                                     LN ''Ra'' tid0, s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
+                                  |}
+                                  ( inv(s(MV ''pkB'' tid0)) )
+                           |}
+                           ( LN ''check_nonce_4'' tid0 ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis proof(sources! " LN ''check_nonce_4'' tid0 ")
+        qed (insert facts, fastsimp+)?
+      next
+        case (isoiec_9798_3_6_2_A_check_4_out_enc tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_6_opt_2_sig_2'', s(AV ''B'' tid0),
+                                LN ''Ra'' tid0, s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
+                             |}
+                             ( inv(s(MV ''pkB'' tid0)) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis proof(sources! "
+                           Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
+                                  s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
+                                  s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
+                               |}
+                               ( SK ( s(AV ''T'' tid0) ) ) ")
+            case fake note_unified facts = this facts
+            thus ?thesis by (fastsimp dest!: ltk_secrecy)
+          next
+            case (isoiec_9798_3_6_2_T_4_enc tid1) note_unified facts = this facts
+            thus ?thesis by (fastsimp dest!: ltk_secrecy)
+          qed (insert facts, fastsimp+)?
+        next
+          case (isoiec_9798_3_6_2_B_2_enc tid1) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
+qed
+
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_2_B_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_6_2_B &
+          RLKR(s(MV ''A'' tid0)) ~: reveals t &
+          RLKR(s(MV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_6_2_B_5 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_6_2_A &
+          ( tid1, isoiec_9798_3_6_2_A_5 ) : steps t &
+          {| s(AV ''A'' tid1), s(AV ''B'' tid1), LN ''Ra'' tid1, s(MV ''Rb'' tid1),
+             s(MV ''Text8'' tid1)
+          |} = {| s(MV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Ra'' tid0),
+                  LN ''Rb'' tid0, s(MV ''Text8'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
+proof -
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
-                              s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
-                              s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
+                       Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', s(MV ''Rpa'' tid0),
+                              LN ''Rb'' tid0, s(MV ''A'' tid0), s(MV ''pkA'' tid0), s(AV ''B'' tid0),
+                              s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
+                           |}
+                           ( SK ( s(MV ''T'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_6_2_T_4_enc tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_6_opt_2_sig_5'', LN ''Rb'' tid0,
+                                s(MV ''Ra'' tid0), s(AV ''B'' tid0), s(MV ''A'' tid0),
+                                s(MV ''Text8'' tid0)
+                             |}
+                             ( SK ( s(MV ''A'' tid0) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        next
+          case (isoiec_9798_3_6_2_A_5_enc tid2) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
+qed
+
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_2_A_injective_agreement_T:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_6_2_A &
+          RLKR(s(AV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_6_2_A_5 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_6_2_T &
+          ( tid1, isoiec_9798_3_6_2_T_4 ) : steps t &
+          {| s(MV ''A'' tid1), s(MV ''B'' tid1), s(AV ''T'' tid1),
+             s(MV ''Rpa'' tid1), s(MV ''Rb'' tid1), PK ( s(MV ''A'' tid1) ),
+             PK ( s(MV ''B'' tid1) ), s(MV ''Text5'' tid1)
+          |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(AV ''T'' tid0),
+                  LN ''Rpa'' tid0, s(MV ''Rb'' tid0), s(MV ''pkA'' tid0),
+                  s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
+proof -
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''check_4'',
+                              {| {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
+                                    s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
+                                    s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
+                                 |},
+                                 Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
+                                        s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
+                                        s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
+                                     |}
+                                     ( SK ( s(AV ''T'' tid0) ) )
+                              |},
+                              {| LC ''isoiec_9798_3_6_opt_2_sig_2'', s(AV ''B'' tid0), LN ''Ra'' tid0,
+                                 s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
+                              |},
+                              Enc {| LC ''isoiec_9798_3_6_opt_2_sig_2'', s(AV ''B'' tid0),
+                                     LN ''Ra'' tid0, s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
+                                  |}
+                                  ( inv(s(MV ''pkB'' tid0)) )
+                           |}
+                           ( LN ''check_nonce_4'' tid0 ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis proof(sources! " LN ''check_nonce_4'' tid0 ")
+        qed (insert facts, fastsimp+)?
+      next
+        case (isoiec_9798_3_6_2_A_check_4_out_enc tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
+                                s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
+                                s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
+                             |}
+                             ( SK ( s(AV ''T'' tid0) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        next
+          case (isoiec_9798_3_6_2_T_4_enc tid1) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
+qed
+
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_2_B_injective_agreement_T:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_6_2_B &
+          RLKR(s(MV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_6_2_B_5 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_6_2_T &
+          ( tid1, isoiec_9798_3_6_2_T_4 ) : steps t &
+          {| s(MV ''A'' tid1), s(MV ''B'' tid1), s(AV ''T'' tid1),
+             s(MV ''Rpa'' tid1), s(MV ''Rb'' tid1), PK ( s(MV ''A'' tid1) ),
+             PK ( s(MV ''B'' tid1) ), s(MV ''Text5'' tid1)
+          |} = {| s(MV ''A'' tid0), s(AV ''B'' tid0), s(MV ''T'' tid0),
+                  s(MV ''Rpa'' tid0), LN ''Rb'' tid0, s(MV ''pkA'' tid0),
+                  s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
+proof -
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', s(MV ''Rpa'' tid0),
+                              LN ''Rb'' tid0, s(MV ''A'' tid0), s(MV ''pkA'' tid0), s(AV ''B'' tid0),
+                              s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
+                           |}
+                           ( SK ( s(MV ''T'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_6_2_T_4_enc tid1) note_unified facts = this facts
+        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
+qed
+
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_1_A_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_7_1_A &
+          RLKR(s(AV ''T'' tid0)) ~: reveals t &
+          RLKR(s(MV ''B'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_7_1_A_5 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_7_1_B &
+          ( tid1, isoiec_9798_3_7_1_B_5 ) : steps t &
+          {| s(AV ''A'' tid1), s(AV ''B'' tid1), s(MV ''Ra'' tid1), LN ''Rb'' tid1,
+             s(MV ''Text8'' tid1)
+          |} = {| s(AV ''A'' tid0), s(MV ''B'' tid0), LN ''Ra'' tid0,
+                  s(MV ''Rb'' tid0), s(MV ''Text8'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
+proof -
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_7_opt_1_sig_3_1'', LN ''Rpa'' tid0,
+                              s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text4'' tid0)
                            |}
                            ( SK ( s(AV ''T'' tid0) ) ) ")
         case fake note_unified facts = this facts
         thus ?thesis by (fastsimp dest!: ltk_secrecy)
       next
-        case (isoiec_9798_3_6_2_T_4_enc tid1) note_unified facts = this facts
-        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        case (isoiec_9798_3_7_1_T_3_enc tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_7_opt_1_sig_5'', LN ''Ra'' tid0,
+                                s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''B'' tid0),
+                                s(MV ''Text8'' tid0)
+                             |}
+                             ( SK ( s(MV ''B'' tid0) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        next
+          case (isoiec_9798_3_7_1_B_5_enc tid2) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
       qed (insert facts, fastsimp+)?
-    next
-      case (isoiec_9798_3_6_2_B_2_enc tid1) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_2_B_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_6_2_B"
-    "RLKR(s(MV ''A'' tid0)) ~: reveals t"
-    "RLKR(s(MV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_6_2_B_5 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_6_2_A &
-        ( tid1, isoiec_9798_3_6_2_A_5 ) : steps t &
-        {| s(AV ''A'' tid1), s(AV ''B'' tid1), LN ''Ra'' tid1, s(MV ''Rb'' tid1),
-           s(MV ''Text8'' tid1)
-        |} = {| s(MV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Ra5'' tid0),
-                LN ''Rb'' tid0, s(MV ''Text8'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_1_B_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_7_1_B &
+          RLKR(s(AV ''A'' tid0)) ~: reveals t &
+          RLKR(s(MV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_7_1_B_4 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_7_1_A &
+          ( tid1, isoiec_9798_3_7_1_A_4 ) : steps t &
+          {| s(AV ''A'' tid1), s(MV ''B'' tid1), LN ''Ra'' tid1, s(MV ''Rb'' tid1),
+             s(MV ''Text6'' tid1)
+          |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Ra'' tid0),
+                  LN ''Rb'' tid0, s(MV ''Text6'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', s(MV ''Rpa'' tid0),
-                          LN ''Rb'' tid0, s(MV ''A'' tid0), s(MV ''pkA'' tid0), s(AV ''B'' tid0),
-                          s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
-                       |}
-                       ( SK ( s(MV ''T'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_6_2_T_4_enc tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_6_opt_2_sig_5'', LN ''Rb'' tid0,
-                            s(MV ''Ra5'' tid0), s(AV ''B'' tid0), s(MV ''A'' tid0),
-                            s(MV ''Text8'' tid0)
-                         |}
-                         ( SK ( s(MV ''A'' tid0) ) ) ")
-      case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
-    next
-      case (isoiec_9798_3_6_2_A_5_enc tid2) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
-qed
-
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_2_A_non_injective_agreement_T:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_6_2_A"
-    "RLKR(s(AV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_6_2_A_5 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_6_2_T &
-        ( tid1, isoiec_9798_3_6_2_T_4 ) : steps t &
-        {| s(MV ''A'' tid1), s(MV ''B'' tid1), s(AV ''T'' tid1),
-           s(MV ''Rpa'' tid1), s(MV ''Rb'' tid1), PK ( s(MV ''A'' tid1) ),
-           PK ( s(MV ''B'' tid1) ), s(MV ''Text5'' tid1)
-        |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(AV ''T'' tid0),
-                LN ''Rpa'' tid0, s(MV ''Rb'' tid0), s(MV ''pkA'' tid0),
-                s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
-             |})"
-proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''check_4'',
-                          {| {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
-                                s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
-                                s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
-                             |},
-                             Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
-                                    s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
-                                    s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
-                                 |}
-                                 ( SK ( s(AV ''T'' tid0) ) )
-                          |},
-                          {| LC ''isoiec_9798_3_6_opt_2_sig_2'', s(AV ''B'' tid0), LN ''Ra'' tid0,
-                             s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
-                          |},
-                          Enc {| LC ''isoiec_9798_3_6_opt_2_sig_2'', s(AV ''B'' tid0),
-                                 LN ''Ra'' tid0, s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''Text2'' tid0)
-                              |}
-                              ( inv(s(MV ''pkB'' tid0)) )
-                       |}
-                       ( LN ''check_nonce_4'' tid0 ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis proof(sources! " LN ''check_nonce_4'' tid0 ")
-    qed (insert facts, fastsimp+)?
-  next
-    case (isoiec_9798_3_6_2_A_check_4_out_enc tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', LN ''Rpa'' tid0,
-                            s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
-                            s(AV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
-                         |}
-                         ( SK ( s(AV ''T'' tid0) ) ) ")
-      case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
-    next
-      case (isoiec_9798_3_6_2_T_4_enc tid1) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
-qed
-
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_6_2_B_non_injective_agreement_T:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_6_2_B"
-    "RLKR(s(MV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_6_2_B_5 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_6_2_T &
-        ( tid1, isoiec_9798_3_6_2_T_4 ) : steps t &
-        {| s(MV ''A'' tid1), s(MV ''B'' tid1), s(AV ''T'' tid1),
-           s(MV ''Rpa'' tid1), s(MV ''Rb'' tid1), PK ( s(MV ''A'' tid1) ),
-           PK ( s(MV ''B'' tid1) ), s(MV ''Text5'' tid1)
-        |} = {| s(MV ''A'' tid0), s(AV ''B'' tid0), s(MV ''T'' tid0),
-                s(MV ''Rpa'' tid0), LN ''Rb'' tid0, s(MV ''pkA'' tid0),
-                s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
-             |})"
-proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_6_opt_2_sig_4'', s(MV ''Rpa'' tid0),
-                          LN ''Rb'' tid0, s(MV ''A'' tid0), s(MV ''pkA'' tid0), s(AV ''B'' tid0),
-                          s(MV ''pkB'' tid0), s(MV ''Text5'' tid0)
-                       |}
-                       ( SK ( s(MV ''T'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_6_2_T_4_enc tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
-qed
-
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_1_A_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_7_1_A"
-    "RLKR(s(AV ''T'' tid0)) ~: reveals t"
-    "RLKR(s(MV ''B'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_7_1_A_5 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_7_1_B &
-        ( tid1, isoiec_9798_3_7_1_B_5 ) : steps t &
-        {| s(AV ''A'' tid1), s(AV ''B'' tid1), s(MV ''Ra'' tid1), LN ''Rb'' tid1,
-           s(MV ''Text8'' tid1)
-        |} = {| s(AV ''A'' tid0), s(MV ''B'' tid0), LN ''Ra'' tid0,
-                s(MV ''Rb'' tid0), s(MV ''Text8'' tid0)
-             |})"
-proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_7_opt_1_sig_3_1'', LN ''Rpa'' tid0,
-                          s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text4'' tid0)
-                       |}
-                       ( SK ( s(AV ''T'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_7_1_T_3_enc tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_7_opt_1_sig_5'', LN ''Ra'' tid0,
-                            s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''B'' tid0),
-                            s(MV ''Text8'' tid0)
-                         |}
-                         ( SK ( s(MV ''B'' tid0) ) ) ")
-      case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
-    next
-      case (isoiec_9798_3_7_1_B_5_enc tid2) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
-qed
-
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_1_B_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_7_1_B"
-    "RLKR(s(AV ''A'' tid0)) ~: reveals t"
-    "RLKR(s(MV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_7_1_B_4 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_7_1_A &
-        ( tid1, isoiec_9798_3_7_1_A_4 ) : steps t &
-        {| s(AV ''A'' tid1), s(MV ''B'' tid1), LN ''Ra'' tid1, s(MV ''Rb'' tid1),
-           s(MV ''Text6'' tid1)
-        |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Ra'' tid0),
-                LN ''Rb'' tid0, s(MV ''Text6'' tid0)
-             |})"
-proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_7_opt_1_sig_3_2'', LN ''Rb'' tid0,
-                          s(AV ''A'' tid0), s(MV ''pkA'' tid0), s(MV ''Text3'' tid0)
-                       |}
-                       ( SK ( s(MV ''T'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_7_1_T_3_enc_1 tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_7_opt_1_sig_4'', LN ''Rb'' tid0,
-                            s(MV ''Ra'' tid0), s(AV ''B'' tid0), s(AV ''A'' tid0),
-                            s(MV ''Text6'' tid0)
-                         |}
-                         ( SK ( s(AV ''A'' tid0) ) ) ")
-      case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
-    next
-      case (isoiec_9798_3_7_1_A_4_enc tid2) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
-qed
-
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_1_A_non_injective_agreement_T:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_7_1_A"
-    "RLKR(s(AV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_7_1_A_3 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_7_1_T &
-        ( tid1, isoiec_9798_3_7_1_T_3 ) : steps t &
-        {| s(MV ''B'' tid1), s(AV ''T'' tid1), s(MV ''Rpa'' tid1),
-           PK ( s(MV ''B'' tid1) ), s(MV ''Text4'' tid1)
-        |} = {| s(MV ''B'' tid0), s(AV ''T'' tid0), LN ''Rpa'' tid0,
-                s(MV ''pkB'' tid0), s(MV ''Text4'' tid0)
-             |})"
-proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_7_opt_1_sig_3_1'', LN ''Rpa'' tid0,
-                          s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text4'' tid0)
-                       |}
-                       ( SK ( s(AV ''T'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_7_1_T_3_enc tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
-qed
-
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_1_B_non_injective_agreement_T:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_7_1_B"
-    "RLKR(s(MV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_7_1_B_4 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_7_1_T &
-        ( tid1, isoiec_9798_3_7_1_T_3 ) : steps t &
-        {| s(MV ''A'' tid1), s(AV ''T'' tid1), s(MV ''Rb'' tid1),
-           PK ( s(MV ''A'' tid1) ), s(MV ''Text3'' tid1)
-        |} = {| s(AV ''A'' tid0), s(MV ''T'' tid0), LN ''Rb'' tid0,
-                s(MV ''pkA'' tid0), s(MV ''Text3'' tid0)
-             |})"
-proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_7_opt_1_sig_3_2'', LN ''Rb'' tid0,
-                          s(AV ''A'' tid0), s(MV ''pkA'' tid0), s(MV ''Text3'' tid0)
-                       |}
-                       ( SK ( s(MV ''T'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_7_1_T_3_enc_1 tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
-qed
-
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_2_A_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_7_2_A"
-    "RLKR(s(AV ''T'' tid0)) ~: reveals t"
-    "RLKR(s(MV ''B'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_7_2_A_5 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_7_2_B &
-        ( tid1, isoiec_9798_3_7_2_B_5 ) : steps t &
-        {| s(AV ''A'' tid1), s(AV ''B'' tid1), s(MV ''Ra'' tid1), LN ''Rb'' tid1,
-           s(MV ''Text8'' tid1)
-        |} = {| s(AV ''A'' tid0), s(MV ''B'' tid0), LN ''Ra'' tid0,
-                s(MV ''Rb'' tid0), s(MV ''Text8'' tid0)
-             |})"
-proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''check_4'',
-                          {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
-                             s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
-                             s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
-                          |},
-                          Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
-                                 s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
-                                 s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
-                              |}
-                              ( SK ( s(AV ''T'' tid0) ) )
-                       |}
-                       ( LN ''check_nonce_4'' tid0 ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis proof(sources! " LN ''check_nonce_4'' tid0 ")
-    qed (insert facts, fastsimp+)?
-  next
-    case (isoiec_9798_3_7_2_A_check_3_out_enc tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
-                            s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
-                            s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
-                         |}
-                         ( SK ( s(AV ''T'' tid0) ) ) ")
-      case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
-    next
-      case (isoiec_9798_3_7_2_T_3_enc tid1) note_unified facts = this facts
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''isoiec_9798_3_7_opt_2_sig_5'', LN ''Ra'' tid0,
-                              s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''B'' tid0),
-                              s(MV ''Text8'' tid0)
+                       Enc {| LC ''isoiec_9798_3_7_opt_1_sig_3_2'', LN ''Rb'' tid0,
+                              s(AV ''A'' tid0), s(MV ''pkA'' tid0), s(MV ''Text3'' tid0)
                            |}
-                           ( SK ( s(MV ''B'' tid0) ) ) ")
+                           ( SK ( s(MV ''T'' tid0) ) ) ")
         case fake note_unified facts = this facts
         thus ?thesis by (fastsimp dest!: ltk_secrecy)
       next
-        case (isoiec_9798_3_7_2_B_5_enc tid2) note_unified facts = this facts
+        case (isoiec_9798_3_7_1_T_3_enc_1 tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_7_opt_1_sig_4'', LN ''Rb'' tid0,
+                                s(MV ''Ra'' tid0), s(AV ''B'' tid0), s(AV ''A'' tid0),
+                                s(MV ''Text6'' tid0)
+                             |}
+                             ( SK ( s(AV ''A'' tid0) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        next
+          case (isoiec_9798_3_7_1_A_4_enc tid2) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
+qed
+
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_1_A_injective_agreement_T:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_7_1_A &
+          RLKR(s(AV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_7_1_A_3 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_7_1_T &
+          ( tid1, isoiec_9798_3_7_1_T_3 ) : steps t &
+          {| s(MV ''B'' tid1), s(AV ''T'' tid1), s(MV ''Rpa'' tid1),
+             PK ( s(MV ''B'' tid1) ), s(MV ''Text4'' tid1)
+          |} = {| s(MV ''B'' tid0), s(AV ''T'' tid0), LN ''Rpa'' tid0,
+                  s(MV ''pkB'' tid0), s(MV ''Text4'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
+proof -
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_7_opt_1_sig_3_1'', LN ''Rpa'' tid0,
+                              s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text4'' tid0)
+                           |}
+                           ( SK ( s(AV ''T'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_7_1_T_3_enc tid1) note_unified facts = this facts
         thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
       qed (insert facts, fastsimp+)?
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_2_B_non_injective_agreement:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_7_2_B"
-    "RLKR(s(AV ''A'' tid0)) ~: reveals t"
-    "RLKR(s(MV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_7_2_B_4 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_7_2_A &
-        ( tid1, isoiec_9798_3_7_2_A_4 ) : steps t &
-        {| s(AV ''A'' tid1), s(MV ''B'' tid1), LN ''Ra'' tid1, s(MV ''Rb'' tid1),
-           s(MV ''Text6'' tid1)
-        |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Ra'' tid0),
-                LN ''Rb'' tid0, s(MV ''Text6'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_1_B_injective_agreement_T:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_7_1_B &
+          RLKR(s(MV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_7_1_B_4 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_7_1_T &
+          ( tid1, isoiec_9798_3_7_1_T_3 ) : steps t &
+          {| s(MV ''A'' tid1), s(AV ''T'' tid1), s(MV ''Rb'' tid1),
+             PK ( s(MV ''A'' tid1) ), s(MV ''Text3'' tid1)
+          |} = {| s(AV ''A'' tid0), s(MV ''T'' tid0), LN ''Rb'' tid0,
+                  s(MV ''pkA'' tid0), s(MV ''Text3'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', s(MV ''Rpa'' tid0),
-                          LN ''Rb'' tid0, s(AV ''A'' tid0), s(MV ''pkA'' tid0), s(AV ''B'' tid0),
-                          s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
-                       |}
-                       ( SK ( s(MV ''T'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_7_2_T_3_enc tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_7_opt_2_sig_4'', LN ''Rb'' tid0,
-                            s(MV ''Ra'' tid0), s(AV ''B'' tid0), s(AV ''A'' tid0),
-                            s(MV ''Text6'' tid0)
-                         |}
-                         ( SK ( s(AV ''A'' tid0) ) ) ")
-      case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
-    next
-      case (isoiec_9798_3_7_2_A_4_enc tid2) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_7_opt_1_sig_3_2'', LN ''Rb'' tid0,
+                              s(AV ''A'' tid0), s(MV ''pkA'' tid0), s(MV ''Text3'' tid0)
+                           |}
+                           ( SK ( s(MV ''T'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_7_1_T_3_enc_1 tid1) note_unified facts = this facts
+        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_2_A_non_injective_agreement_T:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_7_2_A"
-    "RLKR(s(AV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_7_2_A_4 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_7_2_T &
-        ( tid1, isoiec_9798_3_7_2_T_3 ) : steps t &
-        {| s(MV ''A'' tid1), s(MV ''B'' tid1), s(AV ''T'' tid1),
-           s(MV ''Rpa'' tid1), s(MV ''Rb'' tid1), PK ( s(MV ''A'' tid1) ),
-           PK ( s(MV ''B'' tid1) ), s(MV ''Text3'' tid1)
-        |} = {| s(AV ''A'' tid0), s(MV ''B'' tid0), s(AV ''T'' tid0),
-                LN ''Rpa'' tid0, s(MV ''Rb'' tid0), s(MV ''pkA'' tid0),
-                s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_2_A_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_7_2_A &
+          RLKR(s(AV ''T'' tid0)) ~: reveals t &
+          RLKR(s(MV ''B'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_7_2_A_5 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_7_2_B &
+          ( tid1, isoiec_9798_3_7_2_B_5 ) : steps t &
+          {| s(AV ''A'' tid1), s(AV ''B'' tid1), s(MV ''Ra'' tid1), LN ''Rb'' tid1,
+             s(MV ''Text8'' tid1)
+          |} = {| s(AV ''A'' tid0), s(MV ''B'' tid0), LN ''Ra'' tid0,
+                  s(MV ''Rb'' tid0), s(MV ''Text8'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''check_4'',
-                          {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
-                             s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
-                             s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
-                          |},
-                          Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''check_4'',
+                              {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
                                  s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
                                  s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
-                              |}
-                              ( SK ( s(AV ''T'' tid0) ) )
-                       |}
-                       ( LN ''check_nonce_4'' tid0 ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis proof(sources! " LN ''check_nonce_4'' tid0 ")
-    qed (insert facts, fastsimp+)?
-  next
-    case (isoiec_9798_3_7_2_A_check_3_out_enc tid1) note_unified facts = this facts
-    thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
-                            s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
-                            s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
-                         |}
-                         ( SK ( s(AV ''T'' tid0) ) ) ")
-      case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
-    next
-      case (isoiec_9798_3_7_2_T_3_enc tid1) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+                              |},
+                              Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
+                                     s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
+                                     s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
+                                  |}
+                                  ( SK ( s(AV ''T'' tid0) ) )
+                           |}
+                           ( LN ''check_nonce_4'' tid0 ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis proof(sources! " LN ''check_nonce_4'' tid0 ")
+        qed (insert facts, fastsimp+)?
+      next
+        case (isoiec_9798_3_7_2_A_check_3_out_enc tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
+                                s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
+                                s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
+                             |}
+                             ( SK ( s(AV ''T'' tid0) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        next
+          case (isoiec_9798_3_7_2_T_3_enc tid1) note_unified facts = this facts
+          thus ?thesis proof(sources! "
+                           Enc {| LC ''isoiec_9798_3_7_opt_2_sig_5'', LN ''Ra'' tid0,
+                                  s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''B'' tid0),
+                                  s(MV ''Text8'' tid0)
+                               |}
+                               ( SK ( s(MV ''B'' tid0) ) ) ")
+            case fake note_unified facts = this facts
+            thus ?thesis by (fastsimp dest!: ltk_secrecy)
+          next
+            case (isoiec_9798_3_7_2_B_5_enc tid2) note_unified facts = this facts
+            thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+          qed (insert facts, fastsimp+)?
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
-lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_2_B_non_injective_agreement_T:
-  assumes facts:
-    "roleMap r tid0 = Some isoiec_9798_3_7_2_B"
-    "RLKR(s(MV ''T'' tid0)) ~: reveals t"
-    "( tid0, isoiec_9798_3_7_2_B_4 ) : steps t"
-  shows
-    "(?  tid1.
-        roleMap r tid1 = Some isoiec_9798_3_7_2_T &
-        ( tid1, isoiec_9798_3_7_2_T_3 ) : steps t &
-        {| s(MV ''A'' tid1), s(MV ''B'' tid1), s(AV ''T'' tid1),
-           s(MV ''Rpa'' tid1), s(MV ''Rb'' tid1), PK ( s(MV ''A'' tid1) ),
-           PK ( s(MV ''B'' tid1) ), s(MV ''Text3'' tid1)
-        |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''T'' tid0),
-                s(MV ''Rpa'' tid0), LN ''Rb'' tid0, s(MV ''pkA'' tid0),
-                s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
-             |})"
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_2_B_injective_agreement:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_7_2_B &
+          RLKR(s(AV ''A'' tid0)) ~: reveals t &
+          RLKR(s(MV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_7_2_B_4 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_7_2_A &
+          ( tid1, isoiec_9798_3_7_2_A_4 ) : steps t &
+          {| s(AV ''A'' tid1), s(MV ''B'' tid1), LN ''Ra'' tid1, s(MV ''Rb'' tid1),
+             s(MV ''Text6'' tid1)
+          |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''Ra'' tid0),
+                  LN ''Rb'' tid0, s(MV ''Text6'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
 proof -
-  note_prefix_closed facts = facts
-  thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', s(MV ''Rpa'' tid0),
-                          LN ''Rb'' tid0, s(AV ''A'' tid0), s(MV ''pkA'' tid0), s(AV ''B'' tid0),
-                          s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
-                       |}
-                       ( SK ( s(MV ''T'' tid0) ) ) ")
-    case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  next
-    case (isoiec_9798_3_7_2_T_3_enc tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', s(MV ''Rpa'' tid0),
+                              LN ''Rb'' tid0, s(AV ''A'' tid0), s(MV ''pkA'' tid0), s(AV ''B'' tid0),
+                              s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
+                           |}
+                           ( SK ( s(MV ''T'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_7_2_T_3_enc tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_7_opt_2_sig_4'', LN ''Rb'' tid0,
+                                s(MV ''Ra'' tid0), s(AV ''B'' tid0), s(AV ''A'' tid0),
+                                s(MV ''Text6'' tid0)
+                             |}
+                             ( SK ( s(AV ''A'' tid0) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        next
+          case (isoiec_9798_3_7_2_A_4_enc tid2) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
+qed
+
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_2_A_injective_agreement_T:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_7_2_A &
+          RLKR(s(AV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_7_2_A_4 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_7_2_T &
+          ( tid1, isoiec_9798_3_7_2_T_3 ) : steps t &
+          {| s(MV ''A'' tid1), s(MV ''B'' tid1), s(AV ''T'' tid1),
+             s(MV ''Rpa'' tid1), s(MV ''Rb'' tid1), PK ( s(MV ''A'' tid1) ),
+             PK ( s(MV ''B'' tid1) ), s(MV ''Text3'' tid1)
+          |} = {| s(AV ''A'' tid0), s(MV ''B'' tid0), s(AV ''T'' tid0),
+                  LN ''Rpa'' tid0, s(MV ''Rb'' tid0), s(MV ''pkA'' tid0),
+                  s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
+proof -
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''check_4'',
+                              {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
+                                 s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
+                                 s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
+                              |},
+                              Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
+                                     s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
+                                     s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
+                                  |}
+                                  ( SK ( s(AV ''T'' tid0) ) )
+                           |}
+                           ( LN ''check_nonce_4'' tid0 ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis proof(sources! " LN ''check_nonce_4'' tid0 ")
+        qed (insert facts, fastsimp+)?
+      next
+        case (isoiec_9798_3_7_2_A_check_3_out_enc tid1) note_unified facts = this facts
+        thus ?thesis proof(sources! "
+                         Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', LN ''Rpa'' tid0,
+                                s(MV ''Rb'' tid0), s(AV ''A'' tid0), s(MV ''pkA'' tid0),
+                                s(MV ''B'' tid0), s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
+                             |}
+                             ( SK ( s(AV ''T'' tid0) ) ) ")
+          case fake note_unified facts = this facts
+          thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        next
+          case (isoiec_9798_3_7_2_T_3_enc tid1) note_unified facts = this facts
+          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+        qed (insert facts, fastsimp+)?
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
+qed
+
+lemma (in restricted_isoiec_9798_3_state) isoiec_9798_3_7_2_B_injective_agreement_T:
+  "let
+     prems =
+       (% tid0.
+          roleMap r tid0 = Some isoiec_9798_3_7_2_B &
+          RLKR(s(MV ''T'' tid0)) ~: reveals t &
+          ( tid0, isoiec_9798_3_7_2_B_4 ) : steps t);
+     concs =
+       (% tid0 tid1.
+          roleMap r tid1 = Some isoiec_9798_3_7_2_T &
+          ( tid1, isoiec_9798_3_7_2_T_3 ) : steps t &
+          {| s(MV ''A'' tid1), s(MV ''B'' tid1), s(AV ''T'' tid1),
+             s(MV ''Rpa'' tid1), s(MV ''Rb'' tid1), PK ( s(MV ''A'' tid1) ),
+             PK ( s(MV ''B'' tid1) ), s(MV ''Text3'' tid1)
+          |} = {| s(AV ''A'' tid0), s(AV ''B'' tid0), s(MV ''T'' tid0),
+                  s(MV ''Rpa'' tid0), LN ''Rb'' tid0, s(MV ''pkA'' tid0),
+                  s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
+               |})
+   in ? f. inj_on f prems & (! i. prems i --> concs i (f i))"
+  (is "let prems = ?prems; concs = ?concs in ?P prems concs")
+proof -
+  { fix tid0 tid1
+    assume facts: "?prems tid0"
+    have " ? tid1. ?concs tid0 tid1"
+    proof -
+      note_unified facts = facts
+      note_prefix_closed facts = facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''isoiec_9798_3_7_opt_2_sig_3'', s(MV ''Rpa'' tid0),
+                              LN ''Rb'' tid0, s(AV ''A'' tid0), s(MV ''pkA'' tid0), s(AV ''B'' tid0),
+                              s(MV ''pkB'' tid0), s(MV ''Text3'' tid0)
+                           |}
+                           ( SK ( s(MV ''T'' tid0) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      next
+        case (isoiec_9798_3_7_2_T_3_enc tid1) note_unified facts = this facts
+        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastsimp+)?
+    qed
+  }
+  note niagree = this
+  { fix i1 i2 j
+    assume "?concs i1 j & ?concs i2 j"
+    note_unified facts = this
+    have "i1 = i2" using facts by simp
+  }
+  note conc_inj = this
+  show ?thesis
+    by (fast intro!: iagree_to_niagree elim!: niagree conc_inj)
 qed
 
 end

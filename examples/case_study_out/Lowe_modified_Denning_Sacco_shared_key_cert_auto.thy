@@ -22,10 +22,8 @@ text{*
 *}
 
 protocol DenningSacco
-{
-  role A
-  {
-    Send_1(A, B)
+{ role A
+  { Send_1(A, B)
     Recv_2(?S, {'2', B, ?Kab, 'Time', ?Ticket}k(A,?S))
     Send_3(?S, ?Ticket)
     Recv_4( {'4', ?Nb}?Kab )
@@ -33,15 +31,13 @@ protocol DenningSacco
   }
   
   role B
-  {
-    Recv_3(?S, {'3', ?Kab, ?A, 'Time'}k(B,?S))
+  { Recv_3(?S, {'3', ?Kab, ?A, 'Time'}k(B,?S))
     Send_4( {'4', ~Nb}?Kab )
     Recv_5( {'5', 'dec', ~Nb}?Kab )
   }
   
   role S
-  {
-    Recv_1(?A, ?B)
+  { Recv_1(?A, ?B)
     Send_2(S, {'2', ?B, ~Kab, 'Time', {'3', ~Kab, ?A, 'Time'}k(?B,S)}k(?A,S))
   }
 }

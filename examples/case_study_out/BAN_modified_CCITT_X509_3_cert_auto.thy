@@ -18,17 +18,14 @@ text{*
 *}
 
 protocol X509
-{
-  role A
-  {
-    Send_1(A, sign{'1_1', 'Time', ~Na, B, ~Xa, {'1_2', ~Ya}pk(B)}pk(A))
+{ role A
+  { Send_1(A, sign{'1_1', 'Time', ~Na, B, ~Xa, {'1_2', ~Ya}pk(B)}pk(A))
     Recv_2(B, sign{'2_1', 'Time', ?Nb, A, ~Na, ?Xb, {'2_2', ?Yb}pk(A)}pk(B))
     Send_3(A, sign{'3', B, ?Nb}pk(A))
   }
   
   role B
-  {
-    Recv_1(?A, sign{'1_1', 'Time', ?Na, B, ?Xa, {'1_2', ?Ya}pk(B)}pk(?A))
+  { Recv_1(?A, sign{'1_1', 'Time', ?Na, B, ?Xa, {'1_2', ?Ya}pk(B)}pk(?A))
     Send_2(B, sign{'2_1', 'Time', ~Nb, ?A, ?Na, ~Xb, {'2_2', ~Yb}pk(?A)}pk(B)
           )
     Recv_3(?A, sign{'3', B, ~Nb}pk(?A))

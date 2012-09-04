@@ -36,18 +36,15 @@ Schaub in his master thesis [1], but scyther-proof does not (yet).
 *}
 
 protocol Kerberos
-{
-  role A
-  {
-    Recv_1(?C, ?G, ?L1, ?N1)
+{ role A
+  { Recv_1(?C, ?G, ?L1, ?N1)
     Send_2_leak(~T1start, ~T1expire)
     Send_2(A, ?C, {'2_1', ?C, ?G, ~AuthKey, ~T1start, ~T1expire}k(?G,A), 
            {'2_2', ?G, ~AuthKey, ~T1start, ~T1expire}k(?C,A))
   }
   
   role C
-  {
-    Send_1(C, G, ~L1, ~N1)
+  { Send_1(C, G, ~L1, ~N1)
     Recv_2(?A, C, ?TicketGrantingTicket, 
            {'2_2', G, ?AuthKey, ?T1start, ?T1expire}k(C,?A))
     Send_3_leak( ~T1 )
@@ -60,8 +57,7 @@ protocol Kerberos
   }
   
   role G
-  {
-    Recv_3(?A, ?S, ?L2, ?N2, 
+  { Recv_3(?A, ?S, ?L2, ?N2, 
            {'2_1', ?C, G, ?AuthKey, ?T1start, ?T1expire}k(G,?A), 
            {'3', ?C, ?T1}?AuthKey)
     Send_4_leak(~T2start, ~T2expire)
@@ -70,8 +66,7 @@ protocol Kerberos
   }
   
   role S
-  {
-    Recv_5(?G, {'4_1', ?C, S, ?ServerKey, ?T2start, ?T2expire}k(?G,S), 
+  { Recv_5(?G, {'4_1', ?C, S, ?ServerKey, ?T2start, ?T2expire}k(?G,S), 
            {'5', ?C, ?T2}?ServerKey)
     Send_6( {'6', ?T2}?ServerKey )
   }

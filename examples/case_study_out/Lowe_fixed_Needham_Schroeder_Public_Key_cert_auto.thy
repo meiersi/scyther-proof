@@ -19,10 +19,8 @@ text{*
 *}
 
 protocol NSLPK
-{
-  role I
-  {
-    Send_ca1(I, R)
+{ role I
+  { Send_ca1(I, R)
     Recv_ca2(?S, sign{'ca2', ?pkR, R}pk(?S))
     Send_1(I, {'1', ~ni, I}?pkR)
     Recv_2( {'2', ~ni, ?nr, R}pk(I) )
@@ -30,8 +28,7 @@ protocol NSLPK
   }
   
   role R
-  {
-    Recv_1(?I, {'1', ?ni, ?I}pk(R))
+  { Recv_1(?I, {'1', ?ni, ?I}pk(R))
     Send_ca1(R, ?I)
     Recv_ca2(?S, sign{'ca2', ?pkI, ?I}pk(?S))
     Send_2( {'2', ?ni, ~nr, R}?pkI )
@@ -39,8 +36,7 @@ protocol NSLPK
   }
   
   role S
-  {
-    Recv_ca1(?A, ?B)
+  { Recv_ca1(?A, ?B)
     Send_ca2(S, sign{'ca2', pk(?B), ?B}pk(S))
   }
 }

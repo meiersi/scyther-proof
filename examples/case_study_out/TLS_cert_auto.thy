@@ -19,10 +19,8 @@ text{*
 *}
 
 protocol TLS
-{
-  role C
-  {
-    Send_1(C, ~nc, ~sid, ~pc)
+{ role C
+  { Send_1(C, ~nc, ~sid, ~pc)
     Recv_2(?ns, ~sid, ?ps)
     Send_ca1( S )
     Recv_ca2(?CA, sign{'cert', S, ?pkS}pk(?CA))
@@ -36,14 +34,12 @@ protocol TLS
   }
   
   role CA
-  {
-    Recv_ca1( ?S )
+  { Recv_ca1( ?S )
     Send_ca2(CA, sign{'cert', ?S, pk(?S)}pk(CA))
   }
   
   role S
-  {
-    Recv_1(?C, ?nc, ?sid, ?pc)
+  { Recv_1(?C, ?nc, ?sid, ?pc)
     Send_2(~ns, ?sid, ~ps)
     Recv_3({'31', ?pms}pk(S), sign{'32', h('32', ~ns, S, ?pms)}pk(?C), 
            {'33', ?sid, h('PRF', ?pms, ?nc, ~ns), ?nc, ?pc, ?C, ~ns, ~ps, S}

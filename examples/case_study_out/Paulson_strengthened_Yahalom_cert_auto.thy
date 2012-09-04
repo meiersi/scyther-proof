@@ -21,24 +21,20 @@ text{*
 *}
 
 protocol Yahalom
-{
-  role A
-  {
-    Send_1(A, ~Na)
+{ role A
+  { Send_1(A, ~Na)
     Recv_3(?S, ?Nb, {'3_1', ?B, ?Kab, ~Na}k[A,?S], ?TicketB)
     Send_4(?TicketB, {'4', ?Nb}?Kab)
   }
   
   role B
-  {
-    Recv_1(?A, ?Na)
+  { Recv_1(?A, ?Na)
     Send_2(B, ~Nb, {'2', ?A, ?Na}k[B,S])
     Recv_4({'3_2', ?A, B, ?Kab, ~Nb}k[B,S], {'4', ~Nb}?Kab)
   }
   
   role S
-  {
-    Recv_2(?B, ?Nb, {'2', ?A, ?Na}k[?B,S])
+  { Recv_2(?B, ?Nb, {'2', ?A, ?Na}k[?B,S])
     Send_3(S, ?Nb, {'3_1', ?B, ~Kab, ?Na}k[?A,S], 
            {'3_2', ?A, ?B, ~Kab, ?Nb}k[?B,S])
   }

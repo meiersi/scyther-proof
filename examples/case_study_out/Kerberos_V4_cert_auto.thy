@@ -36,18 +36,15 @@ text{*
 *}
 
 protocol Kerberos
-{
-  role A
-  {
-    Recv_1(?C, ?G, ?Tc1)
+{ role A
+  { Recv_1(?C, ?G, ?Tc1)
     Send_2_leak( ~Ta )
     Send_2(A, 
            {'21', ~AuthKey, ?G, ~Ta, {'22', ?C, ?G, ~AuthKey, ~Ta}k(A,?G)}k(?C,A))
   }
   
   role C
-  {
-    Send_1_leak( ~Tc1 )
+  { Send_1_leak( ~Tc1 )
     Send_1(C, G, ~Tc1)
     Recv_2(?A, {'21', ?AuthKey, G, ?Ta, ?AuthTicket}k(C,?A))
     Send_3_leak( ~Tc2 )
@@ -59,9 +56,8 @@ protocol Kerberos
   }
   
   role G
-  {
-    Recv_3(?A, {'22', ?C, G, ?AuthKey, ?Ta}k(?A,G), {'3', ?C, ?Tc2}?AuthKey, 
-           ?S)
+  { Recv_3(?A, {'22', ?C, G, ?AuthKey, ?Ta}k(?A,G), 
+           {'3', ?C, ?Tc2}?AuthKey, ?S)
     Send_4_leak( ~Tg )
     Send_4( {'41', ~ServKey, ?S, ~Tg, {'42', ?C, ?S, ~ServKey, ~Tg}k(G,?S)}
             ?AuthKey
@@ -69,8 +65,8 @@ protocol Kerberos
   }
   
   role S
-  {
-    Recv_5(?G, {'42', ?C, S, ?ServKey, ?Tg}k(?G,S), {'5', ?C, ?Tc3}?ServKey)
+  { Recv_5(?G, {'42', ?C, S, ?ServKey, ?Tg}k(?G,S), {'5', ?C, ?Tc3}?ServKey
+          )
     Send_6( {'6', ?Tc3}?ServKey )
   }
 }

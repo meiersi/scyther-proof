@@ -26,10 +26,8 @@ text{*
 *}
 
 protocol AmendedNS
-{
-  role I
-  {
-    Send_1( I )
+{ role I
+  { Send_1( I )
     Recv_2( ?RequestR )
     Send_3(I, R, ~ni, ?RequestR)
     Recv_4(?S, {'2', ~ni, R, ?kIR, ?TicketR}k(I,?S))
@@ -39,8 +37,7 @@ protocol AmendedNS
   }
   
   role R
-  {
-    Recv_1( ?I )
+  { Recv_1( ?I )
     Send_2( {'1', ?I, ~nr}k(R,S) )
     Recv_5( {'3', ?kIR, ~nr, ?I}k(R,S) )
     Send_6( {'4', ~nr}?kIR )
@@ -48,8 +45,7 @@ protocol AmendedNS
   }
   
   role S
-  {
-    Recv_3(?I, ?R, ?ni, {'1', ?I, ?nr}k(?R,S))
+  { Recv_3(?I, ?R, ?ni, {'1', ?I, ?nr}k(?R,S))
     Send_4(S, {'2', ?ni, ?R, ~kIR, {'3', ~kIR, ?nr, ?I}k(?R,S)}k(?I,S))
   }
 }

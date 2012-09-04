@@ -18,17 +18,14 @@ text{*
 *}
 
 protocol WooLamPi
-{
-  role A
-  {
-    Send_1( A )
+{ role A
+  { Send_1( A )
     Recv_2( ?Nb )
     Send_3( {'3', ?Nb}k(A,S) )
   }
   
   role B
-  {
-    Recv_1( ?A )
+  { Recv_1( ?A )
     Send_2( ~Nb )
     Recv_3( ?Ticket )
     Send_4(B, {'4', ?A, ?Ticket}k(B,S))
@@ -36,8 +33,7 @@ protocol WooLamPi
   }
   
   role S
-  {
-    Recv_4(?B, {'4', ?A, {'3', ?Nb}k(?A,S)}k(?B,S))
+  { Recv_4(?B, {'4', ?A, {'3', ?Nb}k(?A,S)}k(?B,S))
     Send_5( {'5', ?A, ?Nb}k(?B,S) )
   }
 }

@@ -17,18 +17,15 @@ text{*
 *}
 
 protocol Andrew
-{
-  role A
-  {
-    Send_1(A, ~Na)
+{ role A
+  { Send_1(A, ~Na)
     Recv_2(?B, {'2', ~Na, ?Kab, ?B}k[A,?B])
     Send_3( {'3', ~Na}?Kab )
     Recv_4( ?Nb )
   }
   
   role B
-  {
-    Recv_1(?A, ?Na)
+  { Recv_1(?A, ?Na)
     Send_2(B, {'2', ?Na, ~Kab, B}k[?A,B])
     Recv_3( {'3', ?Na}~Kab )
     Send_4( ~Nb )
