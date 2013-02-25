@@ -2,7 +2,7 @@
 --
 -- Requirements:
 --
---   1. A working installation of Isabelle2009-1 (http://isabelle.in.tum.de/)
+--   1. A working installation of Isabelle2013 (http://isabelle.in.tum.de/)
 --   2. The \'isabelle\' command must be on the PATH.
 --
 module System.Isabelle (

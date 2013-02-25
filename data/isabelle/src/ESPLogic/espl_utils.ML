@@ -103,19 +103,19 @@ fun append_optional_number _   (n,NONE)   = n
    premises 
 *)
 val local_standard' =
-  forall_intr_frees
+  Thm.forall_intr_frees
   #> `Thm.maxidx_of
   #-> (fn maxidx =>
     Thm.forall_elim_vars (maxidx + 1)
     #> Thm.strip_shyps
     #> zero_var_indexes
-    #> Thm.varifyT);
+    #> Thm.varifyT_global);
 
 (* Generate the theorem proving the expansion of a term wrto to the given
    simpset and convert it into a rule.
 *)
 fun expand_term ss t = t
-  |> Thm.cterm_of (ProofContext.theory_of (MetaSimplifier.the_context ss))
+  |> Thm.cterm_of (Proof_Context.theory_of (Raw_Simplifier.the_context ss))
   |> Simplifier.rewrite ss
   |> (fn conv => conv RS @{thm meta_eq_to_obj_eq}) 
   |> local_standard'
@@ -125,7 +125,7 @@ fun prove_prop ctxt mk_tactic goal = Goal.prove ctxt [] [] goal mk_tactic;
 
 (* create a simpset consisting only of the given theorems in the given context *)
 fun thms_to_simpset ctxt ths = 
-  Simplifier.context ctxt (MetaSimplifier.empty_ss addsimps ths);
+  Simplifier.context ctxt (Raw_Simplifier.empty_ss addsimps ths);
 
 (* Expand a list of terms and note the resulting theorems. *)
 fun notes_expansion ss to_expand = 
@@ -151,7 +151,7 @@ fun note_proven mk_tactic (a, ts) =
    inst is a positional instantiation.
 *)
 fun add_simple_locale b loc_name inst thy =
-  Expression.add_locale b (Binding.empty)
+  Expression.add_locale I b (Binding.empty)
   ( [ ( Locale.intern thy loc_name
       , ( ("",false)
         , Expression.Positional inst

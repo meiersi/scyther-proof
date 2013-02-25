@@ -1,6 +1,6 @@
 theory "BKE_cert_auto"
 imports
-  "../ESPLogic"
+  "ESPLogic"
 begin
 
 (* section:  Bilateral Key Exchange with Public Key protocol (BKEPK)  *)
@@ -75,7 +75,7 @@ proof -
                s(AV ''R'' tid0), s(MV ''kir'' tid0)
             |}
             ( PK ( s(AV ''I'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (I_2_nr t r s tid0) note facts = this
     then interpret state: auto_msc_typing_state t r s
@@ -86,13 +86,13 @@ proof -
                s(AV ''R'' tid0), s(MV ''kir'' tid0)
             |}
             ( PK ( s(AV ''I'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (R_1_I t r s tid0) note facts = this
     then interpret state: auto_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (R_1_ni t r s tid0) note facts = this
     then interpret state: auto_msc_typing_state t r s
@@ -101,7 +101,7 @@ proof -
     proof(sources! "
         Enc {| LC ''TT1'', s(MV ''ni'' tid0), s(MV ''I'' tid0) |}
             ( PK ( s(AV ''R'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   qed
   thus "auto_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -167,8 +167,8 @@ lemma (in restricted_BKE_state) I_ni_secrecy:
   shows "False"
 using facts proof(sources! " LN ''ni'' tid0 ")
   case I_1_ni note_unified facts = this facts
-  thus ?thesis by (fastsimp dest!: ltk_secrecy)
-qed (insert facts, fastsimp+)?
+  thus ?thesis by (fastforce dest!: ltk_secrecy)
+qed (insert facts, fastforce+)?
 
 lemma (in restricted_BKE_state) R_nr_secrecy:
   assumes facts:
@@ -179,8 +179,8 @@ lemma (in restricted_BKE_state) R_nr_secrecy:
   shows "False"
 using facts proof(sources! " LN ''nr'' tid0 ")
   case R_2_nr note_unified facts = this facts
-  thus ?thesis by (fastsimp dest!: ltk_secrecy)
-qed (insert facts, fastsimp+)?
+  thus ?thesis by (fastforce dest!: ltk_secrecy)
+qed (insert facts, fastforce+)?
 
 lemma (in restricted_BKE_state) R_kir_secrecy:
   assumes facts:
@@ -191,8 +191,8 @@ lemma (in restricted_BKE_state) R_kir_secrecy:
   shows "False"
 using facts proof(sources! " LN ''kir'' tid0 ")
   case R_2_kir note_unified facts = this facts
-  thus ?thesis by (fastsimp dest!: ltk_secrecy)
-qed (insert facts, fastsimp+)?
+  thus ?thesis by (fastforce dest!: ltk_secrecy)
+qed (insert facts, fastforce+)?
 
 lemma (in restricted_BKE_state) I_hash_ni_secrecy:
   assumes facts:
@@ -203,7 +203,7 @@ lemma (in restricted_BKE_state) I_hash_ni_secrecy:
   shows "False"
 using facts proof(sources! " Hash ( LN ''ni'' tid0 ) ")
   case fake note_unified facts = this facts
-  thus ?thesis by (fastsimp dest: I_ni_secrecy intro: event_predOrdI)
+  thus ?thesis by (fastforce dest: I_ni_secrecy intro: event_predOrdI)
 next
   case (I_3_hash tid1) note_unified facts = this facts
   thus ?thesis proof(sources! "
@@ -212,20 +212,20 @@ next
                        |}
                        ( PK ( s(AV ''I'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: I_ni_secrecy intro: event_predOrdI)
-  qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce dest: I_ni_secrecy intro: event_predOrdI)
+  qed (insert facts, fastforce+)?
 next
   case (R_2_hash tid1) note_unified facts = this facts
   thus ?thesis proof(sources! "
                    Enc {| LC ''TT1'', LN ''ni'' tid0, s(MV ''I'' tid1) |}
                        ( PK ( s(AV ''R'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: I_ni_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: I_ni_secrecy intro: event_predOrdI)
   next
     case (I_1_enc tid2) note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
-  qed (insert facts, fastsimp+)?
-qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
+  qed (insert facts, fastforce+)?
+qed (insert facts, fastforce+)?
 
 lemma (in restricted_BKE_state) R_hash_nr_secrecy:
   assumes facts:
@@ -236,7 +236,7 @@ lemma (in restricted_BKE_state) R_hash_nr_secrecy:
   shows "False"
 using facts proof(sources! " Hash ( LN ''nr'' tid0 ) ")
   case fake note_unified facts = this facts
-  thus ?thesis by (fastsimp dest: R_nr_secrecy intro: event_predOrdI)
+  thus ?thesis by (fastforce dest: R_nr_secrecy intro: event_predOrdI)
 next
   case (I_3_hash tid1) note_unified facts = this facts
   thus ?thesis proof(sources! "
@@ -245,20 +245,20 @@ next
                        |}
                        ( PK ( s(AV ''I'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: R_nr_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: R_nr_secrecy intro: event_predOrdI)
   next
     case (R_2_enc tid2) note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: R_kir_secrecy intro: event_predOrdI)
-  qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce dest: R_kir_secrecy intro: event_predOrdI)
+  qed (insert facts, fastforce+)?
 next
   case (R_2_hash tid1) note_unified facts = this facts
   thus ?thesis proof(sources! "
                    Enc {| LC ''TT1'', LN ''nr'' tid0, s(MV ''I'' tid1) |}
                        ( PK ( s(AV ''R'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: R_nr_secrecy intro: event_predOrdI)
-  qed (insert facts, fastsimp+)?
-qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce dest: R_nr_secrecy intro: event_predOrdI)
+  qed (insert facts, fastforce+)?
+qed (insert facts, fastforce+)?
 
 lemma (in restricted_BKE_state) I_nr_secrecy:
   assumes facts:
@@ -276,11 +276,11 @@ proof -
                        |}
                        ( PK ( s(AV ''I'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: I_hash_ni_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: I_hash_ni_secrecy intro: event_predOrdI)
   next
     case (R_2_enc tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: R_nr_secrecy intro: event_predOrdI)
-  qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce dest: R_nr_secrecy intro: event_predOrdI)
+  qed (insert facts, fastforce+)?
 qed
 
 lemma (in restricted_BKE_state) I_kir_secrecy:
@@ -299,11 +299,11 @@ proof -
                        |}
                        ( PK ( s(AV ''I'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: I_hash_ni_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: I_hash_ni_secrecy intro: event_predOrdI)
   next
     case (R_2_enc tid1) note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: R_kir_secrecy intro: event_predOrdI)
-  qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce dest: R_kir_secrecy intro: event_predOrdI)
+  qed (insert facts, fastforce+)?
 qed
 
 lemma (in restricted_BKE_state) R_ni_secrecy:
@@ -319,7 +319,7 @@ proof -
   thus ?thesis proof(sources! "
                    Enc {| LC ''TT3'', Hash ( LN ''nr'' tid0 ) |} ( LN ''kir'' tid0 ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: R_kir_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: R_kir_secrecy intro: event_predOrdI)
   next
     case (I_3_enc tid1) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -328,12 +328,12 @@ proof -
                          |}
                          ( PK ( s(AV ''I'' tid1) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: R_nr_secrecy intro: event_predOrdI)
+      thus ?thesis by (fastforce dest: R_nr_secrecy intro: event_predOrdI)
     next
       case (R_2_enc tid2) note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: I_ni_secrecy intro: event_predOrdI)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+      thus ?thesis by (fastforce dest: I_ni_secrecy intro: event_predOrdI)
+    qed (insert facts, fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 (* subsection:  Authentication Properties  *)
@@ -364,19 +364,19 @@ proof -
                        |}
                        ( PK ( s(AV ''I'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: I_hash_ni_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: I_hash_ni_secrecy intro: event_predOrdI)
   next
     case (R_2_enc tid2) note_unified facts = this facts
     thus ?thesis proof(sources! "
                      Enc {| LC ''TT1'', LN ''ni'' tid1, s(AV ''I'' tid1) |}
                          ( PK ( s(AV ''R'' tid1) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: I_ni_secrecy intro: event_predOrdI)
+      thus ?thesis by (fastforce dest: I_ni_secrecy intro: event_predOrdI)
     next
       case (I_1_enc tid3) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+      thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
+    qed (insert facts, fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 lemma (in restricted_BKE_state) R_ni_synch:
@@ -404,13 +404,13 @@ proof -
                    Enc {| LC ''TT1'', s(MV ''ni'' tid1), s(MV ''I'' tid1) |}
                        ( PK ( s(AV ''R'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: R_ni_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: R_ni_secrecy intro: event_predOrdI)
   next
     case (I_1_enc tid2) note_unified facts = this facts
     thus ?thesis proof(sources! "
                      Enc {| LC ''TT3'', Hash ( LN ''nr'' tid1 ) |} ( LN ''kir'' tid1 ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: R_kir_secrecy intro: event_predOrdI)
+      thus ?thesis by (fastforce dest: R_kir_secrecy intro: event_predOrdI)
     next
       case (I_3_enc tid3) note_unified facts = this facts
       thus ?thesis proof(sources! "
@@ -419,13 +419,13 @@ proof -
                            |}
                            ( PK ( s(AV ''I'' tid3) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastsimp dest: R_nr_secrecy intro: event_predOrdI)
+        thus ?thesis by (fastforce dest: R_nr_secrecy intro: event_predOrdI)
       next
         case (R_2_enc tid4) note_unified facts = this facts
-        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-      qed (insert facts, fastsimp+)?
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+        thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastforce+)?
+    qed (insert facts, fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 end

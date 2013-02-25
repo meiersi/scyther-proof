@@ -35,17 +35,17 @@ text{*
   to their type.
 *}
 
-types msgtype = "tid \<Rightarrow> state \<Rightarrow> execmsg set"
+type_synonym msgtype = "tid \<Rightarrow> state \<Rightarrow> execmsg set"
 
-types typing = "(role \<times> id) \<Rightarrow> msgtype"
+type_synonym typing = "(role \<times> id) \<Rightarrow> msgtype"
 
 definition approx :: "typing \<Rightarrow> state set"
-where "approx typing q \<equiv> case q of (t,r,s) \<Rightarrow>
+where "approx typing \<equiv> {q. case q of (t,r,s) \<Rightarrow>
   \<forall> (i,step) \<in> steps t. 
     \<forall> R. roleMap r i = Some R \<longrightarrow>
       (\<forall> n. MVar n \<in> FV (stepPat step) \<longrightarrow>
          s (MVar n, i) \<in> typing (R, n) i (t,r,s)
-      )"
+      )}"
 
 locale typed_state = reachable_state+
   fixes typing :: "typing"
@@ -65,7 +65,7 @@ lemma approx_unfold:
       \<forall> R. roleMap r i = Some R \<longrightarrow>
         (\<forall> n. MVar n \<in> FV (stepPat step) \<longrightarrow>
            s (MVar n, i) \<in> typing (R, n) i (t,r,s)))"
-by (auto simp: approx_def mem_def)
+by (auto simp: approx_def)
 
 lemma in_approxI:
   assumes all_vars:
@@ -299,7 +299,7 @@ proof -
         then obtain l' msg' 
           where "(i, Recv l' msg') \<in> steps t" 
                 "MVar n \<in> FV msg'"
-          by (fastsimp dest!: th1.send_step_FV[OF th1.thread_exists])
+          by (fastforce dest!: th1.send_step_FV[OF th1.thread_exists])
         hence typed: "s (MV n i) \<in> typing (?role, n) i (t, r, s)"
           by (auto dest: IH[OF th1.thread_exists])
         have "done'@todo' = ?role"
@@ -388,9 +388,9 @@ proof -
               apply -
               apply(drule listOrd_append[THEN iffD1])
               apply(case_tac "listOrd done (Recv l'' pt'') (Note l' ty' pt')")
-                apply(fastsimp dest: in_set_listOrd1)
+                apply(fastforce dest: in_set_listOrd1)
               apply(case_tac "listOrd (Recv l pt # todo) (Recv l'' pt'') (Note l' ty' pt')")
-                apply(fastsimp dest: in_set_listOrd2 th1.done_notin_todoD)
+                apply(fastforce dest: in_set_listOrd2 th1.done_notin_todoD)
               apply(case_tac "Recv l'' pt'' \<in> set done \<and> Note l' ty' pt' \<in> set (Recv l pt # todo)")
               by(auto dest: th1.done_notin_todoD)
             hence "(i, Recv l'' pt'') \<in> steps t" by auto
@@ -424,7 +424,7 @@ proof -
               done
          qed
       }
-      ultimately show ?case by fastsimp
+      ultimately show ?case by fastforce
     next
       case (compr t r s i "done" l ty pt todo skipped m i' done' todo' step n skipped')
       then interpret th1: 
@@ -450,7 +450,7 @@ proof -
         then obtain l' msg' 
           where "(i, Recv l' msg') \<in> steps t" 
                 "MVar n \<in> FV msg'"
-          by (fastsimp dest!: th1.note_step_FV[OF th1.thread_exists])
+          by (fastforce dest!: th1.note_step_FV[OF th1.thread_exists])
         hence typed: "s (MV n i) \<in> typing (?role, n) i (t, r, s)"
           by (auto dest: IH[OF th1.thread_exists])
         have "done'@todo' = ?role"
@@ -974,7 +974,7 @@ proof -
     then interpret th1: typed_thread P t r s i "done" todo skipped "typing"
       using approximates by unfold_locales
     from inDone and notinSkipped have note_step: "(i, Note l ty pt) \<in> steps t" 
-      by (fastsimp dest!: th1.in_steps_eq_in_done)
+      by (fastforce dest!: th1.in_steps_eq_in_done)
     moreover
     have "prefixClose s t (done@todo) (Note l ty pt) i" using note_step
       by(auto intro!: prefixCloseI th1.roleMap)
@@ -994,7 +994,7 @@ proof -
     hence ?thesis by blast 
   }
   ultimately
-  show ?thesis by fastsimp
+  show ?thesis by fastforce
 qed
 
 
@@ -1025,9 +1025,9 @@ proof(induct m arbitrary: path "from")
     apply(erule disjE)
     apply(clarsimp)
     apply(rule disjI2)
-    apply(fastsimp intro: less_le_trans)
+    apply(fastforce intro: less_le_trans)
     done
-qed fastsimp+
+qed fastforce+
 
 lemma (in reachable_state) decrChain_KnownT:
   assumes decrChain: "decrChain path t from m m'"
@@ -1039,7 +1039,7 @@ proof -
     where "im \<in> pairParts m" and "\<forall>f \<in> from. f \<prec> Ln im"
     using decrChain by (fast dest!: decrChain_imp_predOrd)
   with KnownT show ?thesis
-    by (fastsimp intro: pairParts_before)
+    by (fastforce intro: pairParts_before)
 qed
 
 lemma (in reachable_state) decrChain_KnownTE:

@@ -62,7 +62,7 @@ syntax (xsymbols)
 
 translations
   "<|x, y, z|>"   == "<|x, <|y, z|> |>"
-  "<|x, y|>"      == "PTup x y"
+  "<|x, y|>"      == "CONST PTup x y"
 
 
 subsubsection{* Execution Messages *}

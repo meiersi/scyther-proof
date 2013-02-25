@@ -1,6 +1,6 @@
 theory "CR_paper_cert_auto"
 imports
-  "../ESPLogic"
+  "ESPLogic"
 begin
 
 (* section:  The Running Example of Our CSF'10 Paper  *)
@@ -37,7 +37,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! " Enc ( s(MV ''k'' tid0) ) ( PK ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   qed
   thus "CR_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -102,10 +102,8 @@ lemma (in restricted_CR_state) C_k_secrecy:
   shows "False"
 using facts proof(sources! " LN ''k'' tid0 ")
   case C_1_k note_unified facts = this facts
-  thus ?thesis by (fastsimp dest!: ltk_secrecy)
-qed (insert facts, fastsimp+)?
-
-(* subsection:  Authentication Properties  *)
+  thus ?thesis by (fastforce dest!: ltk_secrecy)
+qed (insert facts, fastforce+)?
 
 lemma (in restricted_CR_state) C_ni_synch:
   assumes facts:
@@ -124,18 +122,18 @@ proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! " Hash ( LN ''k'' tid1 ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: C_k_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: C_k_secrecy intro: event_predOrdI)
   next
     case (S_2_hash tid2) note_unified facts = this facts
     thus ?thesis proof(sources! "
                      Enc ( LN ''k'' tid1 ) ( PK ( s(AV ''S'' tid2) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: C_k_secrecy intro: event_predOrdI)
+      thus ?thesis by (fastforce dest: C_k_secrecy intro: event_predOrdI)
     next
       case (C_1_enc tid3) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+      thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
+    qed (insert facts, fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 end

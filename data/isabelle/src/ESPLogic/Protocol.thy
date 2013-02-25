@@ -21,7 +21,7 @@ subsection{* Types and Operations *}
 
 subsubsection{* Patterns *}
 
-types id = string
+type_synonym id = string
 
 datatype varid = AVar id | MVar id
 
@@ -108,7 +108,7 @@ text{*
   They are currently defaulted to strings, but could be anything.
 *}
 
-types lbl = string
+type_synonym lbl = string
 
 datatype notetype = RandGen | State | SessKey
 
@@ -161,7 +161,7 @@ proof(cases step)
 qed auto
 
 
-types "role" = "rolestep list"
+type_synonym "role" = "rolestep list"
 
 fun recv_before :: "id set \<Rightarrow> role \<Rightarrow> bool"
 where
@@ -181,7 +181,7 @@ locale wf_role =
   
 subsubsection{* Protocols *}
 
-types proto = "role set"
+type_synonym proto = "role set"
 
 locale wf_proto =
   fixes P :: proto
@@ -242,7 +242,7 @@ proof -
   moreover have "distinct R" and "recv_before {} R" by auto
   ultimately obtain lbl' pt' where "Recv lbl' pt' \<in> set ys" 
                                 and "v \<in> FMV pt'"
-             by (fastsimp dest!: recv_before_sent_distinct_Send_FV intro!: FV)
+             by (fastforce dest!: recv_before_sent_distinct_Send_FV intro!: FV)
   hence "?received lbl' pt'" using split by auto
   thus ?thesis by blast
 qed
@@ -262,7 +262,7 @@ proof -
   moreover have "distinct R" and "recv_before {} R" by auto
   ultimately obtain lbl' pt' where "Recv lbl' pt' \<in> set ys" 
                                 and "v \<in> FMV pt'"
-             by (fastsimp dest!: recv_before_note_distinct_Note_FV intro!: FV)
+             by (fastforce dest!: recv_before_note_distinct_Note_FV intro!: FV)
   hence "?received lbl' pt'" using split by auto
   thus ?thesis by blast
 qed
@@ -291,7 +291,7 @@ where
 
 lemma aVars_singleton[iff]:
   "AVar a \<notin> aVars []"
-by(fastsimp simp add: aVars_def)
+by(fastforce simp add: aVars_def)
 
 lemma aVars_Nil [iff]: "aVars [] = {}"
   by (auto simp: aVars_def)
@@ -301,7 +301,7 @@ lemma aVars_Cons [simp]: "aVars (s#xs) = (AVar ` FAV (stepPat s) \<union> aVars 
 
 lemma aVars_FAV_conv:
   "(AVar a \<in> aVars R) = (\<exists> s \<in> set R. \<exists> pt. (stepPat s = pt \<and> a \<in> FAV pt))"
-by (induct R rule: foldr.induct) ( fastsimp simp add: aVars_def)+
+by (induct R) ( fastforce simp add: aVars_def)+
 
 
 definition lastComStep :: "role \<rightharpoonup> rolestep"
@@ -334,7 +334,7 @@ lemma lastComStep_Cons [simp]:
         s
   )"
 proof (cases "[s\<leftarrow>xs . \<not> noteStep s]")
-qed (fastsimp simp add: lastComStep_def)+
+qed (fastforce simp add: lastComStep_def)+
 
 lemma firstComStep_Nil [iff]: "firstComStep [] = None"
   by (auto simp: firstComStep_def)
@@ -346,7 +346,7 @@ lemma firstComStep_Cons [simp]: "firstComStep (x#xs) =
       Some x
   )"
 proof (cases "[s\<leftarrow>xs . \<not> noteStep s]")
-qed (fastsimp simp add: firstComStep_def)+ 
+qed (fastforce simp add: firstComStep_def)+ 
 
 
 

@@ -34,9 +34,9 @@ datatype reveal =
   RCompr notetype tid
 | RLKR execmsg
 
-types explicit_trace = "rawevent list"
-types execstep = "tid \<times> rolestep"
-types threadpool = "tid \<rightharpoonup> (rolestep list \<times> rolestep list \<times> rolestep set)"
+type_synonym explicit_trace = "rawevent list"
+type_synonym execstep = "tid \<times> rolestep"
+type_synonym threadpool = "tid \<rightharpoonup> (rolestep list \<times> rolestep list \<times> rolestep set)"
 
 fun knows :: "explicit_trace \<Rightarrow> execmsg set"
 where
@@ -109,7 +109,7 @@ lemma longTermKeys_conv:
   by (auto simp: longTermKeys_def)
 
 
-types state = "explicit_trace \<times> threadpool \<times> store"
+type_synonym state = "explicit_trace \<times> threadpool \<times> store"
 
 inductive_set 
   reachable :: "proto \<Rightarrow> state set" 
@@ -208,7 +208,7 @@ text{* The thread state is built such that @{term "done @ todo"} is
 lemma role_in_P:  "done @ todo \<in> P"
 using thread_exists
 proof (induct arbitrary: i "done" todo skipped rule: reachable_induct)
-qed (fastsimp split: if_splits)+
+qed (fastforce split: if_splits)+
 
 end
 
@@ -297,7 +297,7 @@ qed auto
 
 lemma RCompr_steps_conv:
   "RCompr ty i \<in> reveals t = (\<exists> l pt. (i, Note l ty pt) \<in> steps t)"
-by (fastsimp intro: reveals_to_steps steps_to_reveals)
+by (fastforce intro: reveals_to_steps steps_to_reveals)
 
 context reachable_thread
 begin
@@ -330,7 +330,7 @@ lemma note_in_skipped:
 using thread_exists
 proof(induct arbitrary: i "done" todo skipped rule: reachable_induct)
   case init
-  thus "?case" by fastsimp
+  thus "?case" by fastforce
 qed( auto split: if_splits)
 
 
@@ -348,7 +348,7 @@ lemma in_steps_conv_done_skipped:
 using thread_exists
 using distinct
 proof(induct arbitrary: i "done" todo skipped rule: reachable_induct)
-  case init thus ?case by fastsimp
+  case init thus ?case by fastforce
 next 
   case (send t r s i "done" l pt todo skipped m i' done' todo' skipped')
   thus ?case
@@ -357,8 +357,8 @@ next
     then interpret thread: 
       reachable_thread P t r s i "done" "Send l pt # todo" skipped'
       using send by unfold_locales auto
-    thus ?thesis 
-      using send `i = i'` by fastsimp 
+    show ?thesis 
+      using send `i = i'` by fastforce 
   qed auto
 next
   case (recv t r s i "done" l pt todo skipped m i' done' todo' skipped')
@@ -368,8 +368,8 @@ next
     then interpret thread: 
       reachable_thread P t r s i "done" "Recv l pt # todo" skipped'
       using recv by unfold_locales auto
-    thus ?thesis 
-      using recv `i = i'` by fastsimp 
+    show ?thesis 
+      using recv `i = i'` by fastforce
   qed auto
 next
   case (compr t r s i "done" l ty pt todo skipped m i' done' todo' skipped')  
@@ -382,8 +382,8 @@ next
       interpret thread:
         reachable_thread P t r s i "done" "Note l ty pt # todo" skipped'
         using compr  `i = i'` by unfold_locales auto
-      thus ?thesis using compr  `i = i'` `step = Note l ty pt` by (fastsimp dest: thread.skipped_in_done )
-    qed fastsimp
+      show ?thesis using compr  `i = i'` `step = Note l ty pt` by (fastforce dest: thread.skipped_in_done )
+    qed fastforce
   qed auto
 next
   case(skip t r s i "done" l ty pt todo skipped i' done' todo' skipped')
@@ -396,8 +396,8 @@ next
       interpret thread:
         reachable_thread P t r s i "done" "Note l ty pt # todo" skipped
         using skip  `i = i'` by unfold_locales auto
-      thus ?thesis using skip  `i = i'` `step = Note l ty pt` by fastsimp
-    qed fastsimp
+      show ?thesis using skip  `i = i'` `step = Note l ty pt` by fastforce
+    qed fastforce
  qed auto
 qed auto
 
@@ -406,7 +406,7 @@ lemma in_steps_recv:
 using thread_exists
 proof(induct arbitrary: i "done" todo skipped rule rule: reachable_induct)
   case init
-    thus "?case" by fastsimp
+    thus "?case" by fastforce
 qed ((unfold map_upd_Some_unfold)?, auto)+
 
 lemma in_steps_send:
@@ -414,7 +414,7 @@ lemma in_steps_send:
 using thread_exists
 proof(induct arbitrary: i "done" todo skipped rule rule: reachable_induct)
   case init
-    thus "?case" by fastsimp
+    thus "?case" by fastforce
 qed ((unfold map_upd_Some_unfold)?, auto)+
 
 lemmas send_steps_in_done [elim!] = iffD1[OF in_steps_send, rule_format]
@@ -444,13 +444,13 @@ lemma todo_notin_skippedD:
   "step \<in> set todo \<Longrightarrow> step \<notin> skipped"
 using distinct
 using role_in_P
-by(fastsimp dest: skipped_in_done)
+by(fastforce dest: skipped_in_done)
 
 lemma skipped_notin_todoD:
   "step \<in> skipped \<Longrightarrow> step \<notin> set todo"
 using distinct
 using role_in_P
-by(fastsimp dest: skipped_in_done)
+by(fastforce dest: skipped_in_done)
 
 lemma notin_steps_notin_trace:
   "(i, step) \<notin> steps t \<Longrightarrow> (Step (i, step)) \<notin> set t"
@@ -463,13 +463,13 @@ lemma in_steps_in_done:
     "step \<in> set done"
 proof(cases step)
   case (Send l pt)
-    thus ?thesis using inSteps by (fastsimp dest: in_steps_send[THEN iffD2])
+    thus ?thesis using inSteps by (fastforce dest: in_steps_send[THEN iffD2])
 next
   case (Recv l pt)
-    thus ?thesis using inSteps by (fastsimp dest: in_steps_recv[THEN iffD2])
+    thus ?thesis using inSteps by (fastforce dest: in_steps_recv[THEN iffD2])
 next
   case (Note l ty pt)
-    thus ?thesis using inSteps by (fastsimp simp add: in_steps_conv_done_skipped)
+    thus ?thesis using inSteps by (fastforce simp add: in_steps_conv_done_skipped)
 qed
 
 
@@ -483,7 +483,7 @@ by(auto simp add: in_steps_conv_done_skipped)
 
 lemma[dest]:
   "\<lbrakk> step \<in> set todo; step \<in> set done \<rbrakk> \<Longrightarrow> False"
-by(fastsimp dest: todo_notin_doneD)
+by(fastforce dest: todo_notin_doneD)
 
 lemma[dest]:
   "\<lbrakk> step \<in> set todo; step \<in> skipped \<rbrakk> \<Longrightarrow> False"
@@ -509,7 +509,7 @@ using facts
 proof(induct arbitrary: i "done" todo skipped rule: reachable_induct)
   case (init r s i "done" todo) 
   thus ?case
-    by fastsimp
+    by fastforce
 next
   case (send t r s i "done" l msg todo skipped m i' done' todo' skipped')
   thus ?case using send 
@@ -518,9 +518,9 @@ next
       interpret this_thread:
           reachable_thread P t r s i' "done" "Send l msg # todo'" skipped'
           using send `i = i'` by unfold_locales auto
-       thus ?thesis using send `i = i'`
-          by fastsimp
-  qed fastsimp
+       show?thesis using send `i = i'`
+          by fastforce
+  qed fastforce
 next
   case (recv t r s i "done" l msg todo skipped m i' done' todo' skipped')
   from recv show ?case 
@@ -529,9 +529,9 @@ next
       interpret this_thread:
           reachable_thread P t r s i' "done" "Recv l msg # todo'" skipped'
           using recv `i = i'` by unfold_locales auto
-       thus ?thesis using recv `i = i'`
-          by fastsimp
-  qed fastsimp
+       show ?thesis using recv `i = i'`
+          by fastforce
+  qed fastforce
 next
   case (compr t r s i "done" l ty msg todo skipped m i' done' todo' skipped')
   from compr show ?case 
@@ -540,9 +540,9 @@ next
       interpret this_thread:
           reachable_thread P t r s i' "done" "Note l ty msg # todo'" skipped'
           using compr `i = i'` by unfold_locales auto
-       thus ?thesis using compr `i = i'`
-          by fastsimp
-  qed fastsimp
+       show ?thesis using compr `i = i'`
+          by fastforce
+  qed fastforce
 next
   case (skip t r s i "done" l ty msg todo skipped i' done' todo' skipped') 
   from skip show ?case 
@@ -551,9 +551,9 @@ next
     then interpret this_thread:
       reachable_thread P t r s i "done" "Note l ty msg # todo" skipped
       using skip `i = i'` by unfold_locales auto
-    thus ?thesis using skip `i = i'`
-      by fastsimp
-  qed fastsimp
+    show ?thesis using skip `i = i'`
+      by fastforce
+  qed fastforce
 qed auto
 
 lemma listOrd_recv_role_imp_listOrd_trace:
@@ -695,21 +695,21 @@ proof(induct arbitrary: i "done" todo skipped rule: reachable_induct)
     reachable_thread P t r s i "done" "Recv l msg # todo" skipped
     by unfold_locales auto
   show ?case using  `distinct' t` this_thread.distinct
-    by(fastsimp dest: this_thread.in_steps_in_done)
+    by(fastforce dest: this_thread.in_steps_in_done)
 next
   case (send t r s i "done" l msg todo skipped m)
   then interpret this_thread: 
     reachable_thread P t r s i "done" "Send l msg # todo" skipped
     by unfold_locales auto
   show ?case using `distinct' t` and this_thread.distinct
-    by(fastsimp dest: this_thread.in_steps_in_done)
+    by(fastforce dest: this_thread.in_steps_in_done)
 next
   case (compr t r s i "done" l ty msg todo skipped m)
   then interpret this_thread: 
      reachable_thread P t r s i "done" "Note l ty msg # todo" skipped
      by unfold_locales auto
   show ?case using `distinct' t` and this_thread.distinct
-     by(fastsimp dest: this_thread.in_steps_in_done)
+     by(fastforce dest: this_thread.in_steps_in_done)
 next
   case (skip t r s i "done" l ty msg todo skipped)
   then interpret this_thread: 
@@ -827,7 +827,7 @@ lemma event_predOrdE:
   "\<lbrakk>predOrd t (St a) (LKR d);   \<lbrakk> a \<in> steps t; RLKR d \<in> reveals t     \<rbrakk> \<Longrightarrow> R \<rbrakk> \<Longrightarrow> R"
   "\<lbrakk>predOrd t (Ln x) (LKR d);   \<lbrakk> x \<in> knows t; RLKR d \<in> reveals t     \<rbrakk> \<Longrightarrow> R \<rbrakk> \<Longrightarrow> R"
   "\<lbrakk>predOrd t (LKR c) (LKR d);  \<lbrakk> RLKR c \<in> reveals t; RLKR d \<in> reveals t \<rbrakk> \<Longrightarrow> R \<rbrakk> \<Longrightarrow> R"
-  by(fastsimp intro: event_predOrdI compr_predOrdI)+
+  by(fastforce intro: event_predOrdI compr_predOrdI)+
 
 
 lemma predOrd_LKR_agent1:
@@ -1047,7 +1047,7 @@ next
 next
   case decr thus ?case by(auto dest: pairParts_idemD)
 next
-  case tuple thus ?case by fastsimp
+  case tuple thus ?case by fastforce
 next
   case lkr thus ?case by(auto simp: longTermKeys_def)
 next
@@ -1070,37 +1070,37 @@ proof(induct rule: reachable_induct)
   then interpret s1: reachable_state P t r s
     by unfold_locales
   from hash show ?case
-    by (fastsimp dest: s1.rev_knows_pairParts_closedD)
+    by (fastforce dest: s1.rev_knows_pairParts_closedD)
 next
   case (encr t r s msg key)
   then interpret s1: reachable_state P t r s
     by unfold_locales
   from encr show ?case
-    by (fastsimp dest: s1.rev_knows_pairParts_closedD)
+    by (fastforce dest: s1.rev_knows_pairParts_closedD)
 next
   case (tuple t r s msg1 msg2)
   then interpret s1: reachable_state P t r s
     by unfold_locales
   from tuple show ?case
-    by (fastsimp dest: s1.rev_knows_pairParts_closedD)
+    by (fastforce dest: s1.rev_knows_pairParts_closedD)
 next
   case (decr t r s msg key)
   then interpret s1: reachable_state P t r s
     by unfold_locales
   from decr show ?case
-    by (fastsimp dest: s1.rev_knows_pairParts_closedD)
+    by (fastforce dest: s1.rev_knows_pairParts_closedD)
 next
   case (send t r s i "done" l msg todo msg)
   then interpret s1: reachable_state P t r s
     by unfold_locales
   from send show ?case
-    by (fastsimp dest: s1.rev_knows_pairParts_closedD)
+    by (fastforce dest: s1.rev_knows_pairParts_closedD)
 next
   case (recv t r s i "done" l msg todo)
   then interpret s1: reachable_state P t r s
     by unfold_locales
   from recv show ?case
-    by (fastsimp dest: s1.rev_knows_pairParts_closedD)
+    by (fastforce dest: s1.rev_knows_pairParts_closedD)
 next
   case (init r s) thus ?case by simp
 next
@@ -1108,25 +1108,25 @@ next
   then interpret s1: reachable_state P t r s
     by unfold_locales
   from lkr show ?case
-   by (fastsimp dest: s1.rev_knows_pairParts_closedD)
+   by (fastforce dest: s1.rev_knows_pairParts_closedD)
 next
   case (skip t r s i "done" l ty pt todo)
   then interpret s1: reachable_state P t r s 
     by unfold_locales
   from skip show ?case
-    by(fastsimp dest: s1.rev_knows_pairParts_closedD)
+    by(fastforce dest: s1.rev_knows_pairParts_closedD)
 next
   case (compr t r s i "done" l ty pt todo skipped m)
   then interpret s1: reachable_state P t r s
     by unfold_locales
   from compr show ?case
-    by(fastsimp dest: s1.rev_knows_pairParts_closedD)
+    by(fastforce dest: s1.rev_knows_pairParts_closedD)
 qed
 
 lemma Ln_before_inp:
   "(i, Recv l pt) \<in> steps t \<Longrightarrow> 
    \<exists> m. Some m = inst s i pt \<and> Ln m \<prec> St (i, Recv l pt)"
-  by (induct arbitrary: i l pt rule: reachable_induct) fastsimp+
+  by (induct arbitrary: i l pt rule: reachable_induct) fastforce+
 
 lemma Ln_before_inpE:
   "\<lbrakk> (i, Recv l pt) \<in> steps t;
@@ -1144,11 +1144,11 @@ lemmas Input = Ln_before_inp
 
 lemma split_before:
   "Ln (Tup m m') \<prec> y \<Longrightarrow> Ln m \<prec> y \<and> Ln m' \<prec> y"
-  by (fastsimp intro: pairParts_before)
+  by (fastforce intro: pairParts_before)
 
 lemma split_knows:
   "Tup m m' \<in> knows t \<Longrightarrow> m \<in> knows t \<and> m' \<in> knows t"
-  by (fastsimp intro: knows_pairParts_closedD)
+  by (fastforce intro: knows_pairParts_closedD)
 end
 
 subsection{* Case Distinction on Learning Messages *}
@@ -1207,7 +1207,7 @@ proof(induct msg arbitrary: path path' "from")
     hence "?case"
     proof(cases "m' = Enc m k")
       case True thus ?thesis
-	using `?here` Enc by fastsimp
+	using `?here` Enc by fastforce
     next
       case False thus ?thesis
 	using `?here` Enc
@@ -1217,7 +1217,7 @@ proof(induct msg arbitrary: path path' "from")
   moreover
   { assume "?nested"
     hence "?case" using Enc
-      by (fastsimp dest!: Enc(2))
+      by (fastforce dest!: Enc(2))
   }
   ultimately show ?case by fast
 qed auto
@@ -1257,17 +1257,17 @@ proof -
     (is "?ik0 \<or> ?hash \<or> ?enc \<or> ?tup \<or> ?chain t r s \<or> ?note t r s \<or> ?keys")
     moreover
     { assume "?ik0"  hence "?thesis" by blast }    moreover
-    { assume "?hash" hence "?thesis" by fastsimp } moreover
-    { assume "?enc"  hence "?thesis" by fastsimp } moreover
-    { assume "?tup"  hence "?thesis" by fastsimp } moreover
+    { assume "?hash" hence "?thesis" by fastforce } moreover
+    { assume "?enc"  hence "?thesis" by fastforce } moreover
+    { assume "?tup"  hence "?thesis" by fastforce } moreover
     { assume "?chain t r s"
       hence "?chain (t@t') r s" 
-	by (fastsimp intro!: decrChain_append)
+	by (fastforce intro!: decrChain_append)
       hence "?thesis" by blast
     } moreover
     { assume "?note t r s"
       hence "?note (t@t') r s" 
-	by (fastsimp intro!: decrChain_append)
+	by (fastforce intro!: decrChain_append)
       hence "?thesis" by blast
     } moreover
     { assume "?keys" hence "?thesis" by auto }
@@ -1284,14 +1284,14 @@ proof -
     let ?t' = "t @ [Learns {Hash m}]"
     note IH = hash(2)
     have "m' \<in> knows t \<or> m' = Hash m" (is "?old \<or> ?new")
-      using hash by fastsimp
+      using hash by fastforce
     moreover
     { assume "?new" hence ?case 
-	using `m \<in> knows t` by fastsimp 
+	using `m \<in> knows t` by fastforce 
     }
     moreover
     { assume "?old" 
-      hence ?case by (fastsimp intro!: IH cases_appendI_trace)
+      hence ?case by (fastforce intro!: IH cases_appendI_trace)
     }
     ultimately show ?case by fast
   next
@@ -1299,10 +1299,10 @@ proof -
     let ?t' = "t @ [Learns {Enc m k}]"
     note IH = encr(2)
     have "m' \<in> knows t \<or> m' = Enc m k" (is "?old \<or> ?new")
-      using encr by fastsimp
+      using encr by fastforce
     moreover
     { assume "?new" hence ?case 
-	using `m \<in> knows t` and `k \<in> knows t` by fastsimp 
+	using `m \<in> knows t` and `k \<in> knows t` by fastforce 
     }
     moreover
     { assume "?old" 
@@ -1314,10 +1314,10 @@ proof -
     let ?t' = "t @ [Learns {Tup x y}]"
     note IH = tuple(2)
     have "m' \<in> knows t \<or> m' = Tup x y" (is "?old \<or> ?new")
-      using tuple by fastsimp
+      using tuple by fastforce
     moreover
     { assume "?new" hence ?case 
-	using `x \<in> knows t` and `y \<in> knows t` by fastsimp 
+	using `x \<in> knows t` and `y \<in> knows t` by fastforce 
     }
     moreover
     { assume "?old" 
@@ -1331,30 +1331,28 @@ proof -
       by clarsimp
     moreover
     { assume "?ik0"   hence "?case" by blast    } moreover
-    { assume "?hash"  hence "?case" by fastsimp } moreover
-    { assume "?enc"   hence "?case" by fastsimp } moreover
-    { assume "?keys"  hence "?case" by fastsimp } moreover
-    { assume "?tup"   hence "?case" by fastsimp } moreover
+    { assume "?hash"  hence "?case" by fastforce } moreover
+    { assume "?enc"   hence "?case" by fastforce } moreover
+    { assume "?keys"  hence "?case" by fastforce } moreover
+    { assume "?tup"   hence "?case" by fastforce } moreover
     { let ?t' = "t@[Step (i, Recv l pt)]"
       and ?r' = "r(i \<mapsto> (done @ [Recv l pt], todo, skipped))"
       assume "?chain t r s" then
       obtain i' done' todo' l' pt' skipped' m
-	where thread': "r i' = Some (done', todo', skipped')"
-	and send: "Send l' pt' \<in> set done'"
+        where thread': "r i' = Some (done', todo', skipped')"
+        and send: "Send l' pt' \<in> set done'"
         and msg:  "Some m = inst s i' pt'"
-	and chain:"decrChain [] t {St (i', Send l' pt')} m m'"
-	by auto
+        and chain:"decrChain [] t {St (i', Send l' pt')} m m'"
+        by auto
       then interpret th1: reachable_thread P t r s i' done' todo' skipped'
-	using recv by unfold_locales auto
-      moreover
-      obtain done'' todo'' skipped''
-	where "Send l' pt' \<in> set done''"
-	and "?r' i' = Some (done'', todo'', skipped'')"
-	using `r i = Some (done, Recv l pt # todo, skipped)` thread' send
-	by (cases "i = i'") (fastsimp+)
-      ultimately
-      have "?chain ?t' ?r' s"
-	using chain msg
+        using recv by unfold_locales auto
+        obtain done'' todo'' skipped''
+        where "Send l' pt' \<in> set done''"
+        and "?r' i' = Some (done'', todo'', skipped'')"
+        using `r i = Some (done, Recv l pt # todo, skipped)` thread' send
+        by (cases "i = i'") (fastforce+)
+      hence "?chain ?t' ?r' s"
+        using chain msg
         by (fast intro!: decrChain_append)
       hence "?case" by auto
     } moreover
@@ -1362,27 +1360,25 @@ proof -
       and ?r' = "r(i \<mapsto> (done @ [Recv l pt], todo, skipped))"
       assume "?note t r s" then
       obtain i' done' todo' skipped' l' ty' pt' m
-	where thread': "r i' = Some (done', todo', skipped')"
-	and inDone: "Note l' ty' pt' \<in> set done'"
+        where thread': "r i' = Some (done', todo', skipped')"
+        and inDone: "Note l' ty' pt' \<in> set done'"
         and notSkipped: "Note l' ty' pt' \<notin> skipped'"
         and msg: "Some m = inst s i' pt'"
-	and chain: "decrChain [] t {St (i', Note l' ty' pt')} m m'"
+        and chain: "decrChain [] t {St (i', Note l' ty' pt')} m m'"
         by auto
       then interpret th1: reachable_thread P t r s i' done' todo' skipped'
-	using recv by unfold_locales auto
-      moreover
+        using recv by unfold_locales auto
       obtain done'' todo'' skipped''
-	where "Note l' ty' pt' \<in> set done''"
+        where "Note l' ty' pt' \<in> set done''"
         and "Note l' ty' pt' \<notin> skipped'' "
-	and "?r' i' = Some (done'', todo'', skipped'')"
-	using `r i = Some (done, Recv l pt # todo, skipped)` thread' inDone notSkipped
-	by (cases "i = i'") (fastsimp+)
-      ultimately
-      have "?note ?t' ?r' s" using msg chain notSkipped inDone
+        and "?r' i' = Some (done'', todo'', skipped'')"
+        using `r i = Some (done, Recv l pt # todo, skipped)` thread' inDone notSkipped
+        by (cases "i = i'") (fastforce+)
+      hence "?note ?t' ?r' s" using msg chain notSkipped inDone
         by (fast intro!: decrChain_append)
       hence "?case" by auto
     }
-    ultimately show ?case by fastsimp
+    ultimately show ?case by fastforce
   next
     case (send t r s i "done" l pt todo skipped m)
     then interpret th1: 
@@ -1392,23 +1388,23 @@ proof -
     let ?t' = "(t @ [Step (i, Send l pt)]) @ [Learns (pairParts m - knows t)]"
     have "m' \<in> knows t \<or> m' \<in> pairParts m \<and> m' \<notin> knows t \<and> Some m = inst s i pt" 
       (is "?old \<or> ?new")
-      using send by fastsimp
+      using send by fastforce
     moreover
     { assume "?new"
       hence "decrChain [] ?t' {St (i, Send l pt)} m m'"
-	by (fastsimp intro!: decrChain_unpair)
+	by (fastforce intro!: decrChain_unpair)
       moreover
       have "?r' i = Some (done @ [Send l pt], todo, skipped)"
 	using th1.thread_exists by auto
       ultimately
       have ?case using `Some m = inst s i pt`
-	apply-
+        apply-
         apply(rule disjI2)
         apply(rule disjI2)
         apply(rule disjI2)
         apply(rule disjI2)
         apply(rule disjI1)
-        apply(fastsimp)
+        apply(fastforce)
 	done
     }
     moreover
@@ -1418,10 +1414,10 @@ proof -
 	using send by clarsimp
       moreover
       { assume "?ik0"   hence "?case" by blast    } moreover
-      { assume "?hash"  hence "?case" by fastsimp } moreover
-      { assume "?enc"   hence "?case" by fastsimp } moreover
-      { assume "?keys"  hence "?case" by fastsimp } moreover
-      { assume "?tup"   hence "?case" by fastsimp } moreover
+      { assume "?hash"  hence "?case" by fastforce } moreover
+      { assume "?enc"   hence "?case" by fastforce } moreover
+      { assume "?keys"  hence "?case" by fastforce } moreover
+      { assume "?tup"   hence "?case" by fastforce } moreover
       { assume "?chain t r s" then
 	obtain i' done' todo' l' pt' skipped' m
 	  where thread': "r i' = Some (done', todo',skipped')"
@@ -1433,7 +1429,7 @@ proof -
 	  where "Send l' pt' \<in> set done''"
 	  and "(r(i \<mapsto> (done @ [Send l pt], todo, skipped))) i' = Some (done'', todo'',skipped'')"
 	  using `r i = Some (done, Send l pt # todo, skipped)` thread' send
-	  by (cases "i = i'") (fastsimp+)
+	  by (cases "i = i'") (fastforce+)
 	hence "?chain ?t' ?r' s"
 	  using chain msg
           by (fast intro!: decrChain_append)
@@ -1452,7 +1448,7 @@ proof -
           and "Note l' ty' pt' \<notin> skipped'' "
 	  and "?r' i' = Some (done'', todo'', skipped'')"
 	  using `r i = Some (done, Send l pt # todo, skipped)` thread' inDone notSkipped
-	  by (cases "i = i'") (fastsimp+)
+	  by (cases "i = i'") (fastforce+)
         hence "?note ?t' ?r' s" using chain notSkipped inDone msg
  	  by(fast intro!: decrChain_append)
         hence "?case" by auto
@@ -1468,7 +1464,7 @@ proof -
     note IH = decr(2)
     have "m' \<in> knows t \<or> m' \<in> pairParts m \<and> m' \<notin> knows t" 
       (is "?old \<or> ?new")
-      using decr by fastsimp
+      using decr by fastforce
     moreover
     { assume "?new"
       hence "m' \<in> pairParts m" and "m' \<notin> knows t" by auto
@@ -1499,9 +1495,9 @@ proof -
 	moreover
 	hence "decrChain [] ?t' {St (i', Send l' pt')} ms m'"
 	  using `?new` `Enc m k \<in> knows t` `inv k \<in> knows t`
-	  by (fastsimp intro!: decrChain_decrypt)
+	  by (fastforce intro!: decrChain_decrypt)
 	ultimately
-	have "?decchain ?t' m'" by fastsimp
+	have "?decchain ?t' m'" by fastforce
 	hence "?case" by blast
       }
       moreover
@@ -1516,9 +1512,9 @@ proof -
 	moreover
 	hence "decrChain [] ?t' {St (i', Note l' ty' pt')} ms m'"
 	  using `?new` `Enc m k \<in> knows t` `inv k \<in> knows t`
-	  by (fastsimp intro!: decrChain_decrypt)
+	  by (fastforce intro!: decrChain_decrypt)
 	ultimately
-	have "?notechain ?t' m'" by fastsimp
+	have "?notechain ?t' m'" by fastforce
 	hence "?case" by blast
       }
       ultimately have ?case by fast
@@ -1536,7 +1532,7 @@ proof -
     note IH = lkr(2)
     have "m' \<in> knows t \<or> m' \<in> longTermKeys a \<and> m' \<notin> knows t" 
       (is "?old \<or> ?new")
-    using lkr by fastsimp
+    using lkr by fastforce
     moreover 
     {
       assume "?old"
@@ -1552,16 +1548,16 @@ proof -
    case (skip t r s i "done" l ty pt todo skipped)
    then interpret this_thread:  reachable_thread P t r s i "done" "Note l ty pt # todo" skipped  by unfold_locales
    let ?r' = "r(i \<mapsto> (done @ [Note l ty pt], todo, insert (Note l ty pt) skipped))"
-   have "m' \<in> knows t" using skip by fastsimp
+   have "m' \<in> knows t" using skip by fastforce
    hence "?cases m' t r s" 
      (is "?ik0 \<or> ?hash \<or> ?enc \<or> ?tup \<or> ?chain t r s \<or> ?note t r s \<or> ?keys")
      using skip by clarsimp
    moreover
    { assume "?ik0"   hence "?case" by blast    } moreover
-   { assume "?hash"  hence "?case" by fastsimp } moreover
-   { assume "?enc"   hence "?case" by fastsimp } moreover
-   { assume "?keys"  hence "?case" by fastsimp } moreover
-   { assume "?tup"   hence "?case" by fastsimp } moreover
+   { assume "?hash"  hence "?case" by fastforce } moreover
+   { assume "?enc"   hence "?case" by fastforce } moreover
+   { assume "?keys"  hence "?case" by fastforce } moreover
+   { assume "?tup"   hence "?case" by fastforce } moreover
    { assume "?chain t r s" then
      obtain i' done' todo' l' pt' skipped' m
        where thread': "r i' = Some (done', todo',skipped')"
@@ -1573,7 +1569,7 @@ proof -
        where "Send l' pt' \<in> set done''"
        and "?r' i' = Some (done'', todo'',skipped'')"
        using skip(3) thread' send
-       by (cases "i = i'") (fastsimp+)
+       by (cases "i = i'") (fastforce+)
      hence "?chain t ?r'  s"
        using chain msg by fast
      hence "?case" by auto
@@ -1598,9 +1594,9 @@ proof -
        by fast
      hence "?case" by auto
    } moreover
-   { assume "?keys" hence "?case" by fastsimp }
+   { assume "?keys" hence "?case" by fastforce }
    ultimately  
-   show  "?case" by fastsimp
+   show  "?case" by fastforce
   next
    case(compr t r s i "done" l ty pt todo skipped m m')
    then interpret th1: 
@@ -1610,7 +1606,7 @@ proof -
     let ?t' = "(t @ [Step (i, Note l ty pt)]) @ [Learns (pairParts m - knows t)]"
     have "m' \<in> knows t \<or> m' \<in> pairParts m \<and> m' \<notin> knows t \<and> Some m = inst s i pt" 
       (is "?old \<or> ?new")
-      using compr by fastsimp
+      using compr by fastforce
     moreover
     { assume "?new"
   (*
@@ -1618,7 +1614,7 @@ proof -
       by auto
 *)
         hence "decrChain [] ?t' {St (i, Note l ty pt)} m m'" 
-          by (fastsimp intro!: decrChain_unpair)
+          by (fastforce intro!: decrChain_unpair)
       moreover
         have "?r' i = Some (done @ [Note l ty pt], todo, skipped)" 
           using th1.thread_exists by auto
@@ -1626,7 +1622,7 @@ proof -
         have "Note l ty pt \<in> set (Note l ty pt # todo)" 
           using th1.thread_exists by auto
         hence "Note l ty pt \<notin> skipped" 
-          by (fastsimp dest: th1.todo_notin_skippedD)
+          by (fastforce dest: th1.todo_notin_skippedD)
       ultimately
       have ?case using `Some m = inst s i pt`
 	apply-
@@ -1645,10 +1641,10 @@ proof -
 	using compr by clarsimp
       moreover
       { assume "?ik0"   hence "?case" by blast    } moreover
-      { assume "?hash"  hence "?case" by fastsimp } moreover
-      { assume "?enc"   hence "?case" by fastsimp } moreover
-      { assume "?keys"  hence "?case" by fastsimp } moreover
-      { assume "?tup"   hence "?case" by fastsimp } moreover
+      { assume "?hash"  hence "?case" by fastforce } moreover
+      { assume "?enc"   hence "?case" by fastforce } moreover
+      { assume "?keys"  hence "?case" by fastforce } moreover
+      { assume "?tup"   hence "?case" by fastforce } moreover
       { assume "?chain t r s" then
 	obtain i' done' todo' l' pt' skipped' m
 	  where thread': "r i' = Some (done', todo',skipped')"
@@ -1660,7 +1656,7 @@ proof -
 	  where "Send l' pt' \<in> set done''"
 	  and "(r(i \<mapsto> (done @ [Note l ty pt], todo, skipped))) i' = Some (done'', todo'',skipped'')"
 	  using compr(3) thread' send
-	  by (cases "i = i'") (fastsimp+)
+	  by (cases "i = i'") (fastforce+)
 	hence "?chain ?t' ?r' s" using chain msg
           by(fast intro!: decrChain_append)
 	hence "?case"  by auto
@@ -1678,7 +1674,7 @@ proof -
           and "Note l' ty' pt' \<notin> skipped'' "
 	  and "?r' i' = Some (done'', todo'', skipped'')"
 	  using `r i = Some (done, Note l ty pt # todo, skipped)` thread' inDone notSkipped
-	  by (cases "i = i'") (fastsimp+)
+	  by (cases "i = i'") (fastforce+)
         hence "?note ?t' ?r' s"
           using chain notSkipped inDone msg
           by(fast intro!: decrChain_append)

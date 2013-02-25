@@ -1,6 +1,6 @@
 theory "Paulson_strengthened_Yahalom_cert_auto"
 imports
-  "../ESPLogic"
+  "ESPLogic"
 begin
 
 (* section:  Yahalom strengthened by Paulson  *)
@@ -109,7 +109,7 @@ proof -
         Enc {| LC ''3_1'', s(MV ''B'' tid0), s(MV ''Kab'' tid0), LN ''Na'' tid0
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(MV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (A_3_Kab t r s tid0) note facts = this
     then interpret state: Yahalom_msc_typing_state t r s
@@ -119,37 +119,37 @@ proof -
         Enc {| LC ''3_1'', s(MV ''B'' tid0), s(MV ''Kab'' tid0), LN ''Na'' tid0
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(MV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (A_3_Nb t r s tid0) note facts = this
     then interpret state: Yahalom_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (A_3_S t r s tid0) note facts = this
     then interpret state: Yahalom_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (A_3_TicketB t r s tid0) note facts = this
     then interpret state: Yahalom_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (B_1_A t r s tid0) note facts = this
     then interpret state: Yahalom_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (B_1_Na t r s tid0) note facts = this
     then interpret state: Yahalom_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (B_4_Kab t r s tid0) note facts = this
     then interpret state: Yahalom_msc_typing_state t r s
@@ -160,7 +160,7 @@ proof -
                s(MV ''Kab'' tid0), LN ''Nb'' tid0
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (S_2_A t r s tid0) note facts = this
     then interpret state: Yahalom_msc_typing_state t r s
@@ -169,13 +169,13 @@ proof -
     proof(sources! "
         Enc {| LC ''2'', s(MV ''A'' tid0), s(MV ''Na'' tid0) |}
             ( Kbd ( s(AV ''S'' tid0) ) ( s(MV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (S_2_B t r s tid0) note facts = this
     then interpret state: Yahalom_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (S_2_Na t r s tid0) note facts = this
     then interpret state: Yahalom_msc_typing_state t r s
@@ -184,13 +184,13 @@ proof -
     proof(sources! "
         Enc {| LC ''2'', s(MV ''A'' tid0), s(MV ''Na'' tid0) |}
             ( Kbd ( s(AV ''S'' tid0) ) ( s(MV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (S_2_Nb t r s tid0) note facts = this
     then interpret state: Yahalom_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   qed
   thus "Yahalom_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -259,11 +259,11 @@ lemma (in restricted_Yahalom_state) S_Kab_secret:
   shows "False"
 using facts proof(sources! " LN ''Kab'' tid0 ")
   case S_3_Kab note_unified facts = this facts
-  thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  thus ?thesis by (fastforce dest!: ltk_secrecy)
 next
   case S_3_Kab_1 note_unified facts = this facts
-  thus ?thesis by (fastsimp dest!: ltk_secrecy)
-qed (insert facts, fastsimp+)?
+  thus ?thesis by (fastforce dest!: ltk_secrecy)
+qed (insert facts, fastforce+)?
 
 lemma (in restricted_Yahalom_state) A_Kab_secret:
   assumes facts:
@@ -281,7 +281,7 @@ proof -
                        |}
                        ( Kbd ( s(AV ''A'' tid0) ) ( s(MV ''S'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
   next
     case (S_3_enc tid1) note_unified facts = this facts
     hence "Kbd ( s(AV ''S'' tid1) )
@@ -289,12 +289,12 @@ proof -
       by simp note facts = this facts
     thus ?thesis proof(cases rule: Kbd_cases)
       case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: S_Kab_secret intro: event_predOrdI)
+      thus ?thesis by (fastforce dest: S_Kab_secret intro: event_predOrdI)
     next
       case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: S_Kab_secret intro: event_predOrdI)
-    qed (fastsimp+)?
-  qed (insert facts, fastsimp+)?
+      thus ?thesis by (fastforce dest: S_Kab_secret intro: event_predOrdI)
+    qed (fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 lemma (in restricted_Yahalom_state) B_Kab_secret:
@@ -314,20 +314,11 @@ proof -
                        |}
                        ( Kbd ( s(AV ''B'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
   next
     case (S_3_enc_1 tid1) note_unified facts = this facts
-    hence "Kbd ( s(AV ''B'' tid0) )
-               ( s(AV ''S'' tid1) ) = Kbd ( s(AV ''B'' tid0) ) ( s(AV ''S'' tid0) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: S_Kab_secret intro: event_predOrdI)
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: S_Kab_secret intro: event_predOrdI)
-    qed (fastsimp+)?
-  qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce dest: S_Kab_secret intro: event_predOrdI)
+  qed (insert facts, fastforce+)?
 qed
 
 (* subsection:  Authentication Properties  *)
@@ -349,48 +340,31 @@ lemma (in restricted_Yahalom_state) B_auth:
 proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! "
-                   Enc {| LC ''4'', LN ''Nb'' tid2 |} ( s(MV ''Kab'' tid2) ) ")
+                   Enc {| LC ''3_2'', s(MV ''A'' tid2), s(AV ''B'' tid2),
+                          s(MV ''Kab'' tid2), LN ''Nb'' tid2
+                       |}
+                       ( Kbd ( s(AV ''B'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: B_Kab_secret intro: event_predOrdI)
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
   next
-    case (A_4_enc tid3) note_unified facts = this facts
+    case (S_3_enc_1 tid3) note_unified facts = this facts
     thus ?thesis proof(sources! "
-                     Enc {| LC ''3_2'', s(MV ''A'' tid2), s(AV ''B'' tid2),
-                            s(MV ''Kab'' tid2), LN ''Nb'' tid2
-                         |}
-                         ( Kbd ( s(AV ''B'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
+                     Enc {| LC ''4'', LN ''Nb'' tid2 |} ( LN ''Kab'' tid3 ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest!: ltk_secrecy)
+      thus ?thesis by (fastforce dest: S_Kab_secret intro: event_predOrdI)
     next
-      case (S_3_enc_1 tid4) note_unified facts = this facts
-      hence "Kbd ( s(AV ''B'' tid2) )
-                 ( s(AV ''S'' tid4) ) = Kbd ( s(AV ''B'' tid2) ) ( s(AV ''S'' tid2) )"
-        by simp note facts = this facts
-      thus ?thesis proof(cases rule: Kbd_cases)
-        case noswap note_unified facts = this facts
-        thus ?thesis proof(sources! "
-                         Enc {| LC ''3_1'', s(MV ''B'' tid3), LN ''Kab'' tid4, LN ''Na'' tid3 |}
-                             ( Kbd ( s(AV ''A'' tid3) ) ( s(MV ''S'' tid3) ) ) ")
-          case fake note_unified facts = this facts
-          thus ?thesis by (fastsimp dest: S_Kab_secret intro: event_predOrdI)
-        next
-          case (S_3_enc tid5) note_unified facts = this facts
-          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-        qed (insert facts, fastsimp+)?
+      case (A_4_enc tid4) note_unified facts = this facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''3_1'', s(MV ''B'' tid4), LN ''Kab'' tid3, LN ''Na'' tid4 |}
+                           ( Kbd ( s(AV ''A'' tid4) ) ( s(MV ''S'' tid4) ) ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastforce dest: S_Kab_secret intro: event_predOrdI)
       next
-        case swapped note_unified facts = this facts
-        thus ?thesis proof(sources! "
-                         Enc {| LC ''3_1'', s(MV ''B'' tid3), LN ''Kab'' tid4, LN ''Na'' tid3 |}
-                             ( Kbd ( s(AV ''A'' tid3) ) ( s(MV ''S'' tid3) ) ) ")
-          case fake note_unified facts = this facts
-          thus ?thesis by (fastsimp dest: S_Kab_secret intro: event_predOrdI)
-        next
-          case (S_3_enc tid5) note_unified facts = this facts
-          thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-        qed (insert facts, fastsimp+)?
-      qed (fastsimp+)?
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+        case (S_3_enc tid5) note_unified facts = this facts
+        thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastforce+)?
+    qed (insert facts, fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 (* subsection:  Stonger Authentication Properties  *)
@@ -440,7 +414,7 @@ proof -
                        |}
                        ( Kbd ( s(AV ''A'' tid1) ) ( s(MV ''S'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
   next
     case (S_3_enc tid2) note_unified facts = this facts
     hence "Kbd ( s(AV ''S'' tid2) )
@@ -448,14 +422,14 @@ proof -
       by simp note facts = this facts
     thus ?thesis proof(cases rule: Kbd_cases)
       case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: different_actors_A_S intro: event_predOrdI)
+      thus ?thesis by (fastforce dest: different_actors_A_S intro: event_predOrdI)
     next
       case swapped note_unified facts = this facts
       thus ?thesis proof(sources! "
                        Enc {| LC ''2'', s(AV ''A'' tid1), LN ''Na'' tid1 |}
                            ( Kbd ( s(AV ''S'' tid2) ) ( s(MV ''B'' tid1) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastsimp dest!: ltk_secrecy)
+        thus ?thesis by (fastforce dest!: ltk_secrecy)
       next
         case (B_2_enc tid3) note_unified facts = this facts
         hence "Kbd ( s(AV ''S'' tid2) )
@@ -463,23 +437,23 @@ proof -
           by simp note facts = this facts
         thus ?thesis proof(cases rule: Kbd_cases)
           case noswap note_unified facts = this facts
-          thus ?thesis by (fastsimp dest: different_actors_B_S intro: event_predOrdI)
+          thus ?thesis by (fastforce dest: different_actors_B_S intro: event_predOrdI)
         next
           case swapped note_unified facts = this facts
           thus ?thesis proof(sources! " LN ''Na'' tid1 ")
             case A_1_Na note_unified facts = this facts
-            thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
+            thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
           next
             case (S_3_Na tid4) note_unified facts = this facts
             thus ?thesis proof(sources! "
                              Enc {| LC ''2'', s(MV ''A'' tid4), LN ''Na'' tid1 |}
                                  ( Kbd ( s(AV ''S'' tid4) ) ( s(MV ''B'' tid4) ) ) ")
             qed (insert facts, (((clarsimp, order?) | order))+)?
-          qed (insert facts, fastsimp+)?
-        qed (fastsimp+)?
-      qed (insert facts, fastsimp+)?
-    qed (fastsimp+)?
-  qed (insert facts, fastsimp+)?
+          qed (insert facts, fastforce+)?
+        qed (fastforce+)?
+      qed (insert facts, fastforce+)?
+    qed (fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 lemma (in restricted_Yahalom_state) B_strong_auth:
@@ -518,47 +492,38 @@ proof -
                        |}
                        ( Kbd ( s(AV ''B'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
   next
     case (S_3_enc_1 tid3) note_unified facts = this facts
-    hence "Kbd ( s(AV ''B'' tid2) )
-               ( s(AV ''S'' tid3) ) = Kbd ( s(AV ''B'' tid2) ) ( s(AV ''S'' tid2) )"
-      by simp note facts = this facts
-    thus ?thesis proof(cases rule: Kbd_cases)
-      case noswap note_unified facts = this facts
-      thus ?thesis proof(sources! " LN ''Nb'' tid2 ")
-        case B_2_Nb note_unified facts = this facts
+    thus ?thesis proof(sources! " LN ''Nb'' tid2 ")
+      case B_2_Nb note_unified facts = this facts
+      thus ?thesis proof(sources! "
+                       Enc {| LC ''4'', LN ''Nb'' tid2 |} ( LN ''Kab'' tid3 ) ")
+        case fake note_unified facts = this facts
+        thus ?thesis by (fastforce dest: S_Kab_secret intro: event_predOrdI)
+      next
+        case (A_4_enc tid4) note_unified facts = this facts
         thus ?thesis proof(sources! "
-                         Enc {| LC ''4'', LN ''Nb'' tid2 |} ( LN ''Kab'' tid3 ) ")
+                         Enc {| LC ''3_1'', s(MV ''B'' tid4), LN ''Kab'' tid3, LN ''Na'' tid4 |}
+                             ( Kbd ( s(AV ''A'' tid4) ) ( s(MV ''S'' tid4) ) ) ")
           case fake note_unified facts = this facts
-          thus ?thesis by (fastsimp dest: S_Kab_secret intro: event_predOrdI)
+          thus ?thesis by (fastforce dest: S_Kab_secret intro: event_predOrdI)
         next
-          case (A_4_enc tid4) note_unified facts = this facts
-          thus ?thesis proof(sources! "
-                           Enc {| LC ''3_1'', s(MV ''B'' tid4), LN ''Kab'' tid3, LN ''Na'' tid4 |}
-                               ( Kbd ( s(AV ''A'' tid4) ) ( s(MV ''S'' tid4) ) ) ")
-            case fake note_unified facts = this facts
-            thus ?thesis by (fastsimp dest: S_Kab_secret intro: event_predOrdI)
+          case (S_3_enc tid5) note_unified facts = this facts
+          hence "Kbd ( s(AV ''S'' tid2) )
+                     ( s(MV ''A'' tid2) ) = Kbd ( s(AV ''A'' tid4) ) ( s(MV ''S'' tid4) )"
+            by simp note facts = this facts
+          thus ?thesis proof(cases rule: Kbd_cases)
+            case noswap note_unified facts = this facts
+            thus ?thesis by (fastforce dest: different_actors_A_S intro: event_predOrdI)
           next
-            case (S_3_enc tid5) note_unified facts = this facts
-            hence "Kbd ( s(AV ''S'' tid2) )
-                       ( s(MV ''A'' tid2) ) = Kbd ( s(AV ''A'' tid4) ) ( s(MV ''S'' tid4) )"
-              by simp note facts = this facts
-            thus ?thesis proof(cases rule: Kbd_cases)
-              case noswap note_unified facts = this facts
-              thus ?thesis by (fastsimp dest: different_actors_A_S intro: event_predOrdI)
-            next
-              case swapped note_unified facts = this facts
-              thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-            qed (fastsimp+)?
-          qed (insert facts, fastsimp+)?
-        qed (insert facts, fastsimp+)?
-      qed (insert facts, fastsimp+)?
-    next
-      case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: different_actors_B_S intro: event_predOrdI)
-    qed (fastsimp+)?
-  qed (insert facts, fastsimp+)?
+            case swapped note_unified facts = this facts
+            thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
+          qed (fastforce+)?
+        qed (insert facts, fastforce+)?
+      qed (insert facts, fastforce+)?
+    qed (insert facts, fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 end

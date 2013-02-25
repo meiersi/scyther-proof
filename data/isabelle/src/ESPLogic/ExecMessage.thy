@@ -43,7 +43,7 @@ syntax (xsymbols)
 
 translations
   "{|x, y, z|}"   == "{|x, {|y, z|}|}"
-  "{|x, y|}"      == "Tup x y"
+  "{|x, y|}"      == "(CONST Tup) x y"
 
 
 text{* 
@@ -85,7 +85,7 @@ declare Kbd_free[symmetric, simp]
 lemma Kbd_split_inj:
   "\<lbrakk> a \<in> Agent; b \<in> Agent; x \<in> Agent; y \<in> Agent \<rbrakk> \<Longrightarrow>
    (Kbd a b = Kbd x y) = (a = x \<and> b = y \<or> a = y \<and> b = x)"
-  apply(clarsimp simp: Kbd_def Agent_def agents_def expand_set_eq) 
+  apply(clarsimp simp: Kbd_def Agent_def agents_def set_eq_iff) 
   apply(rule iffI)
   apply(rename_tac a b x y)
   apply(safe)
@@ -126,7 +126,7 @@ lemma Kbd_cases [ consumes 1
 
 subsection{* Operations *}
 
-types store = "varid \<times> tid \<Rightarrow> execmsg"
+type_synonym store = "varid \<times> tid \<Rightarrow> execmsg"
 
 fun inv :: "execmsg \<Rightarrow> execmsg"
 where

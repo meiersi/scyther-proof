@@ -71,7 +71,7 @@ proof -
     show ?case using facts
     proof(sources! "
         Enc ( s(MV ''k'' tid0) ) ( PK ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits) | (fastforce intro: event_predOrdI split: if_splits))+)?
   qed
   thus "auto_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -213,12 +213,12 @@ proof
     proof(sources "Enc (LN ''k'' test) (PK (s (AV ''S'' tid')))")
       case C_2_enc
       thus ?thesis 
-        by (fastsimp dest: compr_predOrdI)
+        by (fastforce dest: compr_predOrdI)
     qed
   next
     case C_5_k
     thus ?thesis
-      by (fastsimp dest: compr_predOrdI)
+      by (fastforce dest: compr_predOrdI)
   qed
 qed
 
@@ -232,7 +232,7 @@ lemma (in CR_state_ADVprod) C_k_secrecy_protected:
   shows
     False
 using facts
-by(fastsimp dest: C_k_origin allowed_reveals)
+by(fastforce dest: C_k_origin allowed_reveals)
 
 lemma (in CR_state_ADVint) C_k_secrecy_others:
   assumes facts:
@@ -313,7 +313,7 @@ proof -
   proof(sources "Hash ( LN ''k'' test )")
     case fake
     thus ?thesis 
-      by(fastsimp dest: C_k_secrecy_protected intro: event_predOrdI)
+      by(fastforce dest: C_k_secrecy_protected intro: event_predOrdI)
   next
     case (S_3_hash tid2)
     thus ?thesis
@@ -323,23 +323,23 @@ proof -
     next
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_protected intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_protected intro: event_predOrdI)
     qed
   next
     case C_3_hash
     thus ?thesis
-      by(fastsimp dest: compr_predOrdI allowed_reveals)
+      by(fastforce dest: compr_predOrdI allowed_reveals)
   next
     case (S_2_hash tid2)
     thus ?thesis
     proof(sources "Enc (LN ''k'' test) (PK (s (AV ''S'' tid2)))")
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_protected intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_protected intro: event_predOrdI)
     next
       case C_2_enc
       thus ?thesis
-        by(fastsimp dest: compr_predOrdI allowed_reveals)
+        by(fastforce dest: compr_predOrdI allowed_reveals)
     qed
   qed
 qed
@@ -363,7 +363,7 @@ proof -
   proof(sources "Hash ( LN ''k'' test )")
     case fake
     thus ?thesis 
-      by(fastsimp dest: C_k_secrecy_others intro: event_predOrdI)
+      by(fastforce dest: C_k_secrecy_others intro: event_predOrdI)
   next
     case (S_3_hash tid2)
     thus ?thesis
@@ -373,23 +373,23 @@ proof -
     next
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_others intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_others intro: event_predOrdI)
     qed
   next
     case C_3_hash
     thus ?thesis
-      by(fastsimp dest: compr_predOrdI allowed_reveals)
+      by(fastforce dest: compr_predOrdI allowed_reveals)
   next
     case (S_2_hash tid2)
     thus ?thesis
     proof(sources "Enc (LN ''k'' test) (PK (s (AV ''S'' tid2)))")
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_others intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_others intro: event_predOrdI)
     next
       case C_2_enc
       thus ?thesis
-        by(fastsimp dest: compr_predOrdI allowed_reveals)
+        by(fastforce dest: compr_predOrdI allowed_reveals)
     qed
   qed
 qed
@@ -412,7 +412,7 @@ proof -
   proof(sources "Hash ( LN ''k'' test )")
     case fake
     thus ?thesis 
-      by(fastsimp dest: C_k_secrecy_sessKey intro: event_predOrdI)
+      by(fastforce dest: C_k_secrecy_sessKey intro: event_predOrdI)
   next
     case (S_3_hash tid2)
     thus ?thesis
@@ -422,23 +422,23 @@ proof -
     next
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_sessKey intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_sessKey intro: event_predOrdI)
     qed
   next
     case C_3_hash
     thus ?thesis
-      by(fastsimp dest: compr_predOrdI allowed_reveals)
+      by(fastforce dest: compr_predOrdI allowed_reveals)
   next
     case (S_2_hash tid2)
     thus ?thesis
     proof(sources "Enc (LN ''k'' test) (PK (s (AV ''S'' tid2)))")
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_sessKey intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_sessKey intro: event_predOrdI)
     next
       case C_2_enc
       thus ?thesis
-        by(fastsimp dest: compr_predOrdI allowed_reveals)
+        by(fastforce dest: compr_predOrdI allowed_reveals)
     qed
   qed
 qed
@@ -461,7 +461,7 @@ proof -
   proof(sources "Hash ( LN ''k'' test )")
     case fake
     thus ?thesis 
-      by(fastsimp dest: C_k_secrecy_state intro: event_predOrdI)
+      by(fastforce dest: C_k_secrecy_state intro: event_predOrdI)
   next
     case (S_3_hash tid2)
     thus ?thesis
@@ -471,23 +471,23 @@ proof -
     next
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_state intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_state intro: event_predOrdI)
     qed
   next
     case C_3_hash
     thus ?thesis
-      by(fastsimp dest: compr_predOrdI allowed_reveals)
+      by(fastforce dest: compr_predOrdI allowed_reveals)
   next
     case (S_2_hash tid2)
     thus ?thesis
     proof(sources "Enc (LN ''k'' test) (PK (s (AV ''S'' tid2)))")
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_state intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_state intro: event_predOrdI)
     next
       case C_2_enc
       thus ?thesis
-        by(fastsimp dest: compr_predOrdI allowed_reveals)
+        by(fastforce dest: compr_predOrdI allowed_reveals)
     qed
   qed
 qed
@@ -510,7 +510,7 @@ proof -
   proof(sources "Hash ( LN ''k'' test )")
     case fake
     thus ?thesis 
-      by(fastsimp dest: C_k_secrecy_actor intro: event_predOrdI)
+      by(fastforce dest: C_k_secrecy_actor intro: event_predOrdI)
   next
     case (S_3_hash tid2)
     thus ?thesis
@@ -520,23 +520,23 @@ proof -
     next
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_actor intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_actor intro: event_predOrdI)
     qed
   next
     case C_3_hash
     thus ?thesis
-      by(fastsimp dest: compr_predOrdI allowed_reveals)
+      by(fastforce dest: compr_predOrdI allowed_reveals)
   next
     case (S_2_hash tid2)
     thus ?thesis
     proof(sources "Enc (LN ''k'' test) (PK (s (AV ''S'' tid2)))")
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_actor intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_actor intro: event_predOrdI)
     next
       case C_2_enc
       thus ?thesis
-        by(fastsimp dest: compr_predOrdI allowed_reveals)
+        by(fastforce dest: compr_predOrdI allowed_reveals)
     qed
   qed
 qed
@@ -561,7 +561,7 @@ proof -
   proof(sources "Hash ( LN ''k'' test )")
     case fake
     thus ?thesis 
-      by(fastsimp dest: C_k_secrecy_all intro: event_predOrdI)
+      by(fastforce dest: C_k_secrecy_all intro: event_predOrdI)
   next
     case (S_3_hash tid2)
     thus ?thesis
@@ -571,23 +571,23 @@ proof -
     next
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_all intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_all intro: event_predOrdI)
     qed
   next
     case C_3_hash
     thus ?thesis
-      by(fastsimp dest: compr_predOrdI allowed_reveals)
+      by(fastforce dest: compr_predOrdI allowed_reveals)
   next
     case (S_2_hash tid2)
     thus ?thesis
     proof(sources "Enc (LN ''k'' test) (PK (s (AV ''S'' tid2)))")
       case fake
       thus ?thesis
-        by (fastsimp dest: C_k_secrecy_all intro: event_predOrdI)
+        by (fastforce dest: C_k_secrecy_all intro: event_predOrdI)
     next
       case C_2_enc
       thus ?thesis
-        by(fastsimp dest: compr_predOrdI allowed_reveals)
+        by(fastforce dest: compr_predOrdI allowed_reveals)
     qed
   qed
 qed

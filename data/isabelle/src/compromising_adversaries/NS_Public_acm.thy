@@ -75,7 +75,7 @@ proof -
                s(AV ''R'' tid0)
             |}
             ( PK ( s(AV ''I'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits) | (fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (R_1_ni t r s tid0)
     note facts = this
@@ -85,7 +85,7 @@ proof -
     proof(sources! "
         Enc {| LC ''1'', s(MV ''ni'' tid0), s(AV ''I'' tid0) |}
             ( PK ( s(AV ''R'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits) | (fastforce intro: event_predOrdI split: if_splits))+)?
   qed
   thus "auto_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -199,7 +199,7 @@ proof
       "Enc {| LC ''2'', LN ''ni'' test, s(MV ''nr'' test), s(AV ''R'' test)|} ( PK ( s(AV ''I'' test) ) ) ")
     case fake
     thus ?thesis
-      by(fastsimp dest: I_ni_origin intro: event_predOrdI)
+      by(fastforce dest: I_ni_origin intro: event_predOrdI)
   next
     case (R_2_enc tid1')
     thus ?thesis
@@ -223,18 +223,18 @@ proof
   proof(sources "Enc {| LC ''3'', LN ''nr'' test |} ( PK ( s(AV ''R'' test) ) ) ")
     case fake
     thus ?thesis 
-      by (fastsimp dest: R_nr_origin intro: event_predOrdI)
+      by (fastforce dest: R_nr_origin intro: event_predOrdI)
   next
     case (I_3_enc tid1) 
     thus ?thesis
     proof(sources "Enc {| LC ''2'', LN ''ni'' tid1, LN ''nr'' test, s(AV ''R'' test)|}( PK ( s(AV ''I'' tid1) ) ) ")
       case fake 
       thus ?thesis
-        by(fastsimp dest: R_nr_origin intro: event_predOrdI) 
+        by(fastforce dest: R_nr_origin intro: event_predOrdI) 
     next
       case R_2_enc
       thus ?thesis 
-        by (fastsimp dest: I_ni_origin intro: event_predOrdI) 
+        by (fastforce dest: I_ni_origin intro: event_predOrdI) 
     qed
   qed
 qed
@@ -256,7 +256,7 @@ proof
   proof(sources "Hash \<lbrace>LN ''ni'' test, s (MV ''nr'' test)\<rbrace>")
     case fake
     thus ?thesis
-      by(fastsimp dest: I_ni_origin intro: event_predOrdI)
+      by(fastforce dest: I_ni_origin intro: event_predOrdI)
   next
     case I_4_hash
     thus ?thesis
@@ -268,7 +268,7 @@ proof
        (PK (s (AV ''I'' test)))")
       case fake
       thus ?thesis
-        by(fastsimp dest: I_ni_origin intro: event_predOrdI)
+        by(fastforce dest: I_ni_origin intro: event_predOrdI)
     next
       case R_2_enc
       thus ?thesis
@@ -294,7 +294,7 @@ proof
   proof(sources "Hash \<lbrace>s (MV ''ni'' test), LN ''nr'' test\<rbrace>")
     case fake
     thus ?thesis
-      by(fastsimp dest: R_nr_origin intro: event_predOrdI)
+      by(fastforce dest: R_nr_origin intro: event_predOrdI)
   next
     case R_4_hash
     thus ?thesis
@@ -306,7 +306,7 @@ proof
        (PK (s (AV ''I'' tid1)))")
       case fake
       thus ?thesis
-        by(fastsimp dest: R_nr_origin intro: event_predOrdI)
+        by(fastforce dest: R_nr_origin intro: event_predOrdI)
     next
       case R_2_enc
       thus ?thesis
@@ -324,7 +324,7 @@ lemma (in ns_public_state_ADVall) I_ni_secrecy:
     "LN ''ni'' test \<in> knows t"
   shows "False"
 using facts
-by(insert I_ni_origin, fastsimp dest!: allowed_reveals)
+by(insert I_ni_origin, fastforce dest!: allowed_reveals)
 
 lemma (in ns_public_state_ADVall) R_nr_secrecy:
   assumes facts:
@@ -332,7 +332,7 @@ lemma (in ns_public_state_ADVall) R_nr_secrecy:
     "LN ''nr'' test \<in> knows t"
   shows "False"
 using facts
-by(insert R_nr_origin, fastsimp dest!: allowed_reveals)
+by(insert R_nr_origin, fastforce dest!: allowed_reveals)
 
 lemma (in ns_public_state_ADVall) I_nr_secrecy:
   assumes facts:
@@ -341,7 +341,7 @@ lemma (in ns_public_state_ADVall) I_nr_secrecy:
     "s(MV ''nr'' test) \<in>  knows t"
   shows "False"
 using facts
-by(insert I_nr_origin, fastsimp dest!: allowed_reveals)
+by(insert I_nr_origin, fastforce dest!: allowed_reveals)
 
 
 lemma (in ns_public_state_ADVall) R_ni_secrecy:
@@ -351,7 +351,7 @@ lemma (in ns_public_state_ADVall) R_ni_secrecy:
     "s(MV ''ni'' test) \<in> knows t"
   shows "False"
 using facts
-by(insert R_ni_origin, fastsimp dest!: allowed_reveals)
+by(insert R_ni_origin, fastforce dest!: allowed_reveals)
 
 lemma (in ns_public_state_ADVall) I_sessKey_secrecy:
   assumes facts:
@@ -410,7 +410,7 @@ proof -
     next
       case I_1_enc
       thus ?thesis
-        by(fastsimp)
+        by(fastforce)
     qed
   qed
 qed

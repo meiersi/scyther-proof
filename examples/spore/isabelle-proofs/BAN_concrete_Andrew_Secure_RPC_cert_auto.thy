@@ -1,6 +1,6 @@
 theory "BAN_concrete_Andrew_Secure_RPC_cert_auto"
 imports
-  "../ESPLogic"
+  "ESPLogic"
 begin
 
 (* section:  BAN concrete Andrew Secure RPC  *)
@@ -64,7 +64,7 @@ proof -
     then interpret state: Andrew_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (A_2_Kab t r s tid0) note facts = this
     then interpret state: Andrew_msc_typing_state t r s
@@ -73,19 +73,19 @@ proof -
     proof(sources! "
         Enc {| LC ''2'', LN ''Na'' tid0, s(MV ''Kab'' tid0) |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(MV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (B_1_A t r s tid0) note facts = this
     then interpret state: Andrew_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (B_1_Na t r s tid0) note facts = this
     then interpret state: Andrew_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   qed
   thus "Andrew_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -153,8 +153,8 @@ lemma (in restricted_Andrew_state) B_sec_Kab:
   shows "False"
 using facts proof(sources! " LN ''Kab'' tid0 ")
   case B_2_Kab note_unified facts = this facts
-  thus ?thesis by (fastsimp dest!: ltk_secrecy)
-qed (insert facts, fastsimp+)?
+  thus ?thesis by (fastforce dest!: ltk_secrecy)
+qed (insert facts, fastforce+)?
 
 lemma (in restricted_Andrew_state) A_sec_Kab:
   assumes facts:
@@ -170,7 +170,7 @@ proof -
                    Enc {| LC ''2'', LN ''Na'' tid0, s(MV ''Kab'' tid0) |}
                        ( Kbd ( s(AV ''A'' tid0) ) ( s(MV ''B'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
   next
     case (B_2_enc tid1) note_unified facts = this facts
     hence "Kbd ( s(AV ''B'' tid1) )
@@ -178,12 +178,12 @@ proof -
       by simp note facts = this facts
     thus ?thesis proof(cases rule: Kbd_cases)
       case noswap note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: B_sec_Kab intro: event_predOrdI)
+      thus ?thesis by (fastforce dest: B_sec_Kab intro: event_predOrdI)
     next
       case swapped note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: B_sec_Kab intro: event_predOrdI)
-    qed (fastsimp+)?
-  qed (insert facts, fastsimp+)?
+      thus ?thesis by (fastforce dest: B_sec_Kab intro: event_predOrdI)
+    qed (fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 (* text: 
@@ -209,11 +209,11 @@ proof -
                    Enc {| LC ''2'', LN ''Na'' tid1, s(MV ''Kab'' tid1) |}
                        ( Kbd ( s(AV ''A'' tid1) ) ( s(MV ''B'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
   next
     case (B_2_enc tid2) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
+  qed (insert facts, fastforce+)?
 qed
 
 lemma (in restricted_Andrew_state) B_noninjective_agreement:
@@ -232,11 +232,11 @@ proof -
   thus ?thesis proof(sources! "
                    Enc {| LC ''3'', s(MV ''Na'' tid1) |} ( LN ''Kab'' tid1 ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: B_sec_Kab intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: B_sec_Kab intro: event_predOrdI)
   next
     case (A_3_enc tid2) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
+  qed (insert facts, fastforce+)?
 qed
 
 end

@@ -93,8 +93,8 @@ proof -
                        Enc \<lbrace> LC ''2'', LN ''sid'' tid0, s(AV ''A'' tid0), s(MV ''k'' tid0)
                            \<rbrace>
                            ( SK ( s(AV ''B'' tid0) ) ) ")
-      qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+      qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits) | (fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (B_1_pkNa t r s tid0) note facts = this
     then interpret state: auto_msc_typing_state t r s
@@ -105,7 +105,7 @@ proof -
               s(MV ''pkNa'' tid0)
             \<rbrace>
             ( SK ( s(AV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits) | (fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (B_1_sid t r s tid0) note facts = this
     then interpret state: auto_msc_typing_state t r s
@@ -116,7 +116,7 @@ proof -
               s(MV ''pkNa'' tid0)
             \<rbrace>
             ( SK ( s(AV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits) | (fastforce intro: event_predOrdI split: if_splits))+)?
   qed
   thus "auto_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -181,18 +181,18 @@ proof
        (SK (s (AV ''A'' test)))")
       case fake
       thus ?thesis
-        by (sources "SK (s (AV ''A'' test))") (fastsimp intro: predOrd_distinct'_trans)
+        by (sources "SK (s (AV ''A'' test))") (fastforce intro: predOrd_distinct'_trans)
     next
       case (A_1_enc tid1)
       thus ?thesis 
       proof(sources " SK ( LN ''na'' tid1 ) ")
         case A_N1_SK
         thus ?thesis 
-          by (fastsimp intro: compr_predOrdI)
+          by (fastforce intro: compr_predOrdI)
       next
         case A_N0_SK
         thus ?thesis
-          by (fastsimp intro: compr_predOrdI)
+          by (fastforce intro: compr_predOrdI)
       qed
     qed
   next
@@ -268,14 +268,14 @@ proof
     proof(sources "Enc \<lbrace>LC ''2'', LN ''sid'' test, s (AV ''A'' test), s (MV ''k'' test)\<rbrace> (SK (s (AV ''B'' test)))")
       case fake
       thus ?thesis
-        by (sources "SK (s (AV ''B'' test))") (fastsimp intro: predOrd_distinct'_trans)
+        by (sources "SK (s (AV ''B'' test))") (fastforce intro: predOrd_distinct'_trans)
     next
       case (B_2_enc_1 tid1)
       thus ?thesis
       proof(sources "Enc \<lbrace>LC ''1'', LN ''sid'' test, s (AV ''B'' test), s (MV ''pkNa'' tid1)\<rbrace> (SK (s (AV ''A'' test)))")
         case fake
         thus ?thesis
-          by (sources "SK (s (AV ''A'' test))") (fastsimp intro: predOrd_distinct'_trans)
+          by (sources "SK (s (AV ''A'' test))") (fastforce intro: predOrd_distinct'_trans)
       qed
     qed
   next
@@ -420,7 +420,7 @@ proof -
       proof(sources "Enc \<lbrace>LC ''2'', LN ''sid'' test, s (AV ''A'' test), s (MV ''k'' test)\<rbrace> (SK (s (AV ''B'' test)))")
         case fake
         thus ?thesis
-          by (fastsimp dest: A_sec_k event_predOrdI)
+          by (fastforce dest: A_sec_k event_predOrdI)
       next
         case (B_2_enc_1 tid1)
         thus ?thesis
@@ -432,7 +432,7 @@ proof -
             thus ?thesis
               apply -
               apply(frule lkr_in_reveals_predOrd1)
-              by (fastsimp dest: allowed_reveals)
+              by (fastforce dest: allowed_reveals)
           qed
         qed
       qed
@@ -447,7 +447,7 @@ proof -
             thus ?thesis
               apply -
               apply(frule lkr_in_reveals_predOrd1)
-              by (fastsimp dest: allowed_reveals)
+              by (fastforce dest: allowed_reveals)
           qed
         next
           case A_1_enc
@@ -480,7 +480,7 @@ proof -
       thus ?thesis
         apply -
         apply(frule lkr_in_reveals_predOrd1)
-        by (fastsimp dest: allowed_reveals)
+        by (fastforce dest: allowed_reveals)
     qed
   next
     case (A_1_enc tid1)

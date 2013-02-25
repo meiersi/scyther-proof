@@ -1,0 +1,2 @@
+session ESPL = HOL +
+  theories "src/ESPLogic"

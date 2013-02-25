@@ -1,6 +1,6 @@
 theory "Lowe_fixed_Needham_Schroeder_Public_Key_cert_auto"
 imports
-  "../ESPLogic"
+  "ESPLogic"
 begin
 
 (* section:  Needham-Schroeder-Lowe Public-Key Protocol  *)
@@ -27,8 +27,9 @@ where "I =
   , Recv ''ca2'' <| sMV ''S'',
                     PSign <| sC ''ca2'', sMV ''pkR'', sAV ''R'' |> ( PAsymPK ( sMV ''S'' ) )
                  |>
-  , Send ''1'' ( PEnc <| sC ''1'', sN ''ni'', sAV ''I'' |> ( sMV ''pkR'' )
-               )
+  , Send ''1'' <| sAV ''I'',
+                  PEnc <| sC ''1'', sN ''ni'', sAV ''I'' |> ( sMV ''pkR'' )
+               |>
   , Recv ''2'' ( PEnc <| sC ''2'', sN ''ni'', sMV ''nr'', sAV ''R'' |>
                       ( sPK ''I'' )
                )
@@ -37,7 +38,9 @@ where "I =
 
 role R
 where "R =
-  [ Recv ''1'' ( PEnc <| sC ''1'', sMV ''ni'', sMV ''I'' |> ( sPK ''R'' ) )
+  [ Recv ''1'' <| sMV ''I'',
+                  PEnc <| sC ''1'', sMV ''ni'', sMV ''I'' |> ( sPK ''R'' )
+               |>
   , Send ''ca1'' <| sAV ''R'', sMV ''I'' |>
   , Recv ''ca2'' <| sMV ''S'',
                     PSign <| sC ''ca2'', sMV ''pkI'', sMV ''I'' |> ( PAsymPK ( sMV ''S'' ) )
@@ -67,21 +70,11 @@ locale restricted_NSLPK_state = NSLPK_state +
     "!! tid1.
        [| roleMap r tid1 = Some R |] ==> RLKR(s(MV ''S'' tid1)) ~: reveals t"
 
-(* subsection:  Assumptions  *)
-
-(* text:  
-  Initiators as well as responders talk to an uncompromised server. 
- *)
-
-
-
-(* subsection:  Security Properties  *)
-
-type_invariant NSLPK_typing for NSLPK
-where "NSLPK_typing = mk_typing
+type_invariant NSLPK_msc_typing for NSLPK
+where "NSLPK_msc_typing = mk_typing
   [ ((S, ''A''), (KnownT S_ca1))
   , ((S, ''B''), (KnownT S_ca1))
-  , ((R, ''I''), (SumT (KnownT R_1) AgentT))
+  , ((R, ''I''), (KnownT R_1))
   , ((I, ''S''), (KnownT I_ca2))
   , ((R, ''S''), (KnownT R_ca2))
   , ((R, ''ni''), (SumT (KnownT R_1) (NonceT I ''ni'')))
@@ -90,75 +83,72 @@ where "NSLPK_typing = mk_typing
   , ((I, ''pkR''), (KnownT I_ca2))
   ]"
 
-sublocale NSLPK_state < NSLPK_typing_state
+sublocale NSLPK_state < NSLPK_msc_typing_state
 proof -
-  have "(t,r,s) : approx NSLPK_typing"
+  have "(t,r,s) : approx NSLPK_msc_typing"
   proof(cases rule: reachable_in_approxI_ext
-        [OF NSLPK_typing.monoTyp, completeness_cases_rule])
+        [OF NSLPK_msc_typing.monoTyp, completeness_cases_rule])
     case (I_ca2_S t r s tid0) note facts = this
-    then interpret state: NSLPK_typing_state t r s
+    then interpret state: NSLPK_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (I_ca2_pkR t r s tid0) note facts = this
-    then interpret state: NSLPK_typing_state t r s
+    then interpret state: NSLPK_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (I_2_nr t r s tid0) note facts = this
-    then interpret state: NSLPK_typing_state t r s
+    then interpret state: NSLPK_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
         Enc {| LC ''2'', LN ''ni'' tid0, s(MV ''nr'' tid0), s(AV ''R'' tid0) |}
             ( PK ( s(AV ''I'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (R_1_I t r s tid0) note facts = this
-    then interpret state: NSLPK_typing_state t r s
+    then interpret state: NSLPK_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    proof(sources! "
-        Enc {| LC ''1'', s(MV ''ni'' tid0), s(MV ''I'' tid0) |}
-            ( PK ( s(AV ''R'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (R_1_ni t r s tid0) note facts = this
-    then interpret state: NSLPK_typing_state t r s
+    then interpret state: NSLPK_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
         Enc {| LC ''1'', s(MV ''ni'' tid0), s(MV ''I'' tid0) |}
             ( PK ( s(AV ''R'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
   next
     case (R_ca2_S t r s tid0) note facts = this
-    then interpret state: NSLPK_typing_state t r s
+    then interpret state: NSLPK_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (R_ca2_pkI t r s tid0) note facts = this
-    then interpret state: NSLPK_typing_state t r s
+    then interpret state: NSLPK_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (S_ca1_A t r s tid0) note facts = this
-    then interpret state: NSLPK_typing_state t r s
+    then interpret state: NSLPK_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (S_ca1_B t r s tid0) note facts = this
-    then interpret state: NSLPK_typing_state t r s
+    then interpret state: NSLPK_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   qed
-  thus "NSLPK_typing_state t r s" by unfold_locales auto
+  thus "NSLPK_msc_typing_state t r s" by unfold_locales auto
 qed
 
 text{* Prove secrecy of long-term keys. *}
@@ -213,6 +203,16 @@ context NSLPK_state begin
 
 end
 
+(* subsection:  Assumptions  *)
+
+(* text:  
+  Initiators as well as responders talk to an uncompromised server. 
+ *)
+
+
+
+(* subsection:  Security Properties  *)
+
 lemma (in restricted_NSLPK_state) I_pkR_auth:
   assumes facts:
     "roleMap r tid1 = Some I"
@@ -226,11 +226,11 @@ proof -
                    Enc {| LC ''ca2'', s(MV ''pkR'' tid1), s(AV ''R'' tid1) |}
                        ( SK ( s(MV ''S'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
   next
     case (S_ca2_enc tid2) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
+  qed (insert facts, fastforce+)?
 qed
 
 lemma (in restricted_NSLPK_state) R_pkI_auth:
@@ -246,11 +246,11 @@ proof -
                    Enc {| LC ''ca2'', s(MV ''pkI'' tid1), s(MV ''I'' tid1) |}
                        ( SK ( s(MV ''S'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
   next
     case (S_ca2_enc tid2) note_unified facts = this facts
-    thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
+  qed (insert facts, fastforce+)?
 qed
 
 lemma (in restricted_NSLPK_state) I_ni_secrecy:
@@ -266,7 +266,7 @@ using facts proof(sources! " LN ''ni'' tid0 ")
   have f2: "( tid0, I_ca2
             ) : steps t" using facts by (auto intro: event_predOrdI)
   note facts = facts I_pkR_auth[OF f1 f2, simplified]
-  thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  thus ?thesis by (fastforce dest!: ltk_secrecy)
 next
   case (R_2_ni tid1) note_unified facts = this facts
   have f1: "roleMap r tid1 = Some R" using facts by (auto intro: event_predOrdI)
@@ -277,9 +277,9 @@ next
                    Enc {| LC ''1'', LN ''ni'' tid0, s(MV ''I'' tid1) |}
                        ( PK ( s(AV ''R'' tid1) ) ) ")
     case (I_1_enc tid2) note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
   qed (insert facts, (((clarsimp, order?) | order))+)?
-qed (insert facts, fastsimp+)?
+qed (insert facts, fastforce+)?
 
 lemma (in restricted_NSLPK_state) R_nr_secrecy:
   assumes facts:
@@ -298,7 +298,7 @@ using facts proof(sources! " LN ''nr'' tid0 ")
                    Enc {| LC ''2'', LN ''ni'' tid1, LN ''nr'' tid0, s(AV ''R'' tid1) |}
                        ( PK ( s(AV ''I'' tid1) ) ) ")
     case (R_2_enc tid2) note_unified facts = this facts
-    thus ?thesis by (fastsimp dest!: ltk_secrecy)
+    thus ?thesis by (fastforce dest!: ltk_secrecy)
   qed (insert facts, (((clarsimp, order?) | order))+)?
 next
   case R_2_nr note_unified facts = this facts
@@ -306,8 +306,8 @@ next
   have f2: "( tid0, R_ca2
             ) : steps t" using facts by (auto intro: event_predOrdI)
   note facts = facts R_pkI_auth[OF f1 f2, simplified]
-  thus ?thesis by (fastsimp dest!: ltk_secrecy)
-qed (insert facts, fastsimp+)?
+  thus ?thesis by (fastforce dest!: ltk_secrecy)
+qed (insert facts, fastforce+)?
 
 lemma (in restricted_NSLPK_state) I_nr_secrecy:
   assumes facts:
@@ -323,15 +323,15 @@ proof -
                    Enc {| LC ''2'', LN ''ni'' tid0, s(MV ''nr'' tid0), s(AV ''R'' tid0) |}
                        ( PK ( s(AV ''I'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: I_ni_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: I_ni_secrecy intro: event_predOrdI)
   next
     case (R_2_enc tid1) note_unified facts = this facts
     have f1: "roleMap r tid1 = Some R" using facts by (auto intro: event_predOrdI)
     have f2: "( tid1, R_ca2
               ) : steps t" using facts by (auto intro: event_predOrdI)
     note facts = facts R_pkI_auth[OF f1 f2, simplified]
-    thus ?thesis by (fastsimp dest: R_nr_secrecy intro: event_predOrdI)
-  qed (insert facts, fastsimp+)?
+    thus ?thesis by (fastforce dest: R_nr_secrecy intro: event_predOrdI)
+  qed (insert facts, fastforce+)?
 qed
 
 lemma (in restricted_NSLPK_state) R_ni_secrecy:
@@ -351,7 +351,7 @@ proof -
   thus ?thesis proof(sources! "
                    Enc {| LC ''3'', LN ''nr'' tid0 |} ( PK ( s(AV ''R'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: R_nr_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: R_nr_secrecy intro: event_predOrdI)
   next
     case (I_3_enc tid1) note_unified facts = this facts
     have f1: "roleMap r tid1 = Some I" using facts by (auto intro: event_predOrdI)
@@ -362,12 +362,12 @@ proof -
                      Enc {| LC ''2'', LN ''ni'' tid1, LN ''nr'' tid0, s(AV ''R'' tid0) |}
                          ( PK ( s(AV ''I'' tid1) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: R_nr_secrecy intro: event_predOrdI)
+      thus ?thesis by (fastforce dest: R_nr_secrecy intro: event_predOrdI)
     next
       case (R_2_enc tid2) note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: I_ni_secrecy intro: event_predOrdI)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+      thus ?thesis by (fastforce dest: I_ni_secrecy intro: event_predOrdI)
+    qed (insert facts, fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 lemma (in restricted_NSLPK_state) I_noninjective_synch:
@@ -393,7 +393,7 @@ proof -
                    Enc {| LC ''2'', LN ''ni'' tid1, s(MV ''nr'' tid1), s(AV ''R'' tid1) |}
                        ( PK ( s(AV ''I'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: I_ni_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: I_ni_secrecy intro: event_predOrdI)
   next
     case (R_2_enc tid2) note_unified facts = this facts
     have f1: "roleMap r tid2 = Some R" using facts by (auto intro: event_predOrdI)
@@ -404,12 +404,12 @@ proof -
                      Enc {| LC ''1'', LN ''ni'' tid1, s(AV ''I'' tid1) |}
                          ( PK ( s(AV ''R'' tid1) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: I_ni_secrecy intro: event_predOrdI)
+      thus ?thesis by (fastforce dest: I_ni_secrecy intro: event_predOrdI)
     next
       case (I_1_enc tid3) note_unified facts = this facts
-      thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+      thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
+    qed (insert facts, fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 lemma (in restricted_NSLPK_state) R_noninjective_synch:
@@ -438,13 +438,13 @@ proof -
                    Enc {| LC ''1'', s(MV ''ni'' tid2), s(MV ''I'' tid2) |}
                        ( PK ( s(AV ''R'' tid2) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: R_ni_secrecy intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: R_ni_secrecy intro: event_predOrdI)
   next
     case (I_1_enc tid3) note_unified facts = this facts
     thus ?thesis proof(sources! "
                      Enc {| LC ''3'', LN ''nr'' tid2 |} ( PK ( s(AV ''R'' tid2) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: R_nr_secrecy intro: event_predOrdI)
+      thus ?thesis by (fastforce dest: R_nr_secrecy intro: event_predOrdI)
     next
       case (I_3_enc tid4) note_unified facts = this facts
       have f1: "roleMap r tid4 = Some I" using facts by (auto intro: event_predOrdI)
@@ -455,13 +455,13 @@ proof -
                        Enc {| LC ''2'', LN ''ni'' tid4, LN ''nr'' tid2, s(AV ''R'' tid2) |}
                            ( PK ( s(AV ''I'' tid4) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastsimp dest: R_nr_secrecy intro: event_predOrdI)
+        thus ?thesis by (fastforce dest: R_nr_secrecy intro: event_predOrdI)
       next
         case (R_2_enc tid5) note_unified facts = this facts
-        thus ?thesis by (fastsimp intro: event_predOrdI split: if_splits)
-      qed (insert facts, fastsimp+)?
-    qed (insert facts, fastsimp+)?
-  qed (insert facts, fastsimp+)?
+        thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
+      qed (insert facts, fastforce+)?
+    qed (insert facts, fastforce+)?
+  qed (insert facts, fastforce+)?
 qed
 
 end

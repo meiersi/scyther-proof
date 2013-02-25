@@ -343,8 +343,8 @@ instance MarkupMonad m => MarkupMonad (TaggedIdentityT t m) where
 -- Isabelle tactic.
 isaTactic :: TrivReason -> String
 isaTactic TrivContradictoryPremises   = "((clarsimp, order?) | order)"
-isaTactic (TrivLongTermKeySecrecy _)  = "(fastsimp dest!: ltk_secrecy)"
-isaTactic TrivPremisesImplyConclusion = "(fastsimp intro: event_predOrdI split: if_splits)"
+isaTactic (TrivLongTermKeySecrecy _)  = "(fastforce dest!: ltk_secrecy)"
+isaTactic TrivPremisesImplyConclusion = "(fastforce intro: event_predOrdI split: if_splits)"
 
 -- | Isabelle proof of long-term key secrecy.
 isaLongTermKeySecrecyProof :: Protocol -> Doc
@@ -460,7 +460,7 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
 
 
   prettyForwardContradiction thRef =
-    kwBy <-> text "(fastsimp dest:" <-> thRef <-> text "intro: event_predOrdI)"
+    kwBy <-> text "(fastforce dest:" <-> thRef <-> text "intro: event_predOrdI)"
   prettyForwardResolution thRef thSe mapping
     | isJust . destTypingFormula . seConcl $ thSe = emptyDoc
     | otherwise = do
@@ -491,7 +491,7 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
       | any (`isPrefixOf` name) ["ik0", "fake"] || null newVars = text name
       | otherwise = parens $ text name <-> hsep (map ppNewVar newVars)
   prettyChainRuleQED _ trivCases
-    | null tactics = kwQED <-> text "(insert facts, fastsimp+)?" -- be conservative
+    | null tactics = kwQED <-> text "(insert facts, fastforce+)?" -- be conservative
     | otherwise    =
         kwQED <-> text "(insert facts, (" <> hsep (intersperse (text "|") tactics) <> text ")+)?"
     where
@@ -535,7 +535,7 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     ) $-$
     (text "thus ?thesis proof(cases rule: Kbd_cases)")
 
-  prettySplitEqQed = text "qed (fastsimp+)?"
+  prettySplitEqQed = text "qed (fastforce+)?"
 
   -- theory output
   prettyComment comment = text "(*" <-> text comment <-> text "*)"
@@ -601,7 +601,7 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
     pure body $-$
     text "" $-$ text "end"
     where
-    imports = ["../ESPLogic"]
+    imports = ["ESPLogic"]
 
 
 -- | Pretty-print an injectivity sequent. Works only for two-party
@@ -614,7 +614,7 @@ isaInjectivitySequent conf se =
            , nest 2 (sep [text "prems =", nest 2 $ ppPrems <> semi])
            , nest 2 (sep [text "concs =", nest 2 $ ppConcs])
            , text "in" <->
-               isaExists conf <> text "f. inj_on f prems" <-> isaAnd conf <->
+               isaExists conf <> text "f. inj_on f (Collect prems)" <-> isaAnd conf <->
                parens ( isaForall conf <> text "i. prems i" <->
                         isaImplies conf <-> text "concs i (f i)" )
            ]

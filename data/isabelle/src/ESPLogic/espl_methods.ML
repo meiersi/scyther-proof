@@ -20,8 +20,8 @@ sig
      : Proof.context -> bool -> term ->
        thm option -> thm list -> int -> thm -> (cases * thm) Seq.seq
   val sourcesP
-     : Context.generic * OuterLex.token list ->
-       ((bool * term) * thm option) * (Context.generic * OuterLex.token list)
+     : Context.generic * Token.T list ->
+       ((bool * term) * thm option) * (Context.generic * Token.T list)
 
   (* "prefix_close" proof state transformation *)
   val prefix_close_thms: Proof.context -> thm list -> thm list
@@ -69,7 +69,7 @@ fun finalize_knows_cases ctxt minimal facts case_th =
            else
              TRY o Method.insert_tac facts' THEN'
              TRY o (
-                Clasimp.clarsimp_tac (clasimpset_of ctxt) THEN'
+                Clasimp.clarsimp_tac ctxt THEN'
                 TRY o Orders.order_tac ctxt []
              )
           )
@@ -86,9 +86,9 @@ fun finalize_knows_cases ctxt minimal facts case_th =
 (* The tactic underlying the "sources" proof method *)
 fun sources_tac ctxt minimal msg_t opt_raw_rule facts =
   let
-    val thy = ProofContext.theory_of ctxt;
+    val thy = Proof_Context.theory_of ctxt;
     val cert = Thm.cterm_of thy;
-    val css as (_, ss) = Clasimp.clasimpset_of ctxt;
+    val ss = simpset_of ctxt;
 
     val raw_rules = case opt_raw_rule of
         SOME th => [th]
@@ -113,7 +113,7 @@ fun sources_tac ctxt minimal msg_t opt_raw_rule facts =
         (fn facts' => 
         ALLGOALS (Method.insert_tac (facts' @ facts)) THEN
         (ALLGOALS (assume_tac ORELSE' eresolve_tac predOrd_elim_ths)
-         ORELSE auto_tac (css addIs2 predOrd_elim_ths))
+         ORELSE auto_tac (ctxt addIs predOrd_elim_ths))
         )
       |> simplify ss
 
@@ -123,7 +123,7 @@ fun sources_tac ctxt minimal msg_t opt_raw_rule facts =
       | SOME th => finalize_knows_cases ctxt minimal facts th
   in
     fn i => fn st =>
-      CASES (Rule_Cases.make_common false (thy, Thm.prop_of rule) (fst cases)
+      CASES (Rule_Cases.make_common (thy, Thm.prop_of rule) (fst cases)
             )
             (Tactic.rtac rule i) st
   end;
@@ -139,10 +139,9 @@ fun sources_tac ctxt minimal msg_t opt_raw_rule facts =
    explicitly.
 *)
 local
-  structure P = OuterParse;
   val ruleN = "rule";
   val rule = Scan.lift (Args.$$$ ruleN -- Args.colon) |-- Attrib.thm;
-  val opt_bang = Scan.lift (Scan.optional (P.$$$ "!" >> K true) false);
+  val opt_bang = Scan.lift (Scan.optional (Parse.$$$ "!" >> K true) false);
 in
   val sourcesP = opt_bang -- Args.term -- Scan.option rule;
 end;
@@ -182,7 +181,7 @@ fun derive_step_thms th = map_filter (try (fn rule => th RS rule))
 *)
 fun prefix_close_thms ctxt facts = 
   let
-    val prefixClose_th = ProofContext.get_thm ctxt "ext_prefixClose";
+    val prefixClose_th = Proof_Context.get_thm ctxt "ext_prefixClose";
     fun close step roleMap = [step, roleMap] MRS prefixClose_th;
     val expand = Simplifier.simplify (Simplifier.simpset_of ctxt);
     val distinct_prop = distinct (Thm.eq_thm);
@@ -207,7 +206,7 @@ fun note_prefix_closed_cmd state =
   let val ctxt  = Proof.context_of state;
       val facts = Proof.the_facts state;
       val facts' = facts @ prefix_close_thms ctxt facts
-  in Proof.put_facts (SOME facts') state end
+  in Proof.set_facts facts' state end
 
 (* A proof state transformation implementing prefix closing of
    the currently used facts.
@@ -219,12 +218,11 @@ fun prefix_close_cmd state =
       |> (fn {context = ctxt, facts=using, goal=_} => 
            prefix_close_thms ctxt using)
 
-  in Proof.using_i [[(using,[])]] state end;
+  in Proof.using [[(using,[])]] state end;
 
 (* registering the prefix_close command *)
 val _ =
-  OuterSyntax.command "prefix_close" "prefix close facts being used"
-    (OuterKeyword.tag_proof OuterKeyword.prf_decl)
+  Outer_Syntax.command @{command_spec "prefix_close"} "prefix close facts being used"
     (Scan.succeed (Toplevel.print o (Toplevel.proof prefix_close_cmd)));
 
 
@@ -277,7 +275,7 @@ fun completeness_cases_attrib ctxt th =
 
   in 
     th
-    |> SINGLE (REPEAT (safe_tac cs THEN (TRYALL (full_simp_tac ss))))    
+    |> SINGLE (REPEAT (safe_tac (Context.proof_of ctxt) THEN (TRYALL (full_simp_tac ss))))    
     |> the
     |> add_case_info
   end

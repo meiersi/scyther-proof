@@ -94,12 +94,12 @@ using facts
 proof -
   interpret reachable_thread P t r s i "done" "step#todo" skipped
     using facts by unfold_locales auto
-  hence "step \<in> set (step # todo)" by auto
-  hence "step \<notin> set done" using facts by (fastsimp dest!: todo_notin_doneD)
+  have "step \<in> set (step # todo)" by auto
+  hence "step \<notin> set done" using facts by (fastforce dest!: todo_notin_doneD)
   hence "(takeWhile (\<lambda> x. x \<noteq> step) done) = done" by auto
   hence "(takeWhile (\<lambda> x. x \<noteq> step) (done @ (step # todo))) = done" by auto
   moreover
-  have "R = (done @ (step # todo))" using facts by (fastsimp dest: roleMap_SomeD)
+  have "R = (done @ (step # todo))" using facts by (fastforce dest: roleMap_SomeD)
   ultimately show ?thesis by auto
 qed
 
@@ -138,10 +138,10 @@ lemma filtered_done_conv:
   shows
     "(st \<in> set done \<and> st \<noteq> (Note l ty pt)) \<or> (st = step)"
 proof -
-  have "(st \<in> set R \<and> st \<noteq> (Note l ty pt)) \<or> (st = step)" using filtered by (fastsimp dest: filtered_role_conv)
+  have "(st \<in> set R \<and> st \<noteq> (Note l ty pt)) \<or> (st = step)" using filtered by (fastforce dest: filtered_role_conv)
   moreover
-  have "(takeWhile (\<lambda> x. x \<noteq> step) R) = done" using isThread by (fastsimp dest: take_while_is_done)
-  ultimately show ?thesis using isThread and filtered by fastsimp
+  have "(takeWhile (\<lambda> x. x \<noteq> step) R) = done" using isThread by (fastforce dest: take_while_is_done)
+  ultimately show ?thesis using isThread and filtered by fastforce
 qed
 
 lemma filtered_in_done:
@@ -153,7 +153,7 @@ proof -
   interpret this_thread:
     reachable_thread P t r s i "done" todo skipped
     using role_exists by unfold_locales auto
-  hence "step \<in> set done"
+  have "step \<in> set done"
     using step by (auto dest: this_thread.in_steps_in_done)
   moreover
   then obtain prefix suffix 
@@ -167,7 +167,7 @@ proof -
     assume "st \<noteq> step \<and> takeWhile (\<lambda>x. x \<noteq> step) R = prefix"
     hence "st \<in> set prefix" using inFiltered 
       by auto
-    hence ?thesis using done_split by fastsimp
+    hence ?thesis using done_split by fastforce
   }
   moreover {
     assume "st = step \<and> step \<in> set done"
@@ -236,7 +236,7 @@ lemma prefixClose_rawI:
     \<lbrakk> nextRel (filter (\<lambda> x. \<not> (noteStep x)) (takeWhile (\<lambda> x. x \<noteq> step) R) @ [step]) st st'
     \<rbrakk> \<Longrightarrow> St (i, st) \<prec> St (i, st')"
   shows "prefixClose s t R step i"
-using prems by (auto simp: prefixClose_def)
+using assms by (auto simp: prefixClose_def)
 
 lemma prefixCloseI:
   assumes step: "(i, step) \<in> steps t"
@@ -276,13 +276,13 @@ proof -
       apply -
       apply(rule conjI, assumption)
       apply(case_tac "st = step")
-        apply(fastsimp dest: this_thread.in_steps_conv_done_skipped[THEN iffD1])
-      apply(fastsimp dest!: this_thread.note_in_skipped note_filtered_revRole)
+        apply(fastforce dest: this_thread.in_steps_conv_done_skipped[THEN iffD1])
+      apply(fastforce dest!: this_thread.note_in_skipped note_filtered_revRole)
 
       apply(rule conjI, assumption)
       apply(case_tac "st' = step")
-        apply(fastsimp dest: this_thread.in_steps_conv_done_skipped[THEN iffD1])
-      by(fastsimp dest!: this_thread.note_in_skipped note_filtered_revRole)
+        apply(fastforce dest: this_thread.in_steps_conv_done_skipped[THEN iffD1])
+      by(fastforce dest!: this_thread.note_in_skipped note_filtered_revRole)
     hence steps: "(i, st) \<in> steps t" "(i, st') \<in> steps t"
       by(auto dest: this_thread.in_steps_conv_done_skipped[THEN iffD1])
     { assume "recvStep st" then
@@ -294,12 +294,12 @@ proof -
 
     have "listOrd R st st'" 
       using nextRel and R_split and done_split
-      by(fastsimp dest: nextRel_imp_listOrd listOrd_rev[THEN iffD1] listOrd_filter)
+      by(fastforce dest: nextRel_imp_listOrd listOrd_rev[THEN iffD1] listOrd_filter)
     hence "St (i, st) \<prec> St (i, st')"
       using role_exists steps R_split
       apply -
       apply(drule this_thread.in_steps_conv_done_skipped[THEN iffD1])
-      by(fastsimp dest!: this_thread.roleOrd_notSkipped_imp_listOrd_trace dest:listOrd_imp_predOrd)+
+      by(fastforce dest!: this_thread.roleOrd_notSkipped_imp_listOrd_trace dest:listOrd_imp_predOrd)+
     note input and this
   }
   ultimately show ?thesis
@@ -312,7 +312,7 @@ lemma ext_prefixClose:
   "\<lbrakk> (i, step) \<in> steps t; roleMap r i = Some R \<rbrakk> \<Longrightarrow>
    prefixClose s t R step i \<and> 
    (recvStep step \<longrightarrow> (\<exists> m. Some m = inst s i (stepPat step) \<and> Ln m \<prec> St (i, step)))"
-  by (cases step) (fastsimp intro!: prefixCloseI Ln_before_inp)+
+  by (cases step) (fastforce intro!: prefixCloseI Ln_before_inp)+
 
 text{* 
   Used for prefix closing assumptions corresponding to a case of
@@ -343,14 +343,14 @@ proof -
       proof
         obtain l pt
           where recv_eq: "(Recv l pt) = (last (step # done))"
-          using recv by (fastsimp dest!: recvStepD)
+          using recv by (fastforce dest!: recvStepD)
         hence "Recv l pt \<in> set (step # done)" by auto
         thus ?thesis
           using thread_exists recv_eq
-          by(fastsimp dest!: this_thread.in_steps_recv[THEN iffD1])
+          by(fastforce dest!: this_thread.in_steps_recv[THEN iffD1])
         qed
     hence "?inp_last"
-      by (cases "last (step # done)") (fastsimp dest!: Ln_before_inp)+
+      by (cases "last (step # done)") (fastforce dest!: Ln_before_inp)+
   }
   moreover
   { 
@@ -361,7 +361,7 @@ proof -
     hence skipped: "st \<notin> skipped \<and> st' \<notin> skipped"
       proof(cases "st = step \<and> st' \<in> set done \<and> \<not> noteStep st'")
         case True
-        thus "?thesis" using listOrd not_skipped by (fastsimp dest: this_thread.note_in_skipped)
+        thus "?thesis" using listOrd not_skipped by (fastforce dest: this_thread.note_in_skipped)
       next
         case False
         note falseAsms = this
@@ -382,7 +382,7 @@ proof -
               assumption)
         apply(drule_tac ?Q = "listOrd done st st'" and ?P = "st = step \<and> st' \<in> set done" in disjI1)
         apply(drule listOrd.simps(2)[THEN iffD2])
-        by(fastsimp dest: listOrd_imp_predOrd this_thread.listOrd_done_imp_listOrd_trace)
+        by(fastforce dest: listOrd_imp_predOrd this_thread.listOrd_done_imp_listOrd_trace)
     next
       case False
       note assms = this
@@ -397,7 +397,7 @@ proof -
            apply(drule listOrd_filter)
            apply(drule_tac ?Q = "listOrd done st st'" and ?P = "st = step \<and> st' \<in> set done" in disjI2)
            apply(drule listOrd.simps(2)[THEN iffD2])
-           by (fastsimp dest: listOrd_imp_predOrd this_thread.listOrd_done_imp_listOrd_trace)
+           by (fastforce dest: listOrd_imp_predOrd this_thread.listOrd_done_imp_listOrd_trace)
       qed
     qed
     hence recv: "recvStep st \<Longrightarrow> 
@@ -432,22 +432,22 @@ proof(induct arbitrary: y rule: reachable_induct)
   case (send t r s i "done" l pt todo m y)
   then interpret this_state: reachable_state P t r s by unfold_locales
   show ?case using send
-    by(fastsimp dest: this_state.knows_IK0)
+    by(fastforce dest: this_state.knows_IK0)
 next
   case (decr t r s m k y)
   then interpret this_state: reachable_state P t r s by unfold_locales
   show ?case using decr
-    by(fastsimp dest: this_state.knows_IK0)
+    by(fastforce dest: this_state.knows_IK0)
 next 
   case (lkr t r s a)
   then interpret this_state: reachable_state P t r s by unfold_locales
   show ?case using lkr
-    by(fastsimp dest: this_state.knows_IK0)
+    by(fastforce dest: this_state.knows_IK0)
 next 
   case (compr t r s "done" l ty pt todo skipped m y)
   then interpret this_state: reachable_state P t r s by unfold_locales
   show ?case using compr
-    by(fastsimp dest: this_state.knows_IK0)
+    by(fastforce dest: this_state.knows_IK0)
 qed auto
 
 lemmas nothing_before_IK0_iffs [iff] = in_IK0_simps[THEN nothing_before_IK0]
@@ -485,11 +485,11 @@ lemma iagree_to_niagree:
   and     conc_inj: "\<And> i1 i2 j. \<lbrakk> conc i1 j \<and> conc i2 j \<rbrakk> \<Longrightarrow> i1 = i2"
   shows "let prems = prem; 
              concs = conc
-         in \<exists>f. inj_on f prems \<and> (\<forall>i. prems i \<longrightarrow> concs i (f i))"
+         in \<exists>f. inj_on f (Collect prems) \<and> (\<forall>i. prems i \<longrightarrow> concs i (f i))"
 proof -
   let ?f = "\<lambda> i. SOME j. conc i j"
-  have "inj_on ?f prem"
-    apply(auto simp: inj_on_def mem_def dest!: niagree)
+  have "inj_on ?f (Collect prem)"
+    apply(auto simp: inj_on_def dest!: niagree)
     apply(rule_tac j="(SOME j. conc x j)" in conc_inj[OF conjI])
     apply(rule someI, simp+)+
     done

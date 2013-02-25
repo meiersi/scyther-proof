@@ -17,7 +17,7 @@ section{* Maps *}
 
 lemma dom_upd [simp]: 
   "dom (\<lambda> a. if a = x then Some y else m a) = insert x (dom m)"
-  by(fastsimp simp: dom_if)
+  by(fastforce simp: dom_if)
 
 lemma map_leD: "\<lbrakk> m \<subseteq>\<^sub>m m'; m x = Some y \<rbrakk> \<Longrightarrow> m' x = Some y"
   by(force simp: map_le_def)
@@ -112,7 +112,7 @@ fun invert_perm p =
 *)
 fun forall_permute ctxt p ct =
   let
-    val cert = Thm.cterm_of (ProofContext.theory_of ctxt);
+    val cert = Thm.cterm_of (Proof_Context.theory_of ctxt);
     fun mk_cv (_, ty) n = cert (Free (n, ty));
     val string_of_perm = commas o map string_of_int;
     fun err msg = raise CTERM
@@ -213,7 +213,7 @@ fun refine_rule ctxt tac =
 *)
 fun track_HOL_term ctxt x_t =
   let
-    val thy  = ProofContext.theory_of ctxt;
+    val thy  = Proof_Context.theory_of ctxt;
     val cert = Thm.cterm_of thy;
 
     val x_ty = Term.fastype_of x_t; 
@@ -226,7 +226,7 @@ fun track_HOL_term ctxt x_t =
     val Qx_ct   = cert (HOLogic.mk_Trueprop (Q_t $ x_t));
     val eq_x_ct = cert 
       (Abs ("y", x_ty, 
-            Const (@{const_name "op ="}, x_ty --> x_ty --> HOLogic.boolT)
+            Const (@{const_name "HOL.eq"}, x_ty --> x_ty --> HOLogic.boolT)
             $ x_t $ Bound 0));
 
     fun remove_tracking th' =

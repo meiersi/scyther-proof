@@ -15,10 +15,15 @@ imports
   Syntax
   InferenceRules
   WeakTyping
-uses
+keywords "role" "protocol" "type_invariant" :: thy_decl
+  and "prefix_close" :: prf_decl
+(* uses
   espl_definitions
-  espl_methods
+  espl_methods *)
 begin
+
+ML_file "espl_definitions.ML"
+ML_file "espl_methods.ML"
 
 section{* Automation *}
 
@@ -158,7 +163,7 @@ by(auto dest: predOrd_LKR_agent1 predOrd_LKR_agent2)
 subsection{* Testing the Infrastructure *}
 
 
-(*
+
 text{*
   Commented out because new ISAR syntax comes only active after
   the theory file that defines them.
@@ -187,15 +192,16 @@ where "auto_msc_typing = mk_typing
   [ ((S, ''k''), (SumT (KnownT S_1) (NonceT C ''k'')))
   ]"
 
-
+(*
 lemma additional_reveal_order:
   assumes facts:
     "predOrd t (LKR a) c"
   shows 
     "a \<in> lkreveals t \<and> predOrd t (LKR a) c"
 using facts
+apply(auto intro: event_predOrdI)
 by(auto intro: event_predOrdI)
-
+*)
 sublocale CR_state < auto_msc_typing_state
 proof -
   have "(t,r,s) : approx auto_msc_typing"
@@ -207,7 +213,7 @@ proof -
     show ?case using facts
     proof(sources! "
         Enc ( s(MV ''k'' tid0) ) ( PK ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits) | (fastforce intro: event_predOrdI split: if_splits))+)?
   qed
   thus "auto_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -226,14 +232,14 @@ proof
   proof (sources "LN ''k'' tid0")
     case C_1_k
     thus ?thesis
-      by (sources "SK (s (AV ''S'' tid0))")  (fastsimp intro: event_predOrdI)+
+      by (sources "SK (s (AV ''S'' tid0))")  (fastforce intro: event_predOrdI)+
   qed auto
 qed
 
 (*
 lemmas (in restricted_CR_state) C_k_order = C_k_order_raw[rule_format, THEN additional_reveal_order]
 *)
-
+(*
 lemma (in restricted_CR_state) C_k_secrecy:
   assumes facts:
     "roleMap r tid0 = Some C"
@@ -242,14 +248,13 @@ lemma (in restricted_CR_state) C_k_secrecy:
     "LN ''k'' tid0 : knows t"
   shows "False"
 using facts 
-by(fastsimp dest: C_k_order_raw[rule_format] 
+by(fastforce dest: C_k_order_raw[rule_format] 
            intro: event_predOrdI)
-
-
 *)
 
 
-(*
+
+
 text{*
   Commented out because new ISAR syntax comes only active after
   the theory file that defines them.
@@ -264,6 +269,7 @@ where "I \<equiv>
   ]"
 
 text{* A few of the proven theorems: *}
+(*
 thm I.weakly_atomic_convs
 thm I_def
 thm I.unfold
@@ -281,7 +287,7 @@ thm I_1.sendStep_conv
 thm I_1.stepPat_conv
 thm I_1.FV_conv
 thm I_1.FMV_conv
-
+*)
 text{* 
   Note that you should not need to use these theorems manually as the 
   simplifier and the classical reasoner are already setup such that
@@ -298,9 +304,9 @@ where "R \<equiv>
   , Send ''1'' (PEnc \<langle>sLC ''1'', sLAV ''R'', sLMV ''ni'', sLN ''nr''\<rangle> (sPK ''I''))
   , Recv ''2'' (PEnc \<langle>sLC ''2'', sLN ''nr''\<rangle> (sPK ''R''))
   ]"
-
+(*
 thm R.weakly_atomic_convs
-
+*)
 protocol nsl
 where "nsl = {I, R}"
 
@@ -317,7 +323,7 @@ where "typed_nsl = mk_typing
    , ((I, ''nr''), (SumT (KnownT I_1) (NonceT R ''nr'')))
    ]"
 
-
+(*
 sublocale nsl_state \<subseteq> typed_nsl_state
 proof -
   have "(t,r,s) \<in> approx typed_nsl"
@@ -328,14 +334,14 @@ proof -
       by unfold_locales auto
     show ?case using I_1_nr
     proof(sources "inst s i I_1_pt")
-    qed (fastsimp intro: event_predOrdI split: if_splits)+
+    qed (fastforce intro: event_predOrdI split: if_splits)+
   next
     case (R_0_ni t r s i)
     then interpret state: typed_nsl_state t r s
       by unfold_locales auto
     show ?case using R_0_ni
     proof(sources "inst s i R_0_pt")
-    qed (fastsimp intro: event_predOrdI split: if_splits)+
+    qed (fastforce intro: event_predOrdI split: if_splits)+
   qed
   thus "typed_nsl_state t r s" by unfold_locales auto
 qed
@@ -371,17 +377,17 @@ lemma (in nsl_state) I_ni_secrecy:
     "s (AV ''R'' i) \<notin> lkreveals t"   
   shows "False"
 using facts proof(sources " LN ''ni'' tid0 ")
-  case I_0_ni thus ?thesis by (fastsimp dest!: ltk_secrecy)
+  case I_0_ni thus ?thesis by (fastforce dest!: ltk_secrecy)
 next
   case (R_1_ni tid1) thus ?thesis 
   proof(sources "inst s tid1 R_0_pt")
     case I_0_enc thus ?thesis 
-      by (fastsimp dest!: ltk_secrecy)
+      by (fastforce dest!: ltk_secrecy)
   qed (insert facts, (((clarsimp, order?) | order))+)?
 qed
-
-
 *)
+
+
 
 
 end

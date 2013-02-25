@@ -210,10 +210,10 @@ lemma next_imp_le: "x \<prec>\<^sub>1 y \<Longrightarrow> x \<preceq> y"
   by(auto dest: next_imp_less)
 
 lemma in_set_less1: "x \<prec> y \<Longrightarrow> x \<in> set xs"
-  by(simp add: pred_def in_set_listOrd1)
+  by(simp add: in_set_listOrd1)
 
 lemma in_set_less2: "x \<prec> y \<Longrightarrow> y \<in> set xs"
-  by(simp add: pred_def in_set_listOrd2)
+  by(simp add: in_set_listOrd2)
 
 lemmas in_set_next1 = in_set_less1[OF next_imp_less, rule_format]
 lemmas in_set_next2 = in_set_less2[OF next_imp_less, rule_format]

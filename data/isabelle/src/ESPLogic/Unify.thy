@@ -19,7 +19,9 @@ imports
      espl_methods.ML. With a uses clause it would be
      loaded twice, which may result in strange effects.
   *)
-  Automation  
+  Automation
+keywords
+  "note_prefix_closed" "note_unified" "note_cyclic" :: prf_decl
 begin
 
 section{* Explicit unification of sets of equality theorems *}
@@ -137,14 +139,14 @@ fun unify_term_ord (lhs,rhs) =
 
   in (prod_ord bool_ord 
                 (prod_ord bool_ord 
-                  (prod_ord bool_ord TermOrd.term_ord)))
+                  (prod_ord bool_ord Term_Ord.term_ord)))
      (proj lhs, proj rhs) 
   end
 
 fun old_unify_term_ord (arg as (lhs,rhs)) = 
   if (is_variable_store_lookup lhs) then 
     if (is_variable_store_lookup rhs) then
-      TermOrd.term_ord arg
+      Term_Ord.term_ord arg
     else
       LESS
   else
@@ -153,14 +155,14 @@ fun old_unify_term_ord (arg as (lhs,rhs)) =
     else
       if (is_roleMap lhs) then
         if (is_roleMap rhs) then
-          TermOrd.term_ord arg
+          Term_Ord.term_ord arg
         else
           LESS
       else
         if (is_roleMap rhs) then
           GREATER
         else
-          TermOrd.term_ord arg;
+          Term_Ord.term_ord arg;
           
 *}
 
@@ -184,7 +186,7 @@ both (swap (@{term "roleMap r i"}, @{term "Some R"}));
 ML{*
 
 structure UnifyDest = Named_Thms
-  (val name ="unify_dest"
+  (val name = @{binding "unify_dest"}
    val description = "Destruction rules to be used in note_unified")
 
 *}
@@ -218,7 +220,7 @@ fun inequal_sizes ss eq_th =
 fun unify do_occurs_check ctxt ths =
   let
     (* TODO: Remove hack by using Named_Thms data functor. *)
-    val thm_by_name = ProofContext.get_thm ctxt;
+    val thm_by_name = Proof_Context.get_thm ctxt;
     val ss = simpset_of ctxt 
       delsimps map thm_by_name ["tid_eq_commute", "reorient_store_eq_store"];
 
@@ -252,12 +254,12 @@ fun unify do_occurs_check ctxt ths =
             (case remove_Trueprop (Thm.concl_of th) of
                (@{const True})           => solve1 (done, todo)
              | (@{const False})          => [th]
-             | (@{const "op &"} $ _ $ _) =>
+             | (@{const "HOL.conj"} $ _ $ _) =>
                  solve1 ( done 
                         , (th RS @{thm conjunct1}) ::
                           (th RS @{thm conjunct2}) :: todo
                         )
-             | (Const (@{const_name "op ="},_) $ _ $ _) => 
+             | (Const (@{const_name "HOL.eq"},_) $ _ $ _) => 
                  (case reorient_HOL_eq unify_term_ord th of
                     NONE     => solve1 (done, todo)
                   | SOME th' =>
@@ -306,7 +308,7 @@ fun note_modified_thmss f args =
 
     fun modify_bound_thms ctxt b =
       let
-        val ths  = ProofContext.get_thms ctxt (ProofContext.full_name ctxt b);
+        val ths  = Proof_Context.get_thms ctxt (Proof_Context.full_name ctxt b);
       in
         ((b,[]), [(f ctxt ths,[])])
       end;
@@ -315,41 +317,41 @@ fun note_modified_thmss f args =
       state
       |> map_context_result 
           (fn ctxt => ctxt |>
-            (ProofContext.note_thmss "" 
+            (Proof_Context.note_thmss "" 
               (map (modify_bound_thms ctxt) bindings))
           )
       |> (fn (named_thss, state') =>
            state'
-           |> Proof.put_facts (SOME (maps snd named_thss))
+           |> Proof.set_facts (maps snd named_thss)
          )
   in
-    modify_and_renote o Proof.note_thmss args
+    modify_and_renote o Proof.note_thmss_cmd args
   end
 
 *}
 
+ML {* note_modified_thmss *}
+ML {* Attrib.attribute_cmd *}
+
 ML{*
 local
-  structure K = OuterKeyword;
-  structure T = Toplevel;
-
   fun define_cmd name info f =
-    OuterSyntax.command name info (K.tag_proof K.prf_decl)
-    (SpecParse.name_facts >> (T.print oo (T.proof o (note_modified_thmss f))));
+    Outer_Syntax.command name info
+    (Parse_Spec.name_facts >> (Toplevel.print oo (Toplevel.proof o (note_modified_thmss f))));
 in
   val _ = 
-    define_cmd "note_prefix_closed" 
+    define_cmd @{command_spec "note_prefix_closed"} 
       "prefix close facts and store them under the given name"
       ESPL_Methods.prefix_close_thms;
 
   val _ = 
-    define_cmd "note_unified" 
+    define_cmd @{command_spec "note_unified"}
       "unify equality facts and store them under the given name"
       (unify true);
 
   (* TODO: Implement this command - currently it is just notes. *)
   val _ = 
-    define_cmd "note_cyclic" 
+    define_cmd @{command_spec "note_cyclic"}
       "try to derive a cyclicity violation from the given facts and store them under the given name"
       (K I);
 
@@ -612,7 +614,7 @@ proof (cases rule: complete_atomicAnnI[completeness_cases_rule])
   show ?case using facts
   proof(sources! "
       Enc ( s(MV ''k'' i\<^isub>0) ) ( PK ( s(AV ''S'' i\<^isub>0) ) ) ")
-  qed (insert facts, ((fastsimp simp: atomicAnn_def dest: state.extract_knows_hyps))+)?
+  qed (insert facts, ((fastforce simp: atomicAnn_def dest: state.extract_knows_hyps))+)?
 qed
 
 lemma (in atomic_CR_state) C_ni_synch:
@@ -633,13 +635,13 @@ proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! " Hash ( LN ''k'' i\<^isub>1 ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastsimp dest: C_secret_k intro: event_predOrdI)
+    thus ?thesis by (fastforce dest: C_secret_k intro: event_predOrdI)
   next
     case (S_2_hash i\<^isub>2) note_unified facts = this facts
     thus ?thesis proof(sources! "
                      Enc ( LN ''k'' i\<^isub>1 ) ( PK ( s(AV ''S'' i\<^isub>2) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastsimp dest: C_secret_k intro: event_predOrdI)
+      thus ?thesis by (fastforce dest: C_secret_k intro: event_predOrdI)
     next
       case C_1_enc note_unified facts = this facts
       thus ?thesis by force

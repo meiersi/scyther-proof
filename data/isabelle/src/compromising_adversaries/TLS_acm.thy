@@ -142,31 +142,31 @@ proof -
     then interpret state: auto_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (C_4_ps t r s tid0) note facts = this
     then interpret state: auto_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (S_1_nc t r s tid0) note facts = this
     then interpret state: auto_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (S_1_pc t r s tid0) note facts = this
     then interpret state: auto_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (S_1_sid t r s tid0) note facts = this
     then interpret state: auto_msc_typing_state t r s
       by unfold_locales auto
     show ?case using facts
-    by (fastsimp intro: event_predOrdI split: if_splits)
+    by (fastforce intro: event_predOrdI split: if_splits)
   next
     case (S_5_pms t r s tid0) note facts = this
     then interpret state: auto_msc_typing_state t r s
@@ -175,7 +175,7 @@ proof -
     proof(sources! "
         Enc {| LC ''TT0'', s(MV ''pms'' tid0) |}
             ( PK ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastsimp intro: event_predOrdI split: if_splits) | (fastsimp intro: event_predOrdI split: if_splits))+)?
+    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits) | (fastforce intro: event_predOrdI split: if_splits))+)?
   qed
   thus "auto_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -1339,7 +1339,7 @@ lemma (in TLS_state) TLS_partners_revealsExist:
 proof -
   from facts
   have "roleMap r tid1 = Some S"
-    by (fastsimp dest: mk_partneringRole simp add: TLS_partners_conv)
+    by (fastforce dest: mk_partneringRole simp add: TLS_partners_conv)
   note_prefix_closed facts = facts this
   thus ?thesis
   proof -
@@ -1348,14 +1348,14 @@ proof -
         {(sLAV ''C'', sLAV ''C'', S_1), (sLAV ''S'', sLAV ''S'', S_1),
          (sLMV ''ns'', sLN ''ns'', S_3), (sLN ''pms'', sLMV ''pms'', S_5)}
         (t, r, s)"
-      by (fastsimp simp add: TLS_partners_conv dest: mk_partneringRole)
+      by (fastforce simp add: TLS_partners_conv dest: mk_partneringRole)
     moreover
     from facts 
     have "(i, test) \<in> mk_partnering TLS_acm.C S
         {(sLAV ''C'', sLAV ''C'', S_1), (sLAV ''S'', sLAV ''S'', S_1),
          (sLMV ''ns'', sLN ''ns'', S_3), (sLN ''pms'', sLMV ''pms'', S_5)}
         (t, r, s)"
-      by (fastsimp simp add: TLS_partners_conv dest: mk_partneringRole)
+      by (fastforce simp add: TLS_partners_conv dest: mk_partneringRole)
     ultimately
     show ?thesis
       using facts
@@ -1485,12 +1485,12 @@ proof
     note_unified facts = facts this
 
     hence "(test,tid1) \<in> TLS_partners (t,r,s)"
-      by fastsimp
+      by fastforce
     note_unified facts = facts this
     moreover 
     {
       assume "RLKR (s (AV ''S'' tid1)) \<in> reveals t"
-      hence "?thesis" using facts by fastsimp
+      hence "?thesis" using facts by fastforce
     }
     moreover{
       assume "(tid1, Note ''5'' State C_5_pt) \<in> steps t"
@@ -1509,20 +1509,20 @@ proof
       note_unified facts = facts this
       obtain tid1a where
         partCompr: "(tid1, tid1a) \<in> TLS_partners (t, r, s) \<and> (tid1a, Note ''6'' State S_6_pt) \<in> steps t"
-        using facts by fastsimp
+        using facts by fastforce
       hence  "test = tid1a" using facts
         apply -
         apply(rule TLS_partners_revealsExist,assumption,assumption,rule event_predOrdI, assumption)          
-        by fastsimp+
+        by fastforce+
       hence "?thesis"
         using facts partCompr
-        by fastsimp
+        by fastforce
     }
     ultimately
     show ?thesis using facts
       apply -
       apply(frule event_predOrdI, frule C_pms_origin_reuse, assumption)
-      by fastsimp
+      by fastforce
   qed
 qed
 end

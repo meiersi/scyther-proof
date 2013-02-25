@@ -21,7 +21,7 @@ sig
   (* Additional Utilities *)
   val unnamed_caseN: string
 
-  datatype steptyp = Recv | Send
+  datatype steptyp = Recv | Send | Note of term
   val mk_rolestep: steptyp * term * term -> term
   val dest_rolestep: term -> steptyp * term * term
   val dest_role: term -> (steptyp * term * term) list
@@ -120,26 +120,26 @@ fun dest_non_refl_eq ty t =
 
    TODO: Check if there is a more stable machinery for that purpose.
 *)
-fun get_unfold_thms ctxt (Const (c,_)) = ProofContext.get_thms ctxt (c ^ ".unfold")
-  | get_unfold_thms ctxt (Free  (c,_)) = ProofContext.get_thms ctxt (c ^ ".unfold")
+fun get_unfold_thms ctxt (Const (c,_)) = Proof_Context.get_thms ctxt (c ^ ".unfold")
+  | get_unfold_thms ctxt (Free  (c,_)) = Proof_Context.get_thms ctxt (c ^ ".unfold")
   | get_unfold_thms _ t = raise TERM ("get_unfold_thms", [t])
 
 (* Lookup the term of the message of a role step *)
 fun get_rolestep_msg ctxt step_name = 
-  ProofContext.get_thm ctxt (Thm.def_name (step_name ^ "_pt"))
+  Proof_Context.get_thm ctxt (Thm.def_name (step_name ^ "_pt"))
   |> Thm.prop_of
   |> dest_HOL_def
   |> snd
 
 (* Extract identifiers of message variables in a pattern *)
 fun pat_msgvars (Const (@{const_name "PEnc"},_) $ m $ k)  = 
-      OrdList.union fast_string_ord (pat_msgvars m) (pat_msgvars k)
+      Ord_List.union fast_string_ord (pat_msgvars m) (pat_msgvars k)
   | pat_msgvars (Const (@{const_name "PTup"},_) $ x $ y)  = 
-      OrdList.union fast_string_ord (pat_msgvars x) (pat_msgvars y)
+      Ord_List.union fast_string_ord (pat_msgvars x) (pat_msgvars y)
   | pat_msgvars (Const (@{const_name "PHash"},_) $ x)     = 
       pat_msgvars x
   | pat_msgvars (Const (@{const_name "PSymK"},_) $ a $ b) = 
-      OrdList.union fast_string_ord (pat_msgvars a) (pat_msgvars b)
+      Ord_List.union fast_string_ord (pat_msgvars a) (pat_msgvars b)
   | pat_msgvars (Const (@{const_name "PAsymPK"},_) $ a)   =
       pat_msgvars a
   | pat_msgvars (Const (@{const_name "PAsymSK"},_) $ a)   =
@@ -288,7 +288,7 @@ fun setup_role mk_binding (defs as ((role_const, role_def), steps)) ctxt =
       pat_def |> Thm.prop_of |> dest_HOL_def |> #2 |> pat_msgvars;
 
     val msgvars = Library.foldl 
-      (fn (vs,def) => OrdList.union fast_string_ord vs (pat_def_msgvars def)) 
+      (fn (vs,def) => Ord_List.union fast_string_ord vs (pat_def_msgvars def)) 
       ([],pat_defs);
 
   in
@@ -346,16 +346,12 @@ fun define_role_cmd (raw_bind, raw_spec as ((_,srcs),_)) params_ctxt =
   end
 
 (* registering the role definition command as an outer keyword *)
-local structure P = OuterParse and K = OuterKeyword in
+val roledef_parser = 
+  Parse.binding --| Parse.where_ -- (Parse_Spec.opt_thm_name ":" -- Parse.prop);
 
-  val roledef_parser = 
-    P.binding --| P.where_ -- (SpecParse.opt_thm_name ":" -- P.prop);
-
-  val _ =
-    OuterSyntax.local_theory "role" "security protocol role definition" 
-      K.thy_decl (roledef_parser >> (fn spec => define_role_cmd spec #> snd));
-end;
-
+val _ =
+  Outer_Syntax.local_theory @{command_spec "role"} "security protocol role definition" 
+    (roledef_parser >> (fn spec => define_role_cmd spec #> snd));
 
 (******************************************************************************
 **  Protocol Definitions
@@ -402,14 +398,14 @@ fun define_proto_cmd (raw_bind, raw_spec as ((_,srcs),_)) params_ctxt =
   let
     val ((proto_const, (_, proto_def)), spec_ctxt) = params_ctxt 
       |> Specification.definition_cmd 
-        (SOME (raw_bind, SOME "Protocol.proto", NoSyn), raw_spec);
+        (SOME (raw_bind, SOME "Protocol.proto", NoSyn), raw_spec) true;
 
     val proto_name          = Binding.name_of raw_bind;
     fun mk_rel_binding name = 
       (Binding.qualify true proto_name (Binding.name name), srcs);
   in
     setup_proto mk_rel_binding (proto_const, proto_def) spec_ctxt
-    |> apsnd (Local_Theory.theory (fn thy =>
+    |> apsnd (Local_Theory.raw_theory (fn thy =>
         let
           val locale_b = Binding.name (proto_name ^ "_state");
           val _ = Output.writeln ("\nlocale\n  " ^ (Binding.name_of locale_b));
@@ -424,13 +420,12 @@ fun define_proto_cmd (raw_bind, raw_spec as ((_,srcs),_)) params_ctxt =
   end;
 
 (* registering the protocol definition command *)
-local structure P = OuterParse and K = OuterKeyword in
-  val protodef_parser = 
-    P.binding --| P.where_ -- (SpecParse.opt_thm_name ":" -- P.prop);
-  val _ =
-    OuterSyntax.local_theory "protocol" "security protocol definition" 
-      K.thy_decl (protodef_parser >> (fn spec => define_proto_cmd spec #> #2));
-end;
+val protodef_parser = 
+  Parse.binding --| Parse.where_ -- (Parse_Spec.opt_thm_name ":" -- Parse.prop);
+
+val _ =
+  Outer_Syntax.local_theory @{command_spec "protocol"} "security protocol definition" 
+    (protodef_parser >> (fn spec => define_proto_cmd spec #> #2));
 
 
 (******************************************************************************
@@ -550,7 +545,7 @@ fun mk_case_name_hint thy name =
 (* Insert the case names into a theorem *)
 fun insert_case_names ctxt th =
   let
-    val thy           = ProofContext.theory_of ctxt;
+    val thy           = Proof_Context.theory_of ctxt;
     val cases         = source_case_names th;
     val case_hint     = Hints.mk_hint_thm thy "case_name" o HOLogic.mk_string o nth cases;
     fun ins_tac (_,i) = Method.insert_tac [case_hint (i-1)] i;
@@ -638,13 +633,13 @@ fun type_elim_tac ctxt ty_elim_ths =
         ]
   in
     (FIRST' (map mk_elim_tac ty_elim_ths)) THEN'
-    (TRY o Clasimp.clarsimp_tac (clasimpset_of ctxt))
+    (TRY o Clasimp.clarsimp_tac ctxt)
   end;
 
 
 fun expand_knows_cases_tac ctxt ty_elim_ths =
   REPEAT_DETERM1 (
-    FIRST [ safe_tac (claset_of ctxt)
+    FIRST [ safe_tac ctxt
           , CHANGED_PROP (TRYALL (full_simp_tac (simpset_of ctxt)))
           , CHANGED_PROP (TRYALL (type_elim_tac ctxt ty_elim_ths))
           ] 
@@ -690,7 +685,7 @@ fun prepare_sources_elim ctxt case_th msg_t =
     val knows_ct = 
       HOLogic.mk_mem (msg_t, @{term "knows t"})
       |> HOLogic.mk_Trueprop
-      |> Thm.cterm_of (ProofContext.theory_of lthy);
+      |> Thm.cterm_of (Proof_Context.theory_of lthy);
 
     val knows_th = Thm.assume knows_ct;
   in 
@@ -698,7 +693,7 @@ fun prepare_sources_elim ctxt case_th msg_t =
     |> HOL_Ext.make_HOL_elim
     |> refine_knows_cases lthy (SOME msg_t)
     |> Thm.implies_intr knows_ct
-    |> singleton (ProofContext.export lthy ctxt) 
+    |> singleton (Proof_Context.export lthy ctxt) 
     |> Drule.zero_var_indexes
   end;
 
@@ -706,7 +701,7 @@ fun prepare_sources_elim ctxt case_th msg_t =
 (*** Precomputing and storing chain rule expansion in the actual theory ***)
 
 structure KnowsCasesCache = Named_Thms
-  (val name ="knows_cases_cache"
+  (val name = @{binding "knows_cases_cache"}
    val description = "Cache of protocol and message specific specializations of the knows_cases theorem")
 
 (* shorthand for attributes modifying the knowledge cases *)
@@ -758,10 +753,9 @@ fun setup_typing mk_binding ann_def ctxt =
   let
     val (typ_const,typ_def) = ann_def;
 
-    val cs = Classical.claset_of ctxt;
-    val ss = Simplifier.simpset_of ctxt 
-               addsimps [typ_def];
-    val ss_full = ss addsimps  @{thms mk_typing_def};
+    val autom_tac = auto_tac (map_simpset (fn ss => ss addsimps [typ_def]) ctxt)
+    val ss_full = Simplifier.simpset_of ctxt 
+               addsimps [typ_def] addsimps @{thms mk_typing_def};
     
     val vars = typ_def |> Thm.prop_of 
       |> ESPL_Utils.dest_HOL_def |> snd |> dest_mk_typing |> map fst;
@@ -770,9 +764,9 @@ fun setup_typing mk_binding ann_def ctxt =
 
     val mono_typ_th = (@{const monoTyp} $ typ_const)
       |> HOLogic.mk_Trueprop
-      |> Thm.cterm_of (ProofContext.theory_of ctxt)
+      |> Thm.cterm_of (Proof_Context.theory_of ctxt)
       |> (fn ct => Goal.prove_internal [] ct
-           (K (auto_tac (cs, ss)))
+           (K autom_tac)
          );
   in
    ctxt
@@ -792,9 +786,9 @@ fun define_typing_cmd ((b,proto_name), ((att,srcs),raw_def)) params_ctxt =
       (Binding.qualify true (Binding.name_of b) (Binding.name name), srcs);
 
     val ((typ_const, (_, typ_def)), spec_ctxt) = params_ctxt 
-      |> Specification.definition_cmd 
+      |> Specification.definition_cmd
           (SOME (b, SOME "WeakTyping.typing", NoSyn)
-          , ((att,srcs), raw_def));
+          , ((att,srcs), raw_def)) true;
   in
     setup_typing mk_rel_binding (typ_const, typ_def) spec_ctxt
   end;
@@ -811,7 +805,7 @@ fun add_type_invariant_locale (b,(typ_t, proto_t)) =
 fun type_invariant_cmd (spec as ((typing_b,proto_name),_)) lthy =
   lthy
   |> #2 o define_typing_cmd spec
-  |> Local_Theory.theory (fn thy =>
+  |> Local_Theory.raw_theory (fn thy =>
       let
         val typ_name = Binding.name_of typing_b;
         val typ_t    = Syntax.read_term_global thy typ_name;
@@ -821,7 +815,7 @@ fun type_invariant_cmd (spec as ((typing_b,proto_name),_)) lthy =
 
         val (_,lthy) = 
           add_type_invariant_locale (locale_b, (typ_t, proto_t)) thy;
-        val case_th  = ProofContext.get_thm lthy "knows_cases";
+        val case_th  = Proof_Context.get_thm lthy "knows_cases";
       in
         lthy
         |> #2 o precompute_source_elim_rules case_th
@@ -830,14 +824,14 @@ fun type_invariant_cmd (spec as ((typing_b,proto_name),_)) lthy =
    );
 
 (* register the type invariant definition command *)
-local structure P = OuterParse and K = OuterKeyword in
+local structure P = Parse and K = Keyword in
   val for_proto = P.$$$ "for" |-- P.term;
 
   val type_invariant_parser = 
-    P.binding -- for_proto --| P.where_ -- (SpecParse.opt_thm_name ":" -- P.prop);
+    P.binding -- for_proto --| P.where_ -- (Parse_Spec.opt_thm_name ":" -- P.prop);
   val _ =
-    OuterSyntax.local_theory "type_invariant" "type invariant definition" 
-      K.thy_decl (type_invariant_parser >> type_invariant_cmd);
+    Outer_Syntax.local_theory @{command_spec "type_invariant"} "type invariant definition" 
+      (type_invariant_parser >> type_invariant_cmd);
 end;
 
 end;

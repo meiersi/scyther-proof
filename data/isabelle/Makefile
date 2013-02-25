@@ -26,12 +26,11 @@ scyther-proof-doc:
 
 # The following commands require
 #
-#   a working installation of Isabelle2009-1
+#   a working installation of Isabelle2013
 #   (http://www.cl.cam.ac.uk/research/hvg/Isabelle/).
 #
 
 # build an image of the ESPL formalization in Isabelle. This is required for
 # the 'scyther-proof --isabelle' switch to work.
 espl-image:
-	isabelle make clean
-	isabelle make
+	isabelle build -cb -d . ESPL

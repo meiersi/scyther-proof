@@ -19,7 +19,7 @@ begin
 chapter{* Compromising Adversary Capability *}
 
 section{* Partnering *}
-types partnering = "state \<Rightarrow> (tid \<times> tid) set"
+type_synonym partnering = "state \<Rightarrow> (tid \<times> tid) set"
 
 
 definition unionPart :: "partnering \<Rightarrow> partnering \<Rightarrow> partnering" (infix "UNP" 65)
@@ -31,7 +31,7 @@ notation (xsymbols)
 
 lemma union_unionPart_conv:
   "(a \<in> ((P1 \<union>\<^isub>P P2) q)) = (a \<in> (P1 q \<union> P2 q))"
-by (fastsimp simp add: unionPart_def)
+by (fastforce simp add: unionPart_def)
 
 
 definition mk_partnering :: "role \<Rightarrow> role \<Rightarrow> (pattern \<times> pattern \<times> rolestep) set \<Rightarrow> partnering"
@@ -44,10 +44,10 @@ lemma mk_partnering_conv:
  "((i,j) \<in> mk_partnering R1 R2 conds (t,r,s)) = 
    (roleMap r i = Some R1 \<and> roleMap r j = Some R2 \<and> 
    (\<forall> (p1,p2,st) \<in> conds. (j,st) \<in> steps t \<longrightarrow> (inst s i p1) = (inst s j p2)))"
-by (fastsimp simp add: mk_partnering_def)
+by (fastforce simp add: mk_partnering_def)
 
 lemma setEqImpTupleIn: "(X = Y) \<Longrightarrow> ((i,j) \<in> X) = ((i,j) \<in> Y)"
-by fastsimp
+by fastforce
 
 lemma uniquePartner: 
   assumes facts:
@@ -59,15 +59,15 @@ lemma uniquePartner:
     "\<forall> j'. (i,j') \<in> mk_partnering R1 R2 conds (t,r,s) \<and> (j',st) \<in> steps t \<longrightarrow> j' = j"
 proof -
   have "inst s i pt1 = inst s j pt2"
-    using facts by (fastsimp simp add: mk_partnering_conv)
+    using facts by (fastforce simp add: mk_partnering_conv)
   moreover 
   hence "\<forall> j'. j' \<noteq> j \<longrightarrow> inst s j pt2 \<noteq> inst s j' pt2"
-    using facts by fastsimp
+    using facts by fastforce
   ultimately 
   have "\<forall> j'. j' \<noteq> j \<longrightarrow> inst s i pt1 \<noteq> inst s j' pt2"
-    by fastsimp
+    by fastforce
   hence "\<forall> j'. (j' \<noteq> j \<and> (j',st) \<in> steps t) \<longrightarrow>  (i,j') \<notin> mk_partnering R1 R2 conds (t,r,s)"
-    using facts by (fastsimp simp add: mk_partnering_conv)
+    using facts by (fastforce simp add: mk_partnering_conv)
   thus ?thesis
     by auto
 qed
@@ -78,11 +78,11 @@ lemma mk_partneringRole:
   shows
    "roleMap r i = Some R1 \<and> roleMap r j = Some R2"
 using facts
-by (fastsimp simp add: mk_partnering_conv)
+by (fastforce simp add: mk_partnering_conv)
 
 section{* Capabilities *}
 
-types capability = "state \<Rightarrow> reveal set"
+type_synonym capability = "state \<Rightarrow> reveal set"
 
 subsection{* Helper Functions *}
 definition interCap :: "capability \<Rightarrow> capability \<Rightarrow> capability" (infix "INC" 65)
@@ -101,11 +101,11 @@ notation (xsymbols)
 
 lemma union_unionCap_conv:
   "(a \<in> ((C1 \<union>\<^isub>C C2) q)) = (a \<in> (C1 q \<union> C2 q))"
-by (fastsimp simp add: unionCap_def)
+by (fastforce simp add: unionCap_def)
 
 lemma inter_interCap_conv:
   "(a \<in> ((C1 \<inter>\<^isub>C C2) q)) = (a \<in> (C1 q \<inter> C2 q))"
-by (fastsimp simp add: interCap_def)
+by (fastforce simp add: interCap_def)
 
 
 subsection{* Adversary-Compromise Model *}
@@ -119,13 +119,13 @@ lemma acm_to_caps:
   (t,r,s) \<in> acm caps ; 
   reveal \<in> reveals t 
  \<rbrakk> \<Longrightarrow> \<exists> cap \<in> caps. reveal \<in> cap (t,r,s)"
-by(fastsimp simp add: acm_def)
+by(fastforce simp add: acm_def)
 
 
 lemma acm_monotone:
 "\<lbrakk> (t,r,s) \<in> acm caps \<rbrakk> 
  \<Longrightarrow> (t,r,s) \<in> acm (caps \<union> caps')"
-by(fastsimp simp add: acm_def)
+by(fastforce simp add: acm_def)
 
 subsection{* Implementation of Capabilities and Dot-Mapping *}
 
@@ -183,7 +183,7 @@ lemma imposs_lkr_caps[iff]:
   "RCompr a b \<notin> LKRactor i c (t,r,s)"
   "RCompr a b \<notin> LKRafter i (t,r,s)"
   "RCompr a b \<notin> LKRafterCorrect i ps(t,r,s)"
-by(fastsimp)+
+by(fastforce)+
 
 
 subsubsection{* Compromises *}
@@ -230,20 +230,20 @@ lemma imposs_compr_caps[iff]:
   "RCompr RandGen j \<notin> SkR i ps q"
   "RCompr State j \<notin> RNR q"
   "RCompr SessKey j \<notin> RNR q"
-by(fastsimp simp add: StR_def SkR_def RNR_def)+
+by(fastforce simp add: StR_def SkR_def RNR_def)+
 
 
 lemma SkR_conv[simp]:
   "c \<in> SkR i ps (t,r,s) = (\<exists> j. (c = RCompr SessKey j) \<and> (i,j) \<notin> ps (t,r,s) \<and> j \<noteq> i )"
-by(fastsimp simp add: SkR_def)
+by(fastforce simp add: SkR_def)
 
 lemma RNR_conv[simp]:
   "c \<in> RNR (t,r,s) = (\<exists> j. (c = RCompr RandGen j))"
-by(fastsimp simp add: RNR_def)
+by(fastforce simp add: RNR_def)
 
 lemma StR_conv[simp]:
   "c \<in> StR i ps (t,r,s) = (\<exists> j. (c = RCompr State j) \<and> (i,j) \<notin> ps (t,r,s) \<and> j \<noteq> i )"
-by(fastsimp simp add: StR_def)
+by(fastforce simp add: StR_def)
 
 
 lemma (in reachable_state) LKRafterTrans:
@@ -253,6 +253,6 @@ lemma (in reachable_state) LKRafterTrans:
     RLKR a \<in> LKRafter i (t,r,s);
     LKR a \<prec> St (i,st)
    \<rbrakk> \<Longrightarrow> False"
-by(fastsimp)
+by(fastforce)
 
 end

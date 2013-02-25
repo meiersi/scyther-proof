@@ -13,9 +13,9 @@
 theory Hints
 imports
   Main
-uses
-  espl_utils
 begin
+
+ML_file "espl_utils.ML"
 
 section{* A Theory of Hints for Marking Intermediate Results *}
 
@@ -90,3 +90,4 @@ end;
 *}
 
 end
+

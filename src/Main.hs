@@ -149,8 +149,8 @@ setupMainMode = do
           , "  The '--html' flag requires the 'dot' tool from GraphViz available at:"
           , "    " ++ "http://www.graphviz.org/"
           , "  "
-          , "  The '--isabelle' flag requires the 'Isabelle-2009-1' release of Isabelle/HOL:"
-          , "    " ++ "http://isabelle.in.tum.de/website-Isabelle2009-1/download_x86-linux.html"
+          , "  The '--isabelle' flag requires the 'Isabelle-2013' release of Isabelle/HOL:"
+          , "    " ++ "http://isabelle.in.tum.de/website-Isabelle2013/index.html"
           , ""
           , "  Check the '" ++ readmePath ++ "' file for instructions on how to load the generated theory files in Isabelle's interactive mode."
           ]
@@ -787,14 +787,14 @@ ensureIsabelleESPL rebuild isabelle = do
     putStrLn ""
   where
     checkVersion out _
-      | "Isabelle2009-1" `isInfixOf` out = Right $ init out ++ ". OK."
+      | "Isabelle2013" `isInfixOf` out = Right $ init out ++ ". OK."
       | otherwise                        = Left  $ unlines $
           [ "WARNING:"
           , ""
-          , " " ++ programName ++ " requires Isabelle2009-1."
+          , " " ++ programName ++ " requires Isabelle2013."
           , " Proof checking is likely not to work."
-          , " Please download Isabelle2009-1 from:"
-          , "   http://isabelle.in.tum.de/website-Isabelle2009-1/download_x86-linux.html"
+          , " Please download Isabelle2013 from:"
+          , "   http://isabelle.in.tum.de/website-Isabelle2013/index.html"
           ]
 
     checkLogics out _
