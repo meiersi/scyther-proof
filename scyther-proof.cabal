@@ -81,7 +81,6 @@ data-files:
 
   isabelle/AUTHORS
   isabelle/document/root.tex
-  isabelle/IsaMakefile
   isabelle/Makefile
   isabelle/README
   isabelle/ROOT.ML
