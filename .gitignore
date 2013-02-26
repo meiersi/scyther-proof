@@ -1,5 +1,8 @@
 *.un~
 
+.hsenv
+hsenv.log
+
 dist/
 testbed/
 cabal-dev/
