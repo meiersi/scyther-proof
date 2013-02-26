@@ -1,25 +1,27 @@
 build-type:         Simple
 name:               scyther-proof
-version:            0.6.0.0
+version:            0.7.0.0
 license:            GPL
 license-file:       LICENSE
 category:           Security, Theorem Provers
-author:             Simon Meier <simon.meier@inf.ethz.ch>
-maintainer:         Simon Meier <simon.meier@inf.ethz.ch>
-copyright:          Simon Meier, ETH Zurich, 2009-2011
-synopsis:           Automatic generation of Isabelle/HOL correctness proofs for security protocols.
-description:
-                    scyther-proof is a security protocol verification tool
+author:             Simon Meier <iridcode@gmail.com>, 
+                    Andreas Lochbihler <andreas.lochbihler@inf.ethz.ch>
+maintainer:         Simon Meier <iridcode@gmail.com>
+copyright:          Simon Meier, Andreas Lochbihler, ETH Zurich, 2009-2013
+
+synopsis:           Automatic generation of Isabelle/HOL correctness proofs 
+                    for security protocols.
+
+description:        scyther-proof is a security protocol verification tool
                     based on an algorithm similar to the Scyther tool developed
                     by Cas Cremers
                     (<http://people.inf.ethz.ch/cremersc/scyther/index.html>).
                     The theory underlying scyther-proof is described in the
-                    paper \"Strong Invariants for the Efficient Construction of
-                    Machine-Checked Protocol Security Proofs\" by Meier,
-                    Cremers, and Basin available from
-                    <http://people.inf.ethz.ch/meiersi/publications/index.html>
-
-homepage:           http://www.infsec.ethz.ch/people/meiersi/
+                    2013 Journal of Computer Security paper 
+                    \"Efficient Construction of 
+                    Machine-Checked Protocol Security Proofs\" 
+                    by Meier, Cremers, and Basin available from
+                    <http://people.inf.ethz.ch/cremersc/publications/index.html>.
 stability:          Beta
 cabal-version:      >= 1.8
 data-dir:           data

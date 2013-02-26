@@ -1,3 +1,7 @@
+* 0.7.0.0
+    - ported to Isabelle-2013
+    - cleanup
+
 * 0.5.0.0
     - implemented proof generation for injective agreement
     - fixed bug in unification of inverse-key constructors
