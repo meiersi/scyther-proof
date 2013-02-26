@@ -21,7 +21,7 @@ description:        scyther-proof is a security protocol verification tool
                     \"Efficient Construction of 
                     Machine-Checked Protocol Security Proofs\" 
                     by Meier, Cremers, and Basin available from
-                    <http://people.inf.ethz.ch/cremersc/publications/index.html>.
+                    <https://github.com/meiersi/scyther-proof/tree/master/publications>.
 stability:          Beta
 cabal-version:      >= 1.8
 data-dir:           data
