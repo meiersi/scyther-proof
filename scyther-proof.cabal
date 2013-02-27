@@ -85,7 +85,7 @@ data-files:
   isabelle/document/root.tex
   isabelle/Makefile
   isabelle/README
-  isabelle/ROOT.ML
+  isabelle/ROOT
   isabelle/src/isar-keywords.el
   isabelle/src/*.thy
   isabelle/src/ESPLogic/*.thy

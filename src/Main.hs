@@ -808,9 +808,9 @@ ensureIsabelleESPL rebuild isabelle = do
       putStrLn "Attempting to build ESPL logic (this may take several minutes):"
       theoryDir <- esplTheoryDir
       let isamake args =
-            runProcess isabelle ("make" :args) (Just theoryDir) Nothing Nothing Nothing Nothing
+            runProcess isabelle ("build" : "-d" : theoryDir : args) (Just theoryDir) Nothing Nothing Nothing Nothing
               >>= waitForProcess
-      exitCode <- isamake ["clean"] >> isamake []
+      exitCode <- isamake ["-b", "ESPL"]
       case exitCode of
         ExitSuccess -> putStrLn "Sucess! :-)\n---"
         ExitFailure code -> putStrLn $ unlines
