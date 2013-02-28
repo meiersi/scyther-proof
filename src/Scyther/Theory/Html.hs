@@ -74,10 +74,9 @@ data GenerationInput = GenerationInput {
   , giDotTool     :: String    -- ^ 'dot' tool to use.
   , giCmdLine     :: String    -- ^ The command line that was used in this call to
                                --   scyther-proof.
-  , giIsabelle    :: Maybe (FilePath -> IO (IO String, Maybe String))
+  , giIsabelle    :: Maybe (FilePath -> IO (Maybe String))
                                -- ^ A checking function calling isabelle with
-                               -- the right parameters and returning an IO function
-                               -- for retrieving the logfile contents and an error
+                               -- the right parameters which return an error
                                -- message in case the check didn't succeed.
   }
 
@@ -85,7 +84,6 @@ data GenerationInput = GenerationInput {
 data PathInfo = PathInfo {
     inputFileCopy   :: FilePath  -- ^ Path of input file copy.
   , proofScriptFile :: FilePath  -- ^ Path of generated Isabelle proof script.
-  , logFileCopy     :: FilePath  -- ^ Path of the copy of the logFile
   , outDir          :: FilePath  -- ^ Output directory.
   , imageDir        :: FilePath  -- ^ Relative directory for graphs.
   , filesDir        :: FilePath  -- ^ Relative directory for input and output files.
@@ -99,7 +97,6 @@ pathInfo input = info
       { inputFileCopy   = filesDir info </> takeFileName (giInputFile input)
       , proofScriptFile = filesDir info </> 
           addExtension (takeBaseName (giInputFile input) ++ "_cert_auto") "thy"
-      , logFileCopy     = filesDir info </> "logfile"
       , outDir          = giOutDir input
       , imageDir        = "img"
       , filesDir        = "files"
@@ -119,8 +116,8 @@ requiredDirs info = map (mkAbsolute info) [".", imageDir info, filesDir info]
 -- theories for exporting as JSON.
 jsGenerationInfo :: GenerationInput
                  -> NominalDiffTime  -- ^ Proof script generation time.
-                 -> Maybe (Bool, NominalDiffTime, FilePath) 
-                                     -- ^ Proof checking time and relative logfile path.
+                 -> Maybe (Bool, NominalDiffTime) 
+                                     -- ^ Proof checking time.
                  -> JSObject JSValue
 jsGenerationInfo input genTime optCheckInfo = toJSObject $
     [ ("header",      showJSON . toJSString $ giHeader input)
@@ -138,10 +135,8 @@ jsGenerationInfo input genTime optCheckInfo = toJSObject $
 
     checkInfo Nothing                              = 
         [ ("certificateStatus", showJSON . toJSString $ genTimeString) ]
-    checkInfo (Just (success, checkTime, logFile)) =
-        [ ( "certificateStatus", showJSON . toJSString $ genTimeString ++ status)
-        , ( "logFile", showJSON (toJSString "logfile", toJSString logFile))
-        ]
+    checkInfo (Just (success, checkTime)) =
+        [ ( "certificateStatus", showJSON . toJSString $ genTimeString ++ status) ]
       where
         status | success   = ", successfully checked in " ++ show checkTime
                | otherwise = ", CHECK FAILED after " ++ show checkTime
@@ -164,13 +159,11 @@ theoryToHtml input = do
     Nothing           -> return Nothing
     Just machineCheck -> do
       putStr " checking proof script: " >> hFlush stdout
-      ((logFileContents, optErrMsg), checkTime) <- timed $ 
+      (optErrMsg, checkTime) <- timed $ 
         machineCheck (mkAbsolute paths $ proofScriptFile paths)
       putStrLn $ show checkTime
       -- write log file copy
-      contents <- logFileContents
-      writeAbsolute (logFileCopy paths) contents
-      return $ Just (isNothing optErrMsg, checkTime, logFileCopy paths)
+      return $ Just (isNothing optErrMsg, checkTime)
   -- json output
   let thyJSON = mkThyJSON (jsGenerationInfo input genTime optCheckInfo)
   writeAbsolute "theory.js"
