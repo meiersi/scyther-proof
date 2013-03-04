@@ -1,10 +1,9 @@
 README: The scyther-proof security protocol verification tool
 =============================================================
 
-Author: Simon Meier <simon.meier@inf.ethz.ch>
-
-Creation Date: 13/05/2011  --  Last Updated:  27/02/2013
-
+Authors: Simon Meier <iridcode@gmail.com>
+Creation Date: 2011-05-13
+Last Updated:  2013-02-27 by Andreas Lochbihler <andreas.lochbihler@inf.ethz.ch>
 
 1. Introduction
 ===============
@@ -126,14 +125,12 @@ and start Isabelle using the -k switch as follows.
   all specified security properties together with the proof with the fewest
   number of chain rule applications to stdout.
 
-  In order to generate an Isabelle proof script two additional options need to
-  be added
+  To generate an Isabelle proof script, two additional options are required.
 
     scyther-proof $EXAMPLE_DIR/classic/NS_Public.spthy --shortest --output=nsl_cert.thy --ASCII
 
   The first one specifies the output file and the second one instructs
   scyther-proof to use Isabelle's ASCII notation as the output format.
-
 
   To build the source code documentation you can use the call
 
@@ -160,7 +157,7 @@ and start Isabelle using the -k switch as follows.
         cd <theory-dir-output-by-scytherproof>/src
         isabelle emacs Tutorial.thy
 
-    or if you've chosen the elegant variant
+    or if you've chosen the elegant variant for the keywords file
 
         isabelle emacs -k ESPL Tutorial.thy
 
@@ -181,6 +178,6 @@ and start Isabelle using the -k switch as follows.
 
 `Happy Proving :)`
 
-In case of questions do not hesistate to contact me at
+In case of questions do not hesistate to contact Simon Meier at
 iridcode@gmail.com.
 
