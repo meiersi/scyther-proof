@@ -751,6 +751,8 @@ ensureIsabelleESPL :: FilePath -- ^ Path to the 'isabelle' tool.
 ensureIsabelleESPL isabelle = do
     putStrLn $ "checking suitability of Isabelle tool: '" ++ isabelle ++ "'"
     _ <- testProcess checkVersion " version: " isabelle ["version"] ""
+    success <- testProcess checkLogics " installed logics: " isabelle ["findlogics"] ""
+    unless success buildESPL
     putStrLn ""
   where
     checkVersion out _
@@ -763,4 +765,26 @@ ensureIsabelleESPL isabelle = do
           , " Please download Isabelle2013 from:"
           , "   http://isabelle.in.tum.de/website-Isabelle2013/index.html"
           ]
+
+    checkLogics out _
+      | "ESPL" `isInfixOf` out = Right $ init out ++ ". OK."
+      | otherwise              = Left  $ init out ++ ". WARNING: ESPL logic not installed."
+
+
+    buildESPL = do
+      putStrLn "---"
+      putStrLn "Attempting to build ESPL logic (this may take several minutes):"
+      theoryDir <- esplTheoryDir
+      let isamake args =
+            runProcess isabelle ("build" : "-d" : theoryDir : args) (Just theoryDir) Nothing Nothing Nothing Nothing
+              >>= waitForProcess
+      exitCode <- isamake ["-b", "ESPL"]
+      case exitCode of
+        ExitSuccess -> putStrLn "Sucess! :-)\n---"
+        ExitFailure code -> putStrLn $ unlines
+            [ "  Logic building failed with code: " ++ show code
+            , "  Proof checking is likely not to work."
+            , "  To investigate the problem try manually loading/building the theories in"
+            , "    '" ++ theoryDir ++ "'"
+            ]
 
