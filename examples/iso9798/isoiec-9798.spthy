@@ -1,0 +1,1478 @@
+// All protocols in a single file to test their parallel composition.
+// Author: Simon Meier <iridcode@gmail.com>
+// Created: 2013-03-21
+theory isoiec_9798_2 begin
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 2 - bdkey
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/*
+ * Modeled from ISO/IEC 9798-2
+ * Modeler: Cas Cremers, Dec. 2010
+ * Ported to scyther-proof: Simon Meier, Feb. 2011
+ *
+ * Modeling notes:
+ *   - Variant of ISO/IEC 9798-2 with bidirectional keys k[A,B].
+ *   - time-variant-parameters, time-stamps, and sequence numbers are
+ *     modeled by nonces leaked to the adversary at the start of a role.
+ *   - The TextX fields are chosen by the adversary.
+ */
+
+
+/******************************************************************************
+ * Protocol 1
+ ******************************************************************************
+ *
+ * symmetric
+ * one-pass
+ * unilateral
+ *
+ * Note: the identity B may be ommitted, if
+ *   (a) the environment disallows such attacks, or
+ *   (b) a unidirectional key is used
+ * (This formulation directly stems from the standard.)
+ */
+protocol isoiec_9798_2_1_bdkey
+{
+  leak_A. A ->  : TNA
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, Text2, {'isoiec_9798_2_1_enc_1', TNA, B, Text1 }k[A,B]
+}
+
+// Here we dont get any injective agreement, as there could be two B thread
+// receiving the same message from one A.
+property (of isoiec_9798_2_1_bdkey)
+  B_non_injective_agreement:
+    niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
+
+
+/******************************************************************************
+ * Protocol 2
+ ******************************************************************************
+ *
+ * symmetric
+ * two-pass
+ * unilateral
+ *
+ * Note: the identity B may be ommitted, if
+ *   (a) the environment disallows such attacks, or
+ *   (b) a unidirectional key is used
+ */
+protocol isoiec_9798_2_2_bdkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, RB, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Text3, {'isoiec_9798_2_2_enc_2', RB, B, Text2}k[B,A]
+}
+
+property (of isoiec_9798_2_2_bdkey)
+  B_injective_agreement:
+    iagree(B_2[A,B,RB,Text2] -> A_2[A,B,RB,Text2], {A, B})
+
+
+
+/******************************************************************************
+ * Protocol 3
+ ******************************************************************************
+ *
+ * symmetric
+ * two-pass
+ * mutual
+ *
+ * Note: the identities inside the encryptions may be ommitted, if
+ *   (a) the environment disallows such attacks, or
+ *   (b) a unidirectional key is used
+ */
+protocol isoiec_9798_2_3_bdkey
+{
+  leak_A. A ->  : TNA
+  leak_B. B ->  : TNB
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, Text2, {'isoiec_9798_2_3_enc_1', TNA, B, Text1 }k[A,B]
+
+  text_2.   -> B: Text3, Text4
+       2. B -> A: B, A, Text4, {'isoiec_9798_2_3_enc_2', TNB, A, Text3 }k[B,A]
+}
+
+// NOTE: We do not get injective agreement here, in neither direction. The
+// problem is the same as in isoiec_9798_2_1_bdkey. However, we are missing
+// the opportunity to strengthen the property for A, as we could just embed
+// TNA in the message sent from B.
+properties (of isoiec_9798_2_3_bdkey)
+  A_non_injective_agreement:
+    niagree(A_2[A,B,TNB,Text3] -> B_2[A,B,TNB,Text3], {A, B})
+
+  B_non_injective_agreement:
+    niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
+
+
+/******************************************************************************
+ * Protocol 4
+ ******************************************************************************
+ *
+ * symmetric
+ * three-pass
+ * mutual
+ *
+ * Note: the identity B inside the encryption may be ommitted, if
+ *   (a) the environment disallows such attacks, or
+ *   (b) a unidirectional key is used
+ *
+ */
+protocol isoiec_9798_2_4_bdkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, RB, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Text3, {'isoiec_9798_2_4_enc_1', RA, RB, B, Text2 }k[A,B]
+
+  text_3.   -> B: Text4, Text5
+       3. B -> A: B, A, Text5, {'isoiec_9798_2_4_enc_2', RB, RA, Text4 }k[A,B]
+}
+
+properties (of isoiec_9798_2_4_bdkey)
+  A_injective_agreement:
+    iagree(A_3[A,B,RA,RB,Text2,Text4] -> B_3[A,B,RA,RB,Text2,Text4], {A, B})
+
+  B_injective_agreement:
+    iagree(B_2[A,B,RA,RB,Text2] -> A_2[A,B,RA,RB,Text2], {A, B})
+
+
+/******************************************************************************
+ * Protocol 5
+ ******************************************************************************
+ *
+ * symmetric
+ * ttp
+ * four-pass
+ * mutual
+ *
+ * Modeling notes:
+ * - The use of TNb in message 4, as specified by the ISO standard, is
+ *   different from other models, in which it was TNa.
+ * - Added additional identity to messages in Step 2 to avoid identity swapping.
+ * - We send identity P in Step 3 in order for B to be able to lookup key k(B,P)
+ */
+protocol isoiec_9798_2_5_bdkey
+{
+  leak_A. A ->  : TVPa, TNa
+  leak_B. B ->  : TNb
+  leak_P. P ->  : TNp
+
+  text_1.   -> A: Text1
+       1. A -> P: A, P, TVPa, B, Text1
+
+  text_2.   -> P: Text2, Text3, Text4
+       2. P ->  : P, A, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, A, B, Text3 }k[A,P]
+                             , { 'isoiec_9798_2_5_enc_2_2', TNp , Kab, A, B, Text2 }k[B,P]
+            -> A: P, A, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, A, B, Text3 }k[A,P]
+                             , TokenPA_for_B
+
+  text_3.   -> A: Text5, Text6
+       3. A ->  : A, B, Text6, P, TokenPA_for_B
+                                , { 'isoiec_9798_2_5_enc_3', TNa, B, Text5 }Kab
+            -> B: A, B, Text6, P, { 'isoiec_9798_2_5_enc_2_2', TNp, Kab, A, B, Text2 }k[B,P]
+                                , { 'isoiec_9798_2_5_enc_3', TNa, B, Text5 }Kab
+
+  text_4.   -> B: Text7, Text8
+       4. B -> A: B, A, Text8, { 'isoiec_9798_2_5_enc_4', TNb, A, Text7 }Kab
+}
+
+properties (of isoiec_9798_2_5_bdkey)
+  P_secret_Kab: secret(P, -, Kab, {A, B, P})
+  A_secret_Kab: secret(A, 2, Kab, {A, B, P})
+  B_secret_Kab: secret(B, 3, Kab, {A, B, P})
+
+  // Agreement properties strengthened with respect to Cas Cremers' models:
+  //   (a) we also verify agreement on the freshness data TNa, TNb
+  //   (b) we also verify agreement with the trusted third party
+  //
+  A_injective_agreement_B:
+    iagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
+
+  // Injective agreement does not hold. See
+  // isoiec_9798_2_5_special_TTP_bdkey for more information.
+  B_non_injective_agreement_A:
+    niagree(B_3[A,B,P,Kab,TNa,Text5] -> A_3[A,B,P,Kab,TNa,Text5], {A, B, P})
+
+  A_injective_agreement_P:
+    iagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
+
+  // Injective agreement does not hold. See
+  // isoiec_9798_2_5_special_TTP_bdkey for more information.
+  B_non_injective_agreement_P:
+    niagree(B_3[A,B,P,Kab,TNp,Text2] -> P_2[A,B,P,Kab,TNp,Text2], {A, B, P})
+
+
+/******************************************************************************
+ * Protocol 6
+ ******************************************************************************
+ *
+ * symmetric
+ * ttp
+ * five-pass
+ * mutual
+ *
+ * Modeling notes:
+ * - We send identity P in Step 4 in order for B to be able to lookup key k(B,P)
+ * - Added additional identity to messages in Step 3 to avoid identity swapping.
+ *
+ * MPA Attack reported by Mathuria:
+ * - Type flaw MPA when in parallel with Abadi-Needham protocol.
+ */
+protocol isoiec_9798_2_6_bdkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2
+       2. A -> P: A, P, Ra, Rb, B, Text2
+
+  text_3.   -> P: Text3, Text4, Text5
+       3. P ->  : P, A, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, A, B, Text4}k[A,P]
+                             , {'isoiec_9798_2_6_enc_3_2', Rb, Kab, A, B, Text3}k[B,P]
+            -> A: P, A, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, A, B, Text4}k[A,P]
+                             , TokenPA_for_B
+
+  text_4.   -> A: Text6, Text7
+       4. A ->  : A, B, Text7, P, TokenPA_for_B
+                                , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
+            -> B: A, B, Text7, P, {'isoiec_9798_2_6_enc_3_2', Rb, Kab, A, B, Text3}k[B,P]
+                                , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
+
+  text_5.   -> B: Text8, Text9
+       5. B -> A: B, A, Text9, {'isoiec_9798_2_6_enc_5', Rb, Rpa, Text8}Kab
+}
+
+properties (of isoiec_9798_2_6_bdkey)
+  P_secret_Kab: secret(P, -, Kab, {A, B, P})
+  A_secret_Kab: secret(A, 3, Kab, {A, B, P})
+  B_secret_Kab: secret(B, 4, Kab, {A, B, P})
+
+  // Agreement properties strengthened with respect to Cas Cremers' models:
+  //   (a) we also verify agreement on the freshness data
+  //   (b) we also verify agreement with the trusted third party
+  //
+  A_injective_agreement_B:
+    iagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
+
+  B_injective_agreement_A:
+    iagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
+
+  A_injective_agreement_P:
+    iagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
+
+  B_injective_agreement_P:
+    iagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
+
+
+/******************************************************************************
+ * Protocol 5 (with the assumption that the TTP does not play other roles)
+ ******************************************************************************
+ *
+ * symmetric
+ * ttp
+ * four-pass
+ * mutual
+ *
+ * Modeling notes:
+ * - The use of TNb in message 4, as specified by the ISO standard, is
+ *   different from other models, in which it was TNa.
+ * - We MUST assume that the trusted third party does not execute the A role.
+ *   Otherwise, some authentication properties break (see below).
+ * - We send identity P in Step 3 in order for B to be able to lookup key k[B,P]
+ */
+protocol isoiec_9798_2_5_special_TTP_bdkey
+{
+  leak_A. A ->  : TVPa, TNa
+  leak_B. B ->  : TNb
+  leak_P. P ->  : TNp
+
+  text_1.   -> A: Text1
+       1. A -> P: A, P, TVPa, B, Text1
+
+  text_2.   -> P: Text2, Text3, Text4
+       2. P ->  : P, A, Text4, { 'isoiec_9798_2_5_special_TTP_enc_2_1', TVPa, Kab, B, Text3 }k[A,P]
+                             , { 'isoiec_9798_2_5_special_TTP_enc_2_2', TNp , Kab, A, Text2 }k[B,P]
+            -> A: P, A, Text4, { 'isoiec_9798_2_5_special_TTP_enc_2_1', TVPa, Kab, B, Text3 }k[A,P]
+                             , TokenPA_for_B
+
+  text_3.   -> A: Text5, Text6
+       3. A ->  : A, B, Text6, P, TokenPA_for_B
+                                , { 'isoiec_9798_2_5_special_TTP_enc_3', TNa, B, Text5 }Kab
+            -> B: A, B, Text6, P, { 'isoiec_9798_2_5_special_TTP_enc_2_2', TNp, Kab, A, Text2 }k[B,P]
+                                , { 'isoiec_9798_2_5_special_TTP_enc_3', TNa, B, Text5 }Kab
+
+  text_4.   -> B: Text7, Text8
+       4. B -> A: B, A, Text8, { 'isoiec_9798_2_5_special_TTP_enc_4', TNb, A, Text7 }Kab
+}
+
+axiom (of isoiec_9798_2_5_special_TTP_bdkey) different_actors_A_P:
+  premises
+    "role(0) = A"
+    "role(1) = P"
+    "A#0 = P#1"
+  imply
+    "False"
+
+properties (of isoiec_9798_2_5_special_TTP_bdkey)
+  P_secret_Kab: secret(P, -, Kab, {A, B, P})
+  A_secret_Kab: secret(A, 2, Kab, {A, B, P})
+  B_secret_Kab: secret(B, 3, Kab, {A, B, P})
+
+  // Agreement properties strengthened with respect to Cas Cremers' models:
+  //   (a) we also verify agreement on the freshness data TNa, TNb
+  //   (b) we also verify agreement with the trusted third party
+  //
+  // Note: If no axiom dependency is noted for a property below, then it can
+  //       be proven without the axiom.
+
+  A_injective_agreement_B:
+    iagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
+
+  // Depends on 'different_actors_A_P'
+  //
+  // NO injective agreement can be proven. There may be several B-threads
+  // communicating with the same A-thread! Checking the 'TNb' timestamp in
+  // later steps could be used to remove this problem, up to the clock
+  // resolution.
+  B_non_injective_agreement_A:
+    niagree(B_3[A,B,P,Kab,TNa,Text5] -> A_3[A,B,P,Kab,TNa,Text5], {A, B, P})
+
+  // depends on 'different_actors_A_P'
+  A_injective_agreement_P:
+    iagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
+
+  // No injective agreement, as the TTP does not receive any message from 'B'.
+  B_non_injective_agreement_P:
+    niagree(B_3[A,B,P,Kab,TNp,Text2] -> P_2[A,B,P,Kab,TNp,Text2], {A, B, P})
+
+
+/******************************************************************************
+ * Protocol 6 (with the assumption that the TTP does not play other roles)
+ ******************************************************************************
+ *
+ * symmetric
+ * ttp
+ * five-pass
+ * mutual
+ *
+ * Modeling notes:
+ * - We send identity P in Step 4 in order for B to be able to lookup key k[B,P]
+ * - We MUST assume that the trusted third party does not execute any of the
+ *   other roles. Otherwise, some authentication properties break (see below).
+ *
+ * MPA Attack reported by Mathuria:
+ * - Type flaw MPA when in parallel with Abadi-Needham protocol.
+ */
+protocol isoiec_9798_2_6_special_TTP_bdkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2
+       2. A -> P: A, P, Ra, Rb, B, Text2
+
+  text_3.   -> P: Text3, Text4, Text5
+       3. P ->  : P, A, Text5, {'isoiec_9798_2_6_special_TTP_enc_3_1', Ra, Kab, B, Text4}k[A,P]
+                             , {'isoiec_9798_2_6_special_TTP_enc_3_2', Rb, Kab, A, Text3}k[B,P]
+            -> A: P, A, Text5, {'isoiec_9798_2_6_special_TTP_enc_3_1', Ra, Kab, B, Text4}k[A,P]
+                             , TokenPA_for_B
+
+  text_4.   -> A: Text6, Text7
+       4. A ->  : A, B, Text7, P, TokenPA_for_B
+                                , {'isoiec_9798_2_6_special_TTP_enc_4', Rpa, Rb, Text6}Kab
+            -> B: A, B, Text7, P, {'isoiec_9798_2_6_special_TTP_enc_3_2', Rb, Kab, A, Text3}k[B,P]
+                                , {'isoiec_9798_2_6_special_TTP_enc_4', Rpa, Rb, Text6}Kab
+
+  text_5.   -> B: Text8, Text9
+       5. B -> A: B, A, Text9, {'isoiec_9798_2_6_special_TTP_enc_5', Rb, Rpa, Text8}Kab
+}
+
+axiom (of isoiec_9798_2_6_special_TTP_bdkey) different_actors_A_P:
+  premises
+    "role(0) = A"
+    "role(1) = P"
+    "A#0 = P#1"
+  imply
+    "False"
+
+axiom (of isoiec_9798_2_6_special_TTP_bdkey) different_actors_B_P:
+  premises
+    "role(0) = B"
+    "role(1) = P"
+    "B#0 = P#1"
+  imply
+    "False"
+
+properties (of isoiec_9798_2_6_special_TTP_bdkey)
+  P_secret_Kab: secret(P, -, Kab, {A, B, P})
+  A_secret_Kab: secret(A, 3, Kab, {A, B, P})
+  B_secret_Kab: secret(B, 4, Kab, {A, B, P})
+
+  // Agreement properties strengthened with respect to Cas Cremers' models:
+  //   (a) we also verify agreement on the freshness data
+  //   (b) we also verify agreement with the trusted third party
+  //
+  // Note: If no axiom dependency is noted for a property below, then it can
+  //       be proven without the axiom.
+
+  // depends on 'different_actors_B_P' and 'different_actors_A_P'
+  A_injective_agreement_B:
+    iagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
+
+  // depends on 'different_actors_B_P' and 'different_actors_A_P'
+  B_injective_agreement_A:
+    iagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
+
+  // depends on 'different_actors_A_P
+  A_injective_agreement_P:
+    iagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
+
+  // depends on 'different_actors_B_P
+  B_injective_agreement_P:
+    iagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 2 - udkey
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/* 
+ * Modeled from ISO/IEC 9798-2
+ * Modeler: Cas Cremers, Dec. 2010
+ * Ported to scyther-proof: Simon Meier, Feb. 2011
+ *
+ * Modeling notes:
+ *   - Variant of ISO/IEC 9798-2 with unidirectional keys k(A,B) and all
+ *     optional identities dropped.
+ *   - time-variant-parameters, time-stamps, and sequence numbers are
+ *     modeled by nonces leaked to the adversary at the start of a role.
+ *   - The TextX fields are chosen by the adversary.
+ */
+
+
+/******************************************************************************
+ * Protocol 1
+ ******************************************************************************
+ *
+ * symmetric
+ * one-pass
+ * unilateral
+ *
+ * Note: the identity B is ommitted because a unidirectional key is used
+ */
+protocol isoiec_9798_2_1_udkey
+{
+  leak_A. A ->  : TNA
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, Text2, {'isoiec_9798_2_1_enc_1', TNA, Text1 }k(A,B)
+}
+
+// Here we dont get any injective agreement, as there could be two B thread
+// receiving the same message from one A.
+property (of isoiec_9798_2_1_udkey)
+  B_non_injective_agreement: 
+    niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
+
+
+/******************************************************************************
+ * Protocol 2
+ ******************************************************************************
+ *
+ * symmetric
+ * two-pass
+ * unilateral
+ *
+ * Note: the identity is ommitted because a unidirectional key is used
+ */
+protocol isoiec_9798_2_2_udkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, RB, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Text3, {'isoiec_9798_2_2_enc_2', RB, Text2}k(A,B)
+}
+
+property (of isoiec_9798_2_2_udkey)
+  B_injective_agreement: 
+    iagree(B_2[A,B,RB,Text2] -> A_2[A,B,RB,Text2], {A, B})
+
+
+
+/******************************************************************************
+ * Protocol 3
+ ******************************************************************************
+ *
+ * symmetric
+ * two-pass
+ * mutual
+ *
+ * Note: the identities are ommitted because a unidirectional key is used
+ */
+protocol isoiec_9798_2_3_udkey
+{
+  leak_A. A ->  : TNA
+  leak_B. B ->  : TNB
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, Text2, {'isoiec_9798_2_3_enc_1', TNA, Text1 }k(A,B)
+
+  text_2.   -> B: Text3, Text4
+       2. B -> A: B, A, Text4, {'isoiec_9798_2_3_enc_2', TNB, Text3 }k(B,A)
+}
+
+// NOTE: We do not get injective agreement here, in neither direction. The
+// problem is the same as in isoiec_9798_2_1_bdkey. However, we are missing
+// the opportunity to strengthen the property for A, as we could just embed
+// TNA in the message sent from B.
+properties (of isoiec_9798_2_3_udkey)
+  A_non_injective_agreement: 
+    niagree(A_2[A,B,TNB,Text3] -> B_2[A,B,TNB,Text3], {A, B})
+
+  B_non_injective_agreement: 
+    niagree(B_2[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
+
+
+
+/******************************************************************************
+ * Protocol 4
+ ******************************************************************************
+ *
+ * symmetric
+ * three-pass
+ * mutual
+ *
+ * Note: the identities are ommitted because a unidirectional key is used
+ *
+ * In case (b), modeled here, the second key is reversed and the identities are
+ * omitted in the ciphertexts.
+ */
+protocol isoiec_9798_2_4_udkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, RB, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Text3, {'isoiec_9798_2_4_enc_1', RA, RB, Text2 }k(A,B)
+
+  text_3.   -> B: Text4, Text5
+       3. B -> A: B, A, Text5, {'isoiec_9798_2_4_enc_2', RB, RA, Text4 }k(B,A)
+}
+
+properties (of isoiec_9798_2_4_udkey)
+  A_injective_agreement: 
+    iagree(A_3[A,B,RA,RB,Text2,Text4] -> B_3[A,B,RA,RB,Text2,Text4], {A, B})
+
+  B_injective_agreement: 
+    iagree(B_2[A,B,RA,RB,Text2] -> A_2[A,B,RA,RB,Text2], {A, B})
+
+
+/******************************************************************************
+ * Protocol 5
+ ******************************************************************************
+ *
+ * symmetric
+ * ttp
+ * four-pass
+ * mutual
+ *
+ * Modeling notes:
+ * - The use of TNb in message 4, as specified by the ISO standard, is
+ *   different from other models, in which it was TNa.
+ * - We send identity P in Step 3 in order for B to be able to lookup key k(B,P)
+ */
+protocol isoiec_9798_2_5_udkey
+{
+  leak_A. A ->  : TVPa, TNa
+  leak_B. B ->  : TNb
+  leak_P. P ->  : TNp
+
+  text_1.   -> A: Text1
+       1. A -> P: A, P, TVPa, B, Text1
+
+  text_2.   -> P: Text2, Text3, Text4
+       2. P ->  : P, A, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, B, Text3 }k(A,P)
+                             , { 'isoiec_9798_2_5_enc_2_2', TNp , Kab, A, Text2 }k(B,P)
+            -> A: P, A, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, B, Text3 }k(A,P)
+                             , TokenPA_for_B
+
+  text_3.   -> A: Text5, Text6
+       3. A ->  : A, B, Text6, P, TokenPA_for_B
+                                , { 'isoiec_9798_2_5_enc_3', TNa, B, Text5 }Kab
+            -> B: A, B, Text6, P, { 'isoiec_9798_2_5_enc_2_2', TNp, Kab, A, Text2 }k(B,P)
+                                , { 'isoiec_9798_2_5_enc_3', TNa, B, Text5 }Kab
+
+  text_4.   -> B: Text7, Text8
+       4. B -> A: B, A, Text8, { 'isoiec_9798_2_5_enc_4', TNb, A, Text7 }Kab
+}
+
+properties (of isoiec_9798_2_5_udkey)
+  P_secret_Kab: secret(P, -, Kab, {A, B, P})
+  A_secret_Kab: secret(A, 2, Kab, {A, B, P})
+  B_secret_Kab: secret(B, 3, Kab, {A, B, P})
+
+  // Agreement properties strengthened with respect to Cas Cremers' models:
+  //   (a) we also verify agreement on the freshness data TNa, TNb
+  //   (b) we also verify agreement with the trusted third party
+  //
+  A_injective_agreement_B: 
+    iagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
+
+  // Injectivity agreement does not hold. See
+  //
+  // NO injective agreement can be proven. There may be several B-threads
+  // communicating with the same A-thread! Checking the 'TNb' timestamp in
+  // later steps could be used to remove this problem, up to the clock
+  // resolution.
+  B_non_injective_agreement_A: 
+    niagree(B_3[A,B,P,Kab,TNa,Text5] -> A_3[A,B,P,Kab,TNa,Text5], {A, B, P})
+
+  A_injective_agreement_P: 
+    iagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
+
+  // No injective agreement, as the TTP does not receive any message from 'B'.
+  B_non_injective_agreement_P: 
+    niagree(B_3[A,B,P,Kab,TNp,Text2] -> P_2[A,B,P,Kab,TNp,Text2], {A, B, P})
+
+
+/******************************************************************************
+ * Protocol 6
+ ******************************************************************************
+ *
+ * symmetric
+ * ttp
+ * five-pass
+ * mutual
+ *
+ * Modeling notes:
+ * - We send identity P in Step 4 in order for B to be able to lookup key k(B,P)
+ *
+ * MPA Attack reported by Mathuria:
+ * - Type flaw MPA when in parallel with Abadi-Needham protocol.
+ */
+protocol isoiec_9798_2_6_udkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2
+       2. A -> P: A, P, Ra, Rb, B, Text2
+
+  text_3.   -> P: Text3, Text4, Text5
+       3. P ->  : P, A, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, B, Text4}k(A,P)
+                             , {'isoiec_9798_2_6_enc_3_2', Rb, Kab, A, Text3}k(B,P)
+            -> A: P, A, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, B, Text4}k(A,P)
+                             , TokenPA_for_B
+
+  text_4.   -> A: Text6, Text7   
+       4. A ->  : A, B, Text7, P, TokenPA_for_B
+                                , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
+            -> B: A, B, Text7, P, {'isoiec_9798_2_6_enc_3_2', Rb, Kab, A, Text3}k(B,P)
+                                , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
+       
+  text_5.   -> B: Text8, Text9
+       5. B -> A: B, A, Text9, {'isoiec_9798_2_6_enc_5', Rb, Rpa, Text8}Kab
+}
+
+properties (of isoiec_9798_2_6_udkey)
+  P_secret_Kab: secret(P, -, Kab, {A, B, P})
+  A_secret_Kab: secret(A, 3, Kab, {A, B, P})
+  B_secret_Kab: secret(B, 4, Kab, {A, B, P})
+
+  // Agreement properties strengthened with respect to Cas Cremers' models:
+  //   (a) we also verify agreement on the freshness data 
+  //   (b) we also verify agreement with the trusted third party
+  //
+  A_injective_agreement_B: 
+    iagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
+
+  B_injective_agreement_A: 
+    iagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
+
+  A_injective_agreement_P: 
+    iagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
+
+  B_injective_agreement_P: 
+    iagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 3 
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/*
+ * Modeled from ISO/IEC 9798
+ * Modeler: Cas Cremers, Dec. 2010
+ * Adapted for scyther-proof: Simon Meier, Feb. 2011
+ *
+ * Modeling notes:
+ *   - We allow the adversary to choose the content of all TextX fields.
+ *   - time-variant-parameters, time-stamps, and sequence numbers are
+ *     modeled by nonces leaked to the adversary at the start of a role.
+ *   - Given some pattern 'pkA', then the signature pattern 'sign{m}pkA' is
+ *     translated to the message '(m, {m}inv(pkA))' upon execution.
+ */
+
+/****************************************************************************
+ * Protocol 1
+ ****************************************************************************
+ *
+ * signature
+ * one-pass
+ * unilateral
+ *
+ * Modeling notes:
+ *  - we assume that pk(A) is already known to B
+ */
+
+
+protocol isoiec_9798_3_1
+{
+  leak_A. A ->  : TNA
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, Text2,
+                  sign{'isoiec_9798_3_1_sig_1', TNA, B, Text1 }pk(A)
+}
+
+// No injective agreement here.
+properties (of isoiec_9798_3_1)
+  B_non_injective_agreement:
+    niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A})
+
+
+/****************************************************************************
+ * Protocol 2
+ ****************************************************************************
+ *
+ * signature
+ * two-pass
+ * unilateral
+ *
+ * Modeling notes:
+ *  - we assume that pk(A) is already known to B
+ */
+protocol isoiec_9798_3_2
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Text3,
+                  sign{'isoiec_9798_3_2_sig_2', Ra, Rb, B, Text2 }pk(A)
+}
+
+properties (of isoiec_9798_3_2)
+  B_injective_agreement:
+    iagree(B_2[A,B,Ra,Rb,Text2] -> A_2[A,B,Ra,Rb,Text2], {A})
+
+
+/****************************************************************************
+ * Protocol 3
+ ****************************************************************************
+ *
+ * signature
+ * two-pass
+ * mutual
+ * parallel
+ *
+ * Modeling notes:
+ *  - Here we only verify a sequential model of the protocol.
+ *  - We assume that the public keys are already predistributed.
+ */
+protocol isoiec_9798_3_3
+{
+  leak_A. A ->  : TNA
+  leak_B. B ->  : TNB
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, Text2,
+                  sign{'isoiec_9798_3_3_sig_1', TNA, B, Text1 }pk(A)
+
+  text_2.   -> B: Text3, Text4
+       2. B -> A: A, B, Text4,
+                  sign{'isoiec_9798_3_3_sig_2', TNB, A, Text3 }pk(B)
+}
+
+// No injective agreement. It requires a forth and back message, which does
+// not exist for role B. For role 'A', we miss an opportunity for injective
+// authentication, as we could include 'TNA' in the second message exchange.
+properties (of isoiec_9798_3_3)
+  A_non_injective_agreement:
+    niagree(A_2[A,B,TNB,Text3] -> B_2[A,B,TNB,Text3], {B})
+
+  B_non_injective_agreement:
+    niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A})
+
+
+/****************************************************************************
+ * Protocol 4
+ ****************************************************************************
+ *
+ * signature
+ * three-pass
+ * mutual
+ *
+ * Modeling notes:
+ *  - We assume that the public keys are already predistributed.
+ */
+protocol isoiec_9798_3_4
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, RB, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Text3,
+                  sign{'isoiec_9798_3_4_sig_1', RA, RB, B, Text2 }pk(A)
+
+  text_3.   -> B: Text4, Text5
+       3. B -> A: B, A, Text5,
+                  sign{'isoiec_9798_3_4_sig_2', RB, RA, A, Text4 }pk(B)
+}
+
+properties (of isoiec_9798_3_4)
+  // The identity A in Step 3 is required for this property to hold.
+  A_injective_agreement:
+    iagree(A_3[A,B,RA,RB,Text2,Text4] -> B_3[A,B,RA,RB,Text2,Text4], {A,B})
+
+  // The identity B in Step 2 is required for this property to hold.
+  B_injective_agreement:
+    iagree(B_2[A,B,RA,RB,Text2] -> A_2[A,B,RA,RB,Text2], {A})
+
+
+/****************************************************************************
+ * Protocol 5
+ ****************************************************************************
+ *
+ * signature
+ * two-pass
+ * mutual
+ * parallel
+ *
+ * Modeling notes:
+ *   - unnecessary sequentialization in the model.
+ *   - we assume that the public keys are already predistributed.
+ */
+protocol isoiec_9798_3_5
+{
+  text_1.   -> A: Text1
+       1. A -> B: A, B, RA, Text1
+
+  text_2.   -> B: Text2
+       2. B -> A: B, A, RB, Text2
+
+  text_3.   -> B: Text5, Text6
+       3. B -> A: B, A, Text6,
+                  sign{'isoiec_9798_3_5_sig_1', RB, RA, A, Text5 }pk(B)
+
+  text_4.   -> A: Text3, Text4
+       4. A -> B: A, B, Text4,
+                  sign{'isoiec_9798_3_5_sig_2', RA, RB, B, Text3 }pk(A)
+}
+
+properties (of isoiec_9798_3_5)
+  // The identity A in Step 3 is required for this property to hold.
+  A_injective_agreement:
+    iagree(A_3[A,B,RA,RB,Text5] -> B_3[A,B,RA,RB,Text5], {B})
+
+  // The identity B in Step 4 is required for this property to hold.
+  B_injective_agreement:
+    iagree(B_4[A,B,RA,RB,Text3,Text5] -> A_4[A,B,RA,RB,Text3,Text5], {A,B})
+
+
+/****************************************************************************
+ * Protocol 6 (Option 1)
+ ****************************************************************************
+ *
+ * signature
+ * ttp
+ * five-pass
+ * mutual
+ *
+ * A initiates and also communicates with T
+ *
+ * Modeling notes:
+ *  - We model the case where T sends the public keys instead of just verifying
+ *    the certificates; i.e., 'ResA = (A, pk(A))' and  'ResB = (B, pk(B))'.
+ *  - Option 1 and Option 2 must not share tags!
+ */
+protocol isoiec_9798_3_6_1
+{
+  text_1.   -> A: Text1
+       1. A -> B: A, B, Ra, Text1
+
+  text_2.   -> B: Text2, Text3
+       2. B ->  : A, B, Ra, Rb, Text3,
+                  sign{'isoiec_9798_3_6_opt_1_sig_2', B, Ra, Rb, A, Text2}pk(B)
+
+            -> A: A, B, Ra, Rb, Text3,
+                  TokenBA
+
+  text_3.   -> A: Text4
+       3. A -> T: A, T, Rpa, Rb, B, Text4
+
+  text_4.   -> T: Text5, Text6, Text7
+       4. T ->  : T, A, Text7, A, pk(A), B, pk(B),
+                  sign{'isoiec_9798_3_6_opt_1_sig_4_1', Rpa, B, pk(B), Text6}pk(T),
+                  sign{'isoiec_9798_3_6_opt_1_sig_4_2', Rb,  A, pk(A), Text5}pk(T)
+
+            -> A: T, A, Text7, A, pk(A), B, pkB,
+                  sign{'isoiec_9798_3_6_opt_1_sig_4_1', Rpa, B, pkB,   Text6}pk(T),
+                  TokenTA_for_B
+
+  // Here, A checks TokenBA against the public key pkB received from T.
+  // As we lack support for additionally checked equalities, A sends a message
+  // to itself encrypted with a fresh nonce to emulate the equality check.
+  check_4_out. A ->  : {'check_4',
+                        TokenBA
+                       }check_nonce_4
+  check_4_in.    -> A: {'check_4',
+                        sign{'isoiec_9798_3_6_opt_1_sig_2', B, Ra, Rb, A, Text2}pkB
+                       }check_nonce_4
+
+  // Note: we additionally send T such that B knows which key to use for
+  //       checking TokenTA_for_B
+  text_5.   -> A: Text8, Text9
+       5. A ->  : A, B, Text9, T,
+                  TokenTA_for_B,
+                  sign{'isoiec_9798_3_6_opt_1_sig_5', Rb, Ra, B, A, Text8}pk(A)
+
+            -> B: A, B, Text9, T,
+                  sign{'isoiec_9798_3_6_opt_1_sig_4_2', Rb, A, pkA, Text5}pk(T),
+                  sign{'isoiec_9798_3_6_opt_1_sig_5', Rb, Ra, B, A, Text8}pkA
+}
+
+// All properties except hold injectively. NOTE: Investigate this
+// authentication "flaw" between Ra5 and Ra in role 'B'.
+properties (of isoiec_9798_3_6_1)
+  A_injective_agreement:
+    iagree(A_5[A,B,Ra,Rb,Text2] -> B_2[A,B,Ra,Rb,Text2], {B, T})
+
+  B_injective_agreement:
+    iagree(B_5[A,B,Ra,Rb,Text8] -> A_5[A,B,Ra,Rb,Text8], {A, T})
+
+  // We additionally verify agreement of A and B with the TTP T.
+  A_injective_agreement_T:
+    iagree(A_5[B,T,Rpa,pkB  ,Text6] ->
+           T_4[B,T,Rpa,pk(B),Text6], {T})
+
+  B_injective_agreement_T:
+    iagree(B_5[A,T,Rb,pkA  ,Text5] ->
+           T_4[A,T,Rb,pk(A),Text5], {T})
+
+
+
+/****************************************************************************
+ * Protocol 6 (Option 2)
+ ****************************************************************************
+ *
+ * signature
+ * ttp
+ * five-pass
+ * mutual
+ *
+ * A initiates and also communicates with T
+ *
+ * Modeling notes:
+ *  - Option 1 and Option 2 must not share tags!
+ *  - We model the case where T sends the public keys instead of just verifying
+ *    the certificates; i.e., 'ResA = (A, pk(A))' and  'ResB = (B, pk(B))'.
+ *  - Our model might perform a few equality checks more than what is strictly
+ *    required by the standard. All of them are practically feasible and we
+ *    advise to implement them. We do not verify whether we the security
+ *    properties also hold with fewer equality checks.
+ */
+protocol isoiec_9798_3_6_2
+{
+  text_1.   -> A: Text1
+       1. A -> B: A, B, Ra, Text1
+
+  text_2.   -> B: Text2, Text3
+       2. B ->  : A, B, Ra, Rb, Text3,
+                  sign{'isoiec_9798_3_6_opt_2_sig_2', B, Ra, Rb, A, Text2}pk(B)
+
+            -> A: A, B, Ra, Rb, Text3,
+                  TokenBA
+
+  text_3.   -> A: Text4
+       3. A -> T: A, T, Rpa, Rb, B, Text4
+
+  // Note: Text6 is not used in Option 2
+  text_4.   -> T: Text5, Text7
+       4. T ->  : T, A, Text7, A, pk(A), B, pk(B),
+                  sign{ 'isoiec_9798_3_6_opt_2_sig_4',
+                        Rpa, Rb, A, pk(A), B, pk(B), Text5 }pk(T)
+            -> A: T, A, Text7, A, pk(A), B, pkB,
+                  TokenTA
+
+  // Here, A first checks TokenTA and then checks TokenBA against the public
+  // key received from T. As we lack support for additionally checked
+  // equalities, A sends a message to itself encrypted with a fresh nonce to
+  // emulate the equality check.
+  check_4_out. A ->  : {'check_4',
+                        TokenTA,
+                        TokenBA
+                       }check_nonce_4
+  check_4_in.    -> A: {'check_4',
+                        sign{'isoiec_9798_3_6_opt_2_sig_4',
+                             Rpa, Rb, A, pkA, B, pkB, Text5 }pk(T),
+                        sign{'isoiec_9798_3_6_opt_2_sig_2', B, Ra, Rb, A, Text2}pkB
+                       }check_nonce_4
+
+  // Note: we additionally send T such that B knows which key to use for
+  //       checking TokenTA
+  text_5.   -> A: Text8, Text9
+       5. A ->  : A, B, Rpa, Text9, T,
+                  TokenTA,
+                  sign{'isoiec_9798_3_6_opt_2_sig_5', Rb, Ra,     B, A, Text8}pk(A)
+
+            -> B: A, B, Rpa, Text9, T,
+                  sign{'isoiec_9798_3_6_opt_2_sig_4',
+                       Rpa, Rb, A, pkA, B, pkB, Text5 }pk(T),
+                  sign{'isoiec_9798_3_6_opt_2_sig_5', Rb, Ra, B, A, Text8}pkA
+}
+
+properties (of isoiec_9798_3_6_2)
+  // Note that we do not get agreement on T!
+  A_injective_agreement:
+    iagree(A_5[A,B,Ra,Rb,Text2] -> B_2[A,B,Ra,Rb,Text2], {B, T})
+
+  B_injective_agreement:
+    iagree(B_5[A,B,Ra,Rb,Text8] -> A_5[A,B,Ra,Rb,Text8], {A, T})
+
+  // We additionally verify agreement of A and B with the TTP T
+  A_injective_agreement_T:
+    iagree(A_5[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text5] ->
+           T_4[A,B,T,Rpa,Rb,pk(A),pk(B),Text5], {T})
+
+  B_injective_agreement_T:
+    iagree(B_5[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text5] ->
+           T_4[A,B,T,Rpa,Rb,pk(A),pk(B),Text5], {T})
+
+
+
+/****************************************************************************
+ * Protocol 7 (Option 1)
+ ****************************************************************************
+ *
+ * signature
+ * ttp
+ * five-pass
+ * mutual
+ *
+ * B initiates and A communicates with T
+ *
+ * Modeling notes:
+ *  - Option 1 and Option 2 must not share tags!
+ *  - We model the case where T sends the public keys instead of just verifying
+ *    the certificates; i.e., 'ResA = (A, pk(A))' and  'ResB = (B, pk(B))'.
+ *  - Our model might perform a few equality checks more than what is strictly
+ *    required by the standard. All of them are practically feasible and we
+ *    advise to implement them. We do not verify whether we the security
+ *    properties also hold with fewer equality checks.
+ */
+protocol isoiec_9798_3_7_1
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2
+       2. A -> T: A, T, Rpa, Rb, A, B, Text2
+
+  text_3.   -> T: Text3, Text4, Text5
+       3. T ->  : T, A, Text5, A, pk(A), B, pk(B),
+                  sign{ 'isoiec_9798_3_7_opt_1_sig_3_1', Rpa, B, pk(B), Text4 }pk(T),
+                  sign{ 'isoiec_9798_3_7_opt_1_sig_3_2', Rb,  A, pk(A), Text3 }pk(T)
+            -> A: T, A, Text5, A, pk(A), B, pkB,
+                  sign{ 'isoiec_9798_3_7_opt_1_sig_3_1', Rpa, B, pkB,   Text4 }pk(T),
+                  TokenTA_for_B
+
+  // Note: we additionally send T such that B knows which key to use for
+  //       checking TokenTA
+  text_4.   -> A: Text6, Text7
+       4. A ->  : A, B, Rpa, Text7, T,
+                  TokenTA_for_B,
+                  sign{'isoiec_9798_3_7_opt_1_sig_4', Rb, Ra, B, A, Text6}pk(A)
+
+            -> B: A, B, Rpa, Text9, T,
+                  sign{'isoiec_9798_3_7_opt_1_sig_3_2', Rb, A, pkA, Text3}pk(T),
+                  sign{'isoiec_9798_3_7_opt_1_sig_4', Rb, Ra, B, A, Text6}pkA
+
+  text_5.   -> B: Text8, Text9
+       5. B ->  : A, B, Ra, Rb, Text9,
+                  sign{'isoiec_9798_3_7_opt_1_sig_5', Ra, Rb, A, B, Text8}pk(B)
+
+            -> A: A, B, Ra, Rb, Text9,
+                  sign{'isoiec_9798_3_7_opt_1_sig_5', Ra, Rb, A, B, Text8}pkB
+
+}
+
+properties (of isoiec_9798_3_7_1)
+  // Note that we do not get agreement on T!
+  A_injective_agreement:
+    iagree(A_5[A,B,Ra,Rb,Text8] -> B_5[A,B,Ra,Rb,Text8], {B, T})
+
+  B_injective_agreement:
+    iagree(B_4[A,B,Ra,Rb,Text6] -> A_4[A,B,Ra,Rb,Text6], {A, T})
+
+  // We additionally verify agreement of A and B with the TTP T
+  A_injective_agreement_T:
+    iagree(A_3[B,T,Rpa,pkB,Text4] -> T_3[B,T,Rpa,pk(B),Text4], {T})
+  B_injective_agreement_T:
+    iagree(B_4[A,T,Rb,pkA,Text3] -> T_3[A,T,Rb,pk(A),Text3], {T})
+
+
+
+/****************************************************************************
+ * Protocol 7 (Option 2)
+ ****************************************************************************
+ *
+ * signature
+ * ttp
+ * five-pass
+ * mutual
+ *
+ * B initiates and A communicates with T
+ *
+ * Modeling notes:
+ *  - Option 1 and Option 2 must not share tags!
+ *  - We model the case where T sends the public keys instead of just verifying
+ *    the certificates; i.e., 'ResA = (A, pk(A))' and  'ResB = (B, pk(B))'.
+ *  - Our model might perform a few equality checks more than what is strictly
+ *    required by the standard. All of them are practically feasible and we
+ *    advise to implement them. We do not verify whether we the security
+ *    properties also hold with fewer equality checks.
+ */
+protocol isoiec_9798_3_7_2
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2
+       2. A -> T: A, T, Rpa, Rb, A, B, Text2
+
+  // Note: Text4 is not used in Option 2
+  text_3.   -> T: Text3, Text5
+       3. T ->  : T, A, Text5, A, pk(A), B, pk(B),
+                  sign{ 'isoiec_9798_3_7_opt_2_sig_3',
+                        Rpa, Rb, A, pk(A), B, pk(B), Text3 }pk(T)
+            -> A: T, A, Text5, A, pk(A), B, pkB,
+                  TokenTA
+
+  // Here, A checks TokenTA. As we lack support for additionally checked
+  // equalities, A sends a message to itself encrypted with a fresh nonce to
+  // emulate the equality check.
+  check_3_out. A ->  : {'check_4',
+                        TokenTA
+                       }check_nonce_4
+  check_3_in.    -> A: {'check_4',
+                        sign{'isoiec_9798_3_7_opt_2_sig_3',
+                             Rpa, Rb, A, pkA, B, pkB, Text3 }pk(T)
+                       }check_nonce_4
+
+  // Note: we additionally send T such that B knows which key to use for
+  //       checking TokenTA
+  text_4.   -> A: Text6, Text7
+       4. A ->  : A, B, Rpa, Text7, T,
+                  TokenTA,
+                  sign{'isoiec_9798_3_7_opt_2_sig_4', Rb, Ra, B, A, Text6}pk(A)
+
+            -> B: A, B, Rpa, Text9, T,
+                  sign{'isoiec_9798_3_7_opt_2_sig_3',
+                       Rpa, Rb, A, pkA, B, pkB, Text3 }pk(T),
+                  sign{'isoiec_9798_3_7_opt_2_sig_4', Rb, Ra, B, A, Text6}pkA
+
+  text_5.   -> B: Text8, Text9
+       5. B ->  : A, B, Ra, Rb, Text9,
+                  sign{'isoiec_9798_3_7_opt_2_sig_5', Ra, Rb, A, B, Text8}pk(B)
+
+            -> A: A, B, Ra, Rb, Text9,
+                  sign{'isoiec_9798_3_7_opt_2_sig_5', Ra, Rb, A, B, Text8}pkB
+
+}
+
+properties (of isoiec_9798_3_7_2)
+  A_injective_agreement:
+    iagree(A_5[A,B,Ra,Rb,Text8] -> B_5[A,B,Ra,Rb,Text8], {B, T})
+
+  B_injective_agreement:
+    iagree(B_4[A,B,Ra,Rb,Text6] -> A_4[A,B,Ra,Rb,Text6], {A, T})
+
+  // We additionally verify agreement of A and B with the TTP T
+  A_injective_agreement_T:
+    iagree(A_4[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text3] ->
+           T_3[A,B,T,Rpa,Rb,pk(A),pk(B),Text3], {T})
+
+  B_injective_agreement_T:
+    iagree(B_4[A,B,T,Rpa,Rb,pkA  ,pkB  ,Text3] ->
+           T_3[A,B,T,Rpa,Rb,pk(A),pk(B),Text3], {T})
+
+
+
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 4 - bdkey
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/*
+ * Modeled from ISO/IEC 9798-4
+ * Modeler: Cas Cremers, Dec. 2010, Feb. 2011.
+ * Ported to scyther-proof: Simon Meier, Feb. 2011.
+ *
+ * Modeling notes:
+ *   - Variant of ISO/IEC 9798-4 with bidirectional keys k[A,B].
+ *   - time-variant-parameters, time-stamps, and sequence numbers are
+ *     modeled by nonces leaked to the adversary at the start of a role.
+ *   - The TextX fields are chosen by the adversary.
+ *   - The keyed CCF (f_kab(x)) is modeled as h(('CCF', k[a,b]), x)
+ *
+ */
+
+
+/******************************************************************************
+ * Protocol 1
+ ******************************************************************************
+ *
+ * ccf
+ * unilateral
+ * one-pass
+ */
+protocol isoiec_9798_4_1_bdkey
+{
+  leak_A. A ->  : TNA
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, TNA, Text2, Text1, 
+                  h(('CCF', k[A,B]), ('isoiec_9798_4_1_ccf_1', TNA, B, Text1))
+}
+
+// Does not hold injectively.
+properties (of isoiec_9798_4_1_bdkey)
+  B_non_injective_agreement:
+    niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
+
+
+/******************************************************************************
+ * Protocol 2
+ ******************************************************************************
+ *
+ * ccf
+ * unilateral
+ * two-pass
+ */
+protocol isoiec_9798_4_2_bdkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Text3, Rb, Text2, 
+                  h(('CCF', k[A,B]), ('isoiec_9798_4_2_ccf_2', Rb, B, Text2))
+}
+
+properties (of isoiec_9798_4_2_bdkey)
+  B_injective_agreement:
+    iagree(B_2[A,B,Rb,Text2] -> A_2[A,B,Rb,Text2], {A, B})
+
+
+/******************************************************************************
+ * Protocol 3
+ ******************************************************************************
+ *
+ * ccf
+ * mutual
+ * two-pass
+ */
+protocol isoiec_9798_4_3_bdkey
+{
+  leak_A. A ->  : TNa
+  leak_B. B ->  : TNb
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, TNa, Text2, Text1, 
+                  h(('CCF', k[A,B]), ('isoiec_9798_4_3_ccf_1', TNa, B, Text1))
+
+  text_2.   -> B: Text3, Text4
+       2. B -> A: B, A, TNb, Text4, Text3, 
+                  h(('CCF', k[A,B]), ('isoiec_9798_4_3_ccf_2', TNb, A, Text3))
+}
+
+// Does not hold injectively. Missing an opportunity to get injective
+// agreement for role A by adding TNa in the second message.
+properties (of isoiec_9798_4_3_bdkey)
+  A_non_injective_agreement:
+    niagree(A_2[A,B,TNb,Text3] -> B_2[A,B,TNb,Text3], {A, B})
+
+  B_non_injective_agreement:
+    niagree(B_1[A,B,TNa,Text1] -> A_1[A,B,TNa,Text1], {A, B})
+
+
+/******************************************************************************
+ * Protocol 4
+ ******************************************************************************
+ *
+ * ccf
+ * mutual
+ * three-pass
+ */
+protocol isoiec_9798_4_4_bdkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Ra, Text3, Text2, 
+                  h(('CCF', k[A,B]), ('isoiec_9798_4_4_ccf_2', Ra, Rb, B, Text2))
+
+  text_3.   -> B: Text4, Text5
+       3. B -> A: B, A, Text5, Text4,
+                  h(('CCF', k[A,B]), ('isoiec_9798_4_4_ccf_3', Rb, Ra, Text4))
+}
+
+properties (of isoiec_9798_4_4_bdkey)
+  A_injective_agreement:
+    iagree(A_3[A,B,Ra,Rb,Text2,Text4] -> B_3[A,B,Ra,Rb,Text2,Text4], {A, B})
+
+  B_injective_agreement:
+    iagree(B_2[A,B,Ra,Rb,Text2] -> A_2[A,B,Ra,Rb,Text2], {A, B})
+
+
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 4 - udkey
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/*
+ * Modeled from ISO/IEC 9798-4
+ * Modeler: Cas Cremers, Dec. 2010, Feb. 2011.
+ * Ported to scyther-proof: Simon Meier, Feb. 2011.
+ *
+ * Modeling notes:
+ *   - Variant of ISO/IEC 9798-4 with unidirectional keys k(A,B) and
+ *     identities dropped if possible.
+ *   - time-variant-parameters, time-stamps, and sequence numbers are
+ *     modeled by nonces leaked to the adversary at the start of a role.
+ *   - The TextX fields are chosen by the adversary.
+ *   - The keyed CCF (f_kab(x)) is modeled as h(('CCF', k(a,b)), x)
+ */
+
+
+/******************************************************************************
+ * Protocol 1
+ ******************************************************************************
+ *
+ * ccf
+ * unilateral
+ * one-pass
+ */
+protocol isoiec_9798_4_1_udkey
+{
+  leak_A. A ->  : TNA
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, TNA, Text2, Text1,
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_1_ccf_1', TNA, Text1))
+}
+
+// No injective agreement here, as the message from A can be received by
+// multiple 'B's.
+properties (of isoiec_9798_4_1_udkey)
+  B_non_injective_agreement:
+    niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
+
+
+
+/******************************************************************************
+ * Protocol 2
+ ******************************************************************************
+ *
+ * ccf
+ * unilateral
+ * two-pass
+ */
+protocol isoiec_9798_4_2_udkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Text3, Rb, Text2,
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_2_ccf_2', Rb, Text2))
+}
+
+properties (of isoiec_9798_4_2_udkey)
+  B_injective_agreement:
+    iagree(B_2[A,B,Rb,Text2] -> A_2[A,B,Rb,Text2], {A, B})
+
+
+/******************************************************************************
+ * Protocol 3
+ ******************************************************************************
+ *
+ * ccf
+ * mutual
+ * two-pass
+ */
+protocol isoiec_9798_4_3_udkey
+{
+  leak_A. A ->  : TNa
+  leak_B. B ->  : TNb
+
+  text_1.   -> A: Text1, Text2
+       1. A -> B: A, B, TNa, Text2, Text1,
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_3_ccf_1', TNa, Text1))
+
+  text_2.   -> B: Text3, Text4
+       2. B -> A: B, A, TNb, Text4, Text3,
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_3_ccf_2', TNb, Text3))
+}
+
+// The following properties do not hold injectively. This protocols misses a
+// simple opportunity to get injective agreement for role A by adding TNa in
+// the second message.
+properties (of isoiec_9798_4_3_udkey)
+  A_non_injective_agreement:
+    niagree(A_2[A,B,TNb,Text3] -> B_2[A,B,TNb,Text3], {A, B})
+
+  B_non_injective_agreement:
+    niagree(B_1[A,B,TNa,Text1] -> A_1[A,B,TNa,Text1], {A, B})
+
+
+/******************************************************************************
+ * Protocol 4
+ ******************************************************************************
+ *
+ * ccf
+ * mutual
+ * three-pass
+ */
+protocol isoiec_9798_4_4_udkey
+{
+  text_1.   -> B: Text1
+       1. B -> A: B, A, Rb, Text1
+
+  text_2.   -> A: Text2, Text3
+       2. A -> B: A, B, Ra, Text3, Text2,
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_4_ccf_2', Ra, Rb, Text2))
+
+  text_3.   -> B: Text4, Text5
+       3. B -> A: B, A, Text5, Text4,
+                  h(('CCF', k(A,B)), ('isoiec_9798_4_4_ccf_3', Rb, Ra, Text4))
+}
+
+properties (of isoiec_9798_4_4_udkey)
+  A_injective_agreement:
+    iagree(A_3[A,B,Ra,Rb,Text2,Text4] -> B_3[A,B,Ra,Rb,Text2,Text4], {A, B})
+
+  B_injective_agreement:
+    iagree(B_2[A,B,Ra,Rb,Text2] -> A_2[A,B,Ra,Rb,Text2], {A, B})
+
+
+end
