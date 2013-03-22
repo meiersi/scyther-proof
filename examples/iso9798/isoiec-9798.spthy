@@ -599,16 +599,16 @@ protocol isoiec_9798_2_5_udkey
        1. A -> P: A, P, TVPa, B, Text1
 
   text_2.   -> P: Text2, Text3, Text4
-       2. P ->  : P, A, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, B, Text3 }k(A,P)
-                             , { 'isoiec_9798_2_5_enc_2_2', TNp , Kab, A, Text2 }k(B,P)
-            -> A: P, A, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, B, Text3 }k(A,P)
+       2. P ->  : P, A, Text4, { 'isoiec_9798_2_5_ud_enc_2_1', TVPa, Kab, B, Text3 }k(A,P)
+                             , { 'isoiec_9798_2_5_ud_enc_2_2', TNp , Kab, A, Text2 }k(B,P)
+            -> A: P, A, Text4, { 'isoiec_9798_2_5_ud_enc_2_1', TVPa, Kab, B, Text3 }k(A,P)
                              , TokenPA_for_B
 
   text_3.   -> A: Text5, Text6
        3. A ->  : A, B, Text6, P, TokenPA_for_B
-                                , { 'isoiec_9798_2_5_enc_3', TNa, B, Text5 }Kab
-            -> B: A, B, Text6, P, { 'isoiec_9798_2_5_enc_2_2', TNp, Kab, A, Text2 }k(B,P)
-                                , { 'isoiec_9798_2_5_enc_3', TNa, B, Text5 }Kab
+                                , { 'isoiec_9798_2_5_ud_enc_3', TNa, B, Text5 }Kab
+            -> B: A, B, Text6, P, { 'isoiec_9798_2_5_ud_enc_2_2', TNp, Kab, A, Text2 }k(B,P)
+                                , { 'isoiec_9798_2_5_ud_enc_3', TNa, B, Text5 }Kab
 
   text_4.   -> B: Text7, Text8
        4. B -> A: B, A, Text8, { 'isoiec_9798_2_5_enc_4', TNb, A, Text7 }Kab
@@ -667,16 +667,16 @@ protocol isoiec_9798_2_6_udkey
        2. A -> P: A, P, Ra, Rb, B, Text2
 
   text_3.   -> P: Text3, Text4, Text5
-       3. P ->  : P, A, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, B, Text4}k(A,P)
-                             , {'isoiec_9798_2_6_enc_3_2', Rb, Kab, A, Text3}k(B,P)
-            -> A: P, A, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, B, Text4}k(A,P)
+       3. P ->  : P, A, Text5, {'isoiec_9798_2_6_ud_enc_3_1', Ra, Kab, B, Text4}k(A,P)
+                             , {'isoiec_9798_2_6_ud_enc_3_2', Rb, Kab, A, Text3}k(B,P)
+            -> A: P, A, Text5, {'isoiec_9798_2_6_ud_enc_3_1', Ra, Kab, B, Text4}k(A,P)
                              , TokenPA_for_B
 
   text_4.   -> A: Text6, Text7   
        4. A ->  : A, B, Text7, P, TokenPA_for_B
-                                , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
-            -> B: A, B, Text7, P, {'isoiec_9798_2_6_enc_3_2', Rb, Kab, A, Text3}k(B,P)
-                                , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
+                                , {'isoiec_9798_2_6_ud_enc_4', Rpa, Rb, Text6}Kab
+            -> B: A, B, Text7, P, {'isoiec_9798_2_6_ud_enc_3_2', Rb, Kab, A, Text3}k(B,P)
+                                , {'isoiec_9798_2_6_ud_enc_4', Rpa, Rb, Text6}Kab
        
   text_5.   -> B: Text8, Text9
        5. B -> A: B, A, Text9, {'isoiec_9798_2_6_enc_5', Rb, Rpa, Text8}Kab

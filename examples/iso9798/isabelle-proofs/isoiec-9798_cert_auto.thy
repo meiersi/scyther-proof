@@ -4974,7 +4974,7 @@ where "isoiec_9798_2_5_udkey_A =
                   sMV ''Text1''
                |>
   , Recv ''2'' <| sAV ''P'', sAV ''A'', sMV ''Text4'',
-                  PEnc <| sC ''isoiec_9798_2_5_enc_2_1'', sN ''TVPa'', sMV ''Kab'',
+                  PEnc <| sC ''isoiec_9798_2_5_ud_enc_2_1'', sN ''TVPa'', sMV ''Kab'',
                           sAV ''B'', sMV ''Text3''
                        |>
                        ( sK ''A'' ''P'' ),
@@ -4983,7 +4983,7 @@ where "isoiec_9798_2_5_udkey_A =
   , Recv ''text_3'' <| sMV ''Text5'', sMV ''Text6'' |>
   , Send ''3'' <| sAV ''A'', sAV ''B'', sMV ''Text6'', sAV ''P'',
                   sMV ''TokenPA_for_B'',
-                  PEnc <| sC ''isoiec_9798_2_5_enc_3'', sN ''TNa'', sAV ''B'',
+                  PEnc <| sC ''isoiec_9798_2_5_ud_enc_3'', sN ''TNa'', sAV ''B'',
                           sMV ''Text5''
                        |>
                        ( sMV ''Kab'' )
@@ -5000,11 +5000,11 @@ role isoiec_9798_2_5_udkey_B
 where "isoiec_9798_2_5_udkey_B =
   [ Send ''leak_B'' ( sN ''TNb'' )
   , Recv ''3'' <| sMV ''A'', sAV ''B'', sMV ''Text6'', sMV ''P'',
-                  PEnc <| sC ''isoiec_9798_2_5_enc_2_2'', sMV ''TNp'', sMV ''Kab'',
+                  PEnc <| sC ''isoiec_9798_2_5_ud_enc_2_2'', sMV ''TNp'', sMV ''Kab'',
                           sMV ''A'', sMV ''Text2''
                        |>
                        ( PSymK ( sAV ''B'' ) ( sMV ''P'' ) ),
-                  PEnc <| sC ''isoiec_9798_2_5_enc_3'', sMV ''TNa'', sAV ''B'',
+                  PEnc <| sC ''isoiec_9798_2_5_ud_enc_3'', sMV ''TNa'', sAV ''B'',
                           sMV ''Text5''
                        |>
                        ( sMV ''Kab'' )
@@ -5026,11 +5026,11 @@ where "isoiec_9798_2_5_udkey_P =
                |>
   , Recv ''text_2'' <| sMV ''Text2'', sMV ''Text3'', sMV ''Text4'' |>
   , Send ''2'' <| sAV ''P'', sMV ''A'', sMV ''Text4'',
-                  PEnc <| sC ''isoiec_9798_2_5_enc_2_1'', sMV ''TVPa'', sN ''Kab'',
+                  PEnc <| sC ''isoiec_9798_2_5_ud_enc_2_1'', sMV ''TVPa'', sN ''Kab'',
                           sMV ''B'', sMV ''Text3''
                        |>
                        ( PSymK ( sMV ''A'' ) ( sAV ''P'' ) ),
-                  PEnc <| sC ''isoiec_9798_2_5_enc_2_2'', sN ''TNp'', sN ''Kab'',
+                  PEnc <| sC ''isoiec_9798_2_5_ud_enc_2_2'', sN ''TNp'', sN ''Kab'',
                           sMV ''A'', sMV ''Text2''
                        |>
                        ( PSymK ( sMV ''B'' ) ( sAV ''P'' ) )
@@ -5109,7 +5109,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid0,
+        Enc {| LC ''isoiec_9798_2_5_ud_enc_2_1'', LN ''TVPa'' tid0,
                s(MV ''Kab'' tid0), s(AV ''B'' tid0), s(MV ''Text3'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
@@ -5120,7 +5120,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid0,
+        Enc {| LC ''isoiec_9798_2_5_ud_enc_2_1'', LN ''TVPa'' tid0,
                s(MV ''Kab'' tid0), s(AV ''B'' tid0), s(MV ''Text3'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
@@ -5189,7 +5189,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid0),
+        Enc {| LC ''isoiec_9798_2_5_ud_enc_2_2'', s(MV ''TNp'' tid0),
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
@@ -5206,7 +5206,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_5_enc_3'', s(MV ''TNa'' tid0),
+        Enc {| LC ''isoiec_9798_2_5_ud_enc_3'', s(MV ''TNa'' tid0),
                s(AV ''B'' tid0), s(MV ''Text5'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
@@ -5217,7 +5217,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid0),
+        Enc {| LC ''isoiec_9798_2_5_ud_enc_2_2'', s(MV ''TNp'' tid0),
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
@@ -5228,7 +5228,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid0),
+        Enc {| LC ''isoiec_9798_2_5_ud_enc_2_2'', s(MV ''TNp'' tid0),
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
@@ -5239,7 +5239,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_5_enc_3'', s(MV ''TNa'' tid0),
+        Enc {| LC ''isoiec_9798_2_5_ud_enc_3'', s(MV ''TNa'' tid0),
                s(AV ''B'' tid0), s(MV ''Text5'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
@@ -5388,7 +5388,7 @@ lemma (in restricted_isoiec_9798_2_5_udkey_state) A_secret_Kab:
 proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid0,
+                   Enc {| LC ''isoiec_9798_2_5_ud_enc_2_1'', LN ''TVPa'' tid0,
                           s(MV ''Kab'' tid0), s(AV ''B'' tid0), s(MV ''Text3'' tid0)
                        |}
                        ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
@@ -5412,7 +5412,7 @@ lemma (in restricted_isoiec_9798_2_5_udkey_state) B_secret_Kab:
 proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid0),
+                   Enc {| LC ''isoiec_9798_2_5_ud_enc_2_2'', s(MV ''TNp'' tid0),
                           s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
                        |}
                        ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
@@ -5454,44 +5454,44 @@ proof -
       note_unified facts = facts
       note_prefix_closed facts = facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid0,
-                              s(MV ''Kab'' tid0), s(AV ''B'' tid0), s(MV ''Text3'' tid0)
+                       Enc {| LC ''isoiec_9798_2_5_enc_4'', s(MV ''TNb'' tid0),
+                              s(AV ''A'' tid0), s(MV ''Text7'' tid0)
                            |}
-                           ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
+                           ( s(MV ''Kab'' tid0) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (fastforce dest: A_secret_Kab intro: event_predOrdI)
       next
-        case (isoiec_9798_2_5_udkey_P_2_enc tid1) note_unified facts = this facts
+        case (isoiec_9798_2_5_udkey_B_4_enc tid1) note_unified facts = this facts
         thus ?thesis proof(sources! "
-                         Enc {| LC ''isoiec_9798_2_5_enc_4'', s(MV ''TNb'' tid0),
-                                s(AV ''A'' tid0), s(MV ''Text7'' tid0)
+                         Enc {| LC ''isoiec_9798_2_5_ud_enc_2_1'', LN ''TVPa'' tid0,
+                                s(MV ''Kab'' tid0), s(AV ''B'' tid0), s(MV ''Text3'' tid0)
                              |}
-                             ( LN ''Kab'' tid1 ) ")
+                             ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
           case fake note_unified facts = this facts
-          thus ?thesis by (fastforce dest: P_secret_Kab intro: event_predOrdI)
+          thus ?thesis by (fastforce dest!: ltk_secrecy)
         next
-          case (isoiec_9798_2_5_udkey_B_4_enc tid2) note_unified facts = this facts
+          case (isoiec_9798_2_5_udkey_P_2_enc tid2) note_unified facts = this facts
           thus ?thesis proof(sources! "
-                           Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid2),
-                                  LN ''Kab'' tid1, s(AV ''A'' tid0), s(MV ''Text2'' tid2)
+                           Enc {| LC ''isoiec_9798_2_5_ud_enc_2_2'', s(MV ''TNp'' tid1),
+                                  LN ''Kab'' tid2, s(AV ''A'' tid0), s(MV ''Text2'' tid1)
                                |}
-                               ( K ( s(AV ''B'' tid2) ) ( s(MV ''P'' tid2) ) ) ")
+                               ( K ( s(AV ''B'' tid1) ) ( s(MV ''P'' tid1) ) ) ")
             case fake note_unified facts = this facts
             thus ?thesis by (fastforce dest: P_secret_Kab intro: event_predOrdI)
           next
             case (isoiec_9798_2_5_udkey_P_2_enc_1 tid3) note_unified facts = this facts
             thus ?thesis proof(sources! "
-                             Enc {| LC ''isoiec_9798_2_5_enc_3'', s(MV ''TNa'' tid2),
-                                    s(AV ''B'' tid0), s(MV ''Text5'' tid2)
+                             Enc {| LC ''isoiec_9798_2_5_ud_enc_3'', s(MV ''TNa'' tid1),
+                                    s(AV ''B'' tid0), s(MV ''Text5'' tid1)
                                  |}
-                                 ( LN ''Kab'' tid1 ) ")
+                                 ( LN ''Kab'' tid2 ) ")
               case fake note_unified facts = this facts
               thus ?thesis by (fastforce dest: P_secret_Kab intro: event_predOrdI)
             next
               case (isoiec_9798_2_5_udkey_A_3_enc tid3) note_unified facts = this facts
               thus ?thesis proof(sources! "
-                               Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid3, LN ''Kab'' tid1,
-                                      s(AV ''B'' tid0), s(MV ''Text3'' tid3)
+                               Enc {| LC ''isoiec_9798_2_5_ud_enc_2_1'', LN ''TVPa'' tid3,
+                                      LN ''Kab'' tid2, s(AV ''B'' tid0), s(MV ''Text3'' tid3)
                                    |}
                                    ( K ( s(AV ''A'' tid3) ) ( s(AV ''P'' tid3) ) ) ")
                 case fake note_unified facts = this facts
@@ -5536,7 +5536,7 @@ lemma (in restricted_isoiec_9798_2_5_udkey_state) B_non_injective_agreement_A:
 proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid0),
+                   Enc {| LC ''isoiec_9798_2_5_ud_enc_2_2'', s(MV ''TNp'' tid0),
                           s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
                        |}
                        ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
@@ -5545,7 +5545,7 @@ proof -
   next
     case (isoiec_9798_2_5_udkey_P_2_enc_1 tid1) note_unified facts = this facts
     thus ?thesis proof(sources! "
-                     Enc {| LC ''isoiec_9798_2_5_enc_3'', s(MV ''TNa'' tid0),
+                     Enc {| LC ''isoiec_9798_2_5_ud_enc_3'', s(MV ''TNa'' tid0),
                             s(AV ''B'' tid0), s(MV ''Text5'' tid0)
                          |}
                          ( LN ''Kab'' tid1 ) ")
@@ -5554,8 +5554,8 @@ proof -
     next
       case (isoiec_9798_2_5_udkey_A_3_enc tid2) note_unified facts = this facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid2, LN ''Kab'' tid1,
-                              s(AV ''B'' tid0), s(MV ''Text3'' tid2)
+                       Enc {| LC ''isoiec_9798_2_5_ud_enc_2_1'', LN ''TVPa'' tid2,
+                              LN ''Kab'' tid1, s(AV ''B'' tid0), s(MV ''Text3'' tid2)
                            |}
                            ( K ( s(AV ''A'' tid2) ) ( s(AV ''P'' tid2) ) ) ")
         case fake note_unified facts = this facts
@@ -5596,7 +5596,7 @@ proof -
       note_unified facts = facts
       note_prefix_closed facts = facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid0,
+                       Enc {| LC ''isoiec_9798_2_5_ud_enc_2_1'', LN ''TVPa'' tid0,
                               s(MV ''Kab'' tid0), s(AV ''B'' tid0), s(MV ''Text3'' tid0)
                            |}
                            ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
@@ -5638,7 +5638,7 @@ lemma (in restricted_isoiec_9798_2_5_udkey_state) B_non_injective_agreement_P:
 proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid0),
+                   Enc {| LC ''isoiec_9798_2_5_ud_enc_2_2'', s(MV ''TNp'' tid0),
                           s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
                        |}
                        ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
@@ -5658,7 +5658,7 @@ where "isoiec_9798_2_6_udkey_A =
                   sMV ''Text2''
                |>
   , Recv ''3'' <| sAV ''P'', sAV ''A'', sMV ''Text5'',
-                  PEnc <| sC ''isoiec_9798_2_6_enc_3_1'', sN ''Ra'', sMV ''Kab'',
+                  PEnc <| sC ''isoiec_9798_2_6_ud_enc_3_1'', sN ''Ra'', sMV ''Kab'',
                           sMV ''B'', sMV ''Text4''
                        |>
                        ( sK ''A'' ''P'' ),
@@ -5667,7 +5667,7 @@ where "isoiec_9798_2_6_udkey_A =
   , Recv ''text_4'' <| sMV ''Text6'', sMV ''Text7'' |>
   , Send ''4'' <| sAV ''A'', sMV ''B'', sMV ''Text7'', sAV ''P'',
                   sMV ''TokenPA_for_B'',
-                  PEnc <| sC ''isoiec_9798_2_6_enc_4'', sN ''Rpa'', sMV ''Rb'',
+                  PEnc <| sC ''isoiec_9798_2_6_ud_enc_4'', sN ''Rpa'', sMV ''Rb'',
                           sMV ''Text6''
                        |>
                        ( sMV ''Kab'' )
@@ -5685,11 +5685,11 @@ where "isoiec_9798_2_6_udkey_B =
   [ Recv ''text_1'' ( sMV ''Text1'' )
   , Send ''1'' <| sAV ''B'', sAV ''A'', sN ''Rb'', sMV ''Text1'' |>
   , Recv ''4'' <| sAV ''A'', sAV ''B'', sMV ''Text7'', sMV ''P'',
-                  PEnc <| sC ''isoiec_9798_2_6_enc_3_2'', sN ''Rb'', sMV ''Kab'',
+                  PEnc <| sC ''isoiec_9798_2_6_ud_enc_3_2'', sN ''Rb'', sMV ''Kab'',
                           sAV ''A'', sMV ''Text3''
                        |>
                        ( PSymK ( sAV ''B'' ) ( sMV ''P'' ) ),
-                  PEnc <| sC ''isoiec_9798_2_6_enc_4'', sMV ''Rpa'', sN ''Rb'',
+                  PEnc <| sC ''isoiec_9798_2_6_ud_enc_4'', sMV ''Rpa'', sN ''Rb'',
                           sMV ''Text6''
                        |>
                        ( sMV ''Kab'' )
@@ -5710,11 +5710,11 @@ where "isoiec_9798_2_6_udkey_P =
                |>
   , Recv ''text_3'' <| sMV ''Text3'', sMV ''Text4'', sMV ''Text5'' |>
   , Send ''3'' <| sAV ''P'', sMV ''A'', sMV ''Text5'',
-                  PEnc <| sC ''isoiec_9798_2_6_enc_3_1'', sMV ''Ra'', sN ''Kab'',
+                  PEnc <| sC ''isoiec_9798_2_6_ud_enc_3_1'', sMV ''Ra'', sN ''Kab'',
                           sMV ''B'', sMV ''Text4''
                        |>
                        ( PSymK ( sMV ''A'' ) ( sAV ''P'' ) ),
-                  PEnc <| sC ''isoiec_9798_2_6_enc_3_2'', sMV ''Rb'', sN ''Kab'',
+                  PEnc <| sC ''isoiec_9798_2_6_ud_enc_3_2'', sMV ''Rb'', sN ''Kab'',
                           sMV ''A'', sMV ''Text3''
                        |>
                        ( PSymK ( sMV ''B'' ) ( sAV ''P'' ) )
@@ -5812,7 +5812,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid0,
+        Enc {| LC ''isoiec_9798_2_6_ud_enc_3_1'', LN ''Ra'' tid0,
                s(MV ''Kab'' tid0), s(MV ''B'' tid0), s(MV ''Text4'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
@@ -5823,7 +5823,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid0,
+        Enc {| LC ''isoiec_9798_2_6_ud_enc_3_1'', LN ''Ra'' tid0,
                s(MV ''Kab'' tid0), s(MV ''B'' tid0), s(MV ''Text4'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
@@ -5875,7 +5875,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid0,
+        Enc {| LC ''isoiec_9798_2_6_ud_enc_3_2'', LN ''Rb'' tid0,
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''Text3'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
@@ -5892,8 +5892,8 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_6_enc_4'', s(MV ''Rpa'' tid0), LN ''Rb'' tid0,
-               s(MV ''Text6'' tid0)
+        Enc {| LC ''isoiec_9798_2_6_ud_enc_4'', s(MV ''Rpa'' tid0),
+               LN ''Rb'' tid0, s(MV ''Text6'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
     qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
@@ -5903,7 +5903,7 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid0,
+        Enc {| LC ''isoiec_9798_2_6_ud_enc_3_2'', LN ''Rb'' tid0,
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''Text3'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
@@ -5914,8 +5914,8 @@ proof -
       by unfold_locales auto
     show ?case using facts
     proof(sources! "
-        Enc {| LC ''isoiec_9798_2_6_enc_4'', s(MV ''Rpa'' tid0), LN ''Rb'' tid0,
-               s(MV ''Text6'' tid0)
+        Enc {| LC ''isoiec_9798_2_6_ud_enc_4'', s(MV ''Rpa'' tid0),
+               LN ''Rb'' tid0, s(MV ''Text6'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
     qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
@@ -6069,7 +6069,7 @@ lemma (in restricted_isoiec_9798_2_6_udkey_state) A_secret_Kab:
 proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid0,
+                   Enc {| LC ''isoiec_9798_2_6_ud_enc_3_1'', LN ''Ra'' tid0,
                           s(MV ''Kab'' tid0), s(MV ''B'' tid0), s(MV ''Text4'' tid0)
                        |}
                        ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
@@ -6093,7 +6093,7 @@ lemma (in restricted_isoiec_9798_2_6_udkey_state) B_secret_Kab:
 proof -
   note_prefix_closed facts = facts
   thus ?thesis proof(sources! "
-                   Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid0,
+                   Enc {| LC ''isoiec_9798_2_6_ud_enc_3_2'', LN ''Rb'' tid0,
                           s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''Text3'' tid0)
                        |}
                        ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
@@ -6135,37 +6135,37 @@ proof -
       note_unified facts = facts
       note_prefix_closed facts = facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid0,
-                              s(MV ''Kab'' tid0), s(MV ''B'' tid0), s(MV ''Text4'' tid0)
+                       Enc {| LC ''isoiec_9798_2_6_enc_5'', s(MV ''Rb'' tid0), LN ''Rpa'' tid0,
+                              s(MV ''Text8'' tid0)
                            |}
-                           ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
+                           ( s(MV ''Kab'' tid0) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (fastforce dest: A_secret_Kab intro: event_predOrdI)
       next
-        case (isoiec_9798_2_6_udkey_P_3_enc tid1) note_unified facts = this facts
+        case (isoiec_9798_2_6_udkey_B_5_enc tid1) note_unified facts = this facts
         thus ?thesis proof(sources! "
-                         Enc {| LC ''isoiec_9798_2_6_enc_5'', s(MV ''Rb'' tid0), LN ''Rpa'' tid0,
-                                s(MV ''Text8'' tid0)
+                         Enc {| LC ''isoiec_9798_2_6_ud_enc_3_1'', LN ''Ra'' tid0,
+                                s(MV ''Kab'' tid0), s(MV ''B'' tid0), s(MV ''Text4'' tid0)
                              |}
-                             ( LN ''Kab'' tid1 ) ")
+                             ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
           case fake note_unified facts = this facts
-          thus ?thesis by (fastforce dest: P_secret_Kab intro: event_predOrdI)
+          thus ?thesis by (fastforce dest!: ltk_secrecy)
         next
-          case (isoiec_9798_2_6_udkey_B_5_enc tid2) note_unified facts = this facts
+          case (isoiec_9798_2_6_udkey_P_3_enc tid2) note_unified facts = this facts
           thus ?thesis proof(sources! "
-                           Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid2, LN ''Kab'' tid1,
-                                  s(AV ''A'' tid2), s(MV ''Text3'' tid2)
+                           Enc {| LC ''isoiec_9798_2_6_ud_enc_3_2'', LN ''Rb'' tid1,
+                                  LN ''Kab'' tid2, s(AV ''A'' tid1), s(MV ''Text3'' tid1)
                                |}
-                               ( K ( s(AV ''B'' tid2) ) ( s(MV ''P'' tid2) ) ) ")
+                               ( K ( s(AV ''B'' tid1) ) ( s(MV ''P'' tid1) ) ) ")
             case fake note_unified facts = this facts
             thus ?thesis by (fastforce dest: P_secret_Kab intro: event_predOrdI)
           next
             case (isoiec_9798_2_6_udkey_P_3_enc_1 tid3) note_unified facts = this facts
             thus ?thesis proof(sources! "
-                             Enc {| LC ''isoiec_9798_2_6_enc_4'', LN ''Rpa'' tid0, LN ''Rb'' tid2,
-                                    s(MV ''Text6'' tid2)
+                             Enc {| LC ''isoiec_9798_2_6_ud_enc_4'', LN ''Rpa'' tid0, LN ''Rb'' tid1,
+                                    s(MV ''Text6'' tid1)
                                  |}
-                                 ( LN ''Kab'' tid1 ) ")
+                                 ( LN ''Kab'' tid2 ) ")
               case fake note_unified facts = this facts
               thus ?thesis by (fastforce dest: P_secret_Kab intro: event_predOrdI)
             next
@@ -6218,7 +6218,7 @@ proof -
       note_unified facts = facts
       note_prefix_closed facts = facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid0,
+                       Enc {| LC ''isoiec_9798_2_6_ud_enc_3_2'', LN ''Rb'' tid0,
                               s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''Text3'' tid0)
                            |}
                            ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
@@ -6227,8 +6227,8 @@ proof -
       next
         case (isoiec_9798_2_6_udkey_P_3_enc_1 tid1) note_unified facts = this facts
         thus ?thesis proof(sources! "
-                         Enc {| LC ''isoiec_9798_2_6_enc_4'', s(MV ''Rpa'' tid0), LN ''Rb'' tid0,
-                                s(MV ''Text6'' tid0)
+                         Enc {| LC ''isoiec_9798_2_6_ud_enc_4'', s(MV ''Rpa'' tid0),
+                                LN ''Rb'' tid0, s(MV ''Text6'' tid0)
                              |}
                              ( LN ''Kab'' tid1 ) ")
           case fake note_unified facts = this facts
@@ -6236,8 +6236,8 @@ proof -
         next
           case (isoiec_9798_2_6_udkey_A_4_enc tid2) note_unified facts = this facts
           thus ?thesis proof(sources! "
-                           Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid2, LN ''Kab'' tid1,
-                                  s(MV ''B'' tid2), s(MV ''Text4'' tid2)
+                           Enc {| LC ''isoiec_9798_2_6_ud_enc_3_1'', LN ''Ra'' tid2,
+                                  LN ''Kab'' tid1, s(MV ''B'' tid2), s(MV ''Text4'' tid2)
                                |}
                                ( K ( s(AV ''A'' tid2) ) ( s(AV ''P'' tid2) ) ) ")
             case fake note_unified facts = this facts
@@ -6289,7 +6289,7 @@ proof -
       note_unified facts = facts
       note_prefix_closed facts = facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid0,
+                       Enc {| LC ''isoiec_9798_2_6_ud_enc_3_1'', LN ''Ra'' tid0,
                               s(MV ''Kab'' tid0), s(MV ''B'' tid0), s(MV ''Text4'' tid0)
                            |}
                            ( K ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
@@ -6340,7 +6340,7 @@ proof -
       note_unified facts = facts
       note_prefix_closed facts = facts
       thus ?thesis proof(sources! "
-                       Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid0,
+                       Enc {| LC ''isoiec_9798_2_6_ud_enc_3_2'', LN ''Rb'' tid0,
                               s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''Text3'' tid0)
                            |}
                            ( K ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
