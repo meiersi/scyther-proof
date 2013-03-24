@@ -611,7 +611,7 @@ protocol isoiec_9798_2_5_udkey
                                 , { 'isoiec_9798_2_5_ud_enc_3', TNa, B, Text5 }Kab
 
   text_4.   -> B: Text7, Text8
-       4. B -> A: B, A, Text8, { 'isoiec_9798_2_5_enc_4', TNb, A, Text7 }Kab
+       4. B -> A: B, A, Text8, { 'isoiec_9798_2_5_ud_enc_4', TNb, A, Text7 }Kab
 }
 
 properties (of isoiec_9798_2_5_udkey)
@@ -679,7 +679,7 @@ protocol isoiec_9798_2_6_udkey
                                 , {'isoiec_9798_2_6_ud_enc_4', Rpa, Rb, Text6}Kab
        
   text_5.   -> B: Text8, Text9
-       5. B -> A: B, A, Text9, {'isoiec_9798_2_6_enc_5', Rb, Rpa, Text8}Kab
+       5. B -> A: B, A, Text9, {'isoiec_9798_2_6_ud_enc_5', Rb, Rpa, Text8}Kab
 }
 
 properties (of isoiec_9798_2_6_udkey)
