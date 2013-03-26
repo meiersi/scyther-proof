@@ -1,7 +1,21 @@
 // All protocols in a single file to test their parallel composition.
 // Author: Simon Meier <iridcode@gmail.com>
 // Created: 2013-03-21
-theory isoiec_9798_2 begin
+//
+// Note that we have to specially deal with the 2_5 and 2_6 protocols, as
+// their automatically computed type invariants are not sound. We therefore
+// compose them manually and use a manual type invariant, which we derived
+// from the automatically computed one. These two manually composed protocols
+// can be found at the end of this file.
+//
+// Note also our proof checking automation that we implemented in Isabelle
+// suffers from a scaling problem when verifying the proof script resutling
+// ceritfying the correctness of the parallel composition of all protocols in
+// this file. We therefore do not include checking this file in the
+// regressions tests.
+theory isoiec_9798 begin
+
+/*
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // 2 - bdkey
@@ -143,133 +157,6 @@ properties (of isoiec_9798_2_4_bdkey)
   B_injective_agreement:
     iagree(B_2[A,B,RA,RB,Text2] -> A_2[A,B,RA,RB,Text2], {A, B})
 
-
-/******************************************************************************
- * Protocol 5
- ******************************************************************************
- *
- * symmetric
- * ttp
- * four-pass
- * mutual
- *
- * Modeling notes:
- * - The use of TNb in message 4, as specified by the ISO standard, is
- *   different from other models, in which it was TNa.
- * - Added additional identity to messages in Step 2 to avoid identity swapping.
- * - We send identity P in Step 3 in order for B to be able to lookup key k(B,P)
- */
-protocol isoiec_9798_2_5_bdkey
-{
-  leak_A. A ->  : TVPa, TNa
-  leak_B. B ->  : TNb
-  leak_P. P ->  : TNp
-
-  text_1.   -> A: Text1
-       1. A -> P: A, P, TVPa, B, Text1
-
-  text_2.   -> P: Text2, Text3, Text4
-       2. P ->  : P, A, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, A, B, Text3 }k[A,P]
-                             , { 'isoiec_9798_2_5_enc_2_2', TNp , Kab, A, B, Text2 }k[B,P]
-            -> A: P, A, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, A, B, Text3 }k[A,P]
-                             , TokenPA_for_B
-
-  text_3.   -> A: Text5, Text6
-       3. A ->  : A, B, Text6, P, TokenPA_for_B
-                                , { 'isoiec_9798_2_5_enc_3', TNa, B, Text5 }Kab
-            -> B: A, B, Text6, P, { 'isoiec_9798_2_5_enc_2_2', TNp, Kab, A, B, Text2 }k[B,P]
-                                , { 'isoiec_9798_2_5_enc_3', TNa, B, Text5 }Kab
-
-  text_4.   -> B: Text7, Text8
-       4. B -> A: B, A, Text8, { 'isoiec_9798_2_5_enc_4', TNb, A, Text7 }Kab
-}
-
-properties (of isoiec_9798_2_5_bdkey)
-  P_secret_Kab: secret(P, -, Kab, {A, B, P})
-  A_secret_Kab: secret(A, 2, Kab, {A, B, P})
-  B_secret_Kab: secret(B, 3, Kab, {A, B, P})
-
-  // Agreement properties strengthened with respect to Cas Cremers' models:
-  //   (a) we also verify agreement on the freshness data TNa, TNb
-  //   (b) we also verify agreement with the trusted third party
-  //
-  A_injective_agreement_B:
-    iagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
-
-  // Injective agreement does not hold. See
-  // isoiec_9798_2_5_special_TTP_bdkey for more information.
-  B_non_injective_agreement_A:
-    niagree(B_3[A,B,P,Kab,TNa,Text5] -> A_3[A,B,P,Kab,TNa,Text5], {A, B, P})
-
-  A_injective_agreement_P:
-    iagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
-
-  // Injective agreement does not hold. See
-  // isoiec_9798_2_5_special_TTP_bdkey for more information.
-  B_non_injective_agreement_P:
-    niagree(B_3[A,B,P,Kab,TNp,Text2] -> P_2[A,B,P,Kab,TNp,Text2], {A, B, P})
-
-
-/******************************************************************************
- * Protocol 6
- ******************************************************************************
- *
- * symmetric
- * ttp
- * five-pass
- * mutual
- *
- * Modeling notes:
- * - We send identity P in Step 4 in order for B to be able to lookup key k(B,P)
- * - Added additional identity to messages in Step 3 to avoid identity swapping.
- *
- * MPA Attack reported by Mathuria:
- * - Type flaw MPA when in parallel with Abadi-Needham protocol.
- */
-protocol isoiec_9798_2_6_bdkey
-{
-  text_1.   -> B: Text1
-       1. B -> A: B, A, Rb, Text1
-
-  text_2.   -> A: Text2
-       2. A -> P: A, P, Ra, Rb, B, Text2
-
-  text_3.   -> P: Text3, Text4, Text5
-       3. P ->  : P, A, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, A, B, Text4}k[A,P]
-                             , {'isoiec_9798_2_6_enc_3_2', Rb, Kab, A, B, Text3}k[B,P]
-            -> A: P, A, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, A, B, Text4}k[A,P]
-                             , TokenPA_for_B
-
-  text_4.   -> A: Text6, Text7
-       4. A ->  : A, B, Text7, P, TokenPA_for_B
-                                , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
-            -> B: A, B, Text7, P, {'isoiec_9798_2_6_enc_3_2', Rb, Kab, A, B, Text3}k[B,P]
-                                , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
-
-  text_5.   -> B: Text8, Text9
-       5. B -> A: B, A, Text9, {'isoiec_9798_2_6_enc_5', Rb, Rpa, Text8}Kab
-}
-
-properties (of isoiec_9798_2_6_bdkey)
-  P_secret_Kab: secret(P, -, Kab, {A, B, P})
-  A_secret_Kab: secret(A, 3, Kab, {A, B, P})
-  B_secret_Kab: secret(B, 4, Kab, {A, B, P})
-
-  // Agreement properties strengthened with respect to Cas Cremers' models:
-  //   (a) we also verify agreement on the freshness data
-  //   (b) we also verify agreement with the trusted third party
-  //
-  A_injective_agreement_B:
-    iagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
-
-  B_injective_agreement_A:
-    iagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
-
-  A_injective_agreement_P:
-    iagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
-
-  B_injective_agreement_P:
-    iagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
 
 
 /******************************************************************************
@@ -443,7 +330,7 @@ properties (of isoiec_9798_2_6_special_TTP_bdkey)
 // 2 - udkey
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-/* 
+/*
  * Modeled from ISO/IEC 9798-2
  * Modeler: Cas Cremers, Dec. 2010
  * Ported to scyther-proof: Simon Meier, Feb. 2011
@@ -478,7 +365,7 @@ protocol isoiec_9798_2_1_udkey
 // Here we dont get any injective agreement, as there could be two B thread
 // receiving the same message from one A.
 property (of isoiec_9798_2_1_udkey)
-  B_non_injective_agreement: 
+  B_non_injective_agreement:
     niagree(B_1[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
 
 
@@ -502,7 +389,7 @@ protocol isoiec_9798_2_2_udkey
 }
 
 property (of isoiec_9798_2_2_udkey)
-  B_injective_agreement: 
+  B_injective_agreement:
     iagree(B_2[A,B,RB,Text2] -> A_2[A,B,RB,Text2], {A, B})
 
 
@@ -534,10 +421,10 @@ protocol isoiec_9798_2_3_udkey
 // the opportunity to strengthen the property for A, as we could just embed
 // TNA in the message sent from B.
 properties (of isoiec_9798_2_3_udkey)
-  A_non_injective_agreement: 
+  A_non_injective_agreement:
     niagree(A_2[A,B,TNB,Text3] -> B_2[A,B,TNB,Text3], {A, B})
 
-  B_non_injective_agreement: 
+  B_non_injective_agreement:
     niagree(B_2[A,B,TNA,Text1] -> A_1[A,B,TNA,Text1], {A, B})
 
 
@@ -568,143 +455,16 @@ protocol isoiec_9798_2_4_udkey
 }
 
 properties (of isoiec_9798_2_4_udkey)
-  A_injective_agreement: 
+  A_injective_agreement:
     iagree(A_3[A,B,RA,RB,Text2,Text4] -> B_3[A,B,RA,RB,Text2,Text4], {A, B})
 
-  B_injective_agreement: 
+  B_injective_agreement:
     iagree(B_2[A,B,RA,RB,Text2] -> A_2[A,B,RA,RB,Text2], {A, B})
 
 
-/******************************************************************************
- * Protocol 5
- ******************************************************************************
- *
- * symmetric
- * ttp
- * four-pass
- * mutual
- *
- * Modeling notes:
- * - The use of TNb in message 4, as specified by the ISO standard, is
- *   different from other models, in which it was TNa.
- * - We send identity P in Step 3 in order for B to be able to lookup key k(B,P)
- */
-protocol isoiec_9798_2_5_udkey
-{
-  leak_A. A ->  : TVPa, TNa
-  leak_B. B ->  : TNb
-  leak_P. P ->  : TNp
-
-  text_1.   -> A: Text1
-       1. A -> P: A, P, TVPa, B, Text1
-
-  text_2.   -> P: Text2, Text3, Text4
-       2. P ->  : P, A, Text4, { 'isoiec_9798_2_5_ud_enc_2_1', TVPa, Kab, B, Text3 }k(A,P)
-                             , { 'isoiec_9798_2_5_ud_enc_2_2', TNp , Kab, A, Text2 }k(B,P)
-            -> A: P, A, Text4, { 'isoiec_9798_2_5_ud_enc_2_1', TVPa, Kab, B, Text3 }k(A,P)
-                             , TokenPA_for_B
-
-  text_3.   -> A: Text5, Text6
-       3. A ->  : A, B, Text6, P, TokenPA_for_B
-                                , { 'isoiec_9798_2_5_ud_enc_3', TNa, B, Text5 }Kab
-            -> B: A, B, Text6, P, { 'isoiec_9798_2_5_ud_enc_2_2', TNp, Kab, A, Text2 }k(B,P)
-                                , { 'isoiec_9798_2_5_ud_enc_3', TNa, B, Text5 }Kab
-
-  text_4.   -> B: Text7, Text8
-       4. B -> A: B, A, Text8, { 'isoiec_9798_2_5_ud_enc_4', TNb, A, Text7 }Kab
-}
-
-properties (of isoiec_9798_2_5_udkey)
-  P_secret_Kab: secret(P, -, Kab, {A, B, P})
-  A_secret_Kab: secret(A, 2, Kab, {A, B, P})
-  B_secret_Kab: secret(B, 3, Kab, {A, B, P})
-
-  // Agreement properties strengthened with respect to Cas Cremers' models:
-  //   (a) we also verify agreement on the freshness data TNa, TNb
-  //   (b) we also verify agreement with the trusted third party
-  //
-  A_injective_agreement_B: 
-    iagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
-
-  // Injectivity agreement does not hold. See
-  //
-  // NO injective agreement can be proven. There may be several B-threads
-  // communicating with the same A-thread! Checking the 'TNb' timestamp in
-  // later steps could be used to remove this problem, up to the clock
-  // resolution.
-  B_non_injective_agreement_A: 
-    niagree(B_3[A,B,P,Kab,TNa,Text5] -> A_3[A,B,P,Kab,TNa,Text5], {A, B, P})
-
-  A_injective_agreement_P: 
-    iagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
-
-  // No injective agreement, as the TTP does not receive any message from 'B'.
-  B_non_injective_agreement_P: 
-    niagree(B_3[A,B,P,Kab,TNp,Text2] -> P_2[A,B,P,Kab,TNp,Text2], {A, B, P})
-
-
-/******************************************************************************
- * Protocol 6
- ******************************************************************************
- *
- * symmetric
- * ttp
- * five-pass
- * mutual
- *
- * Modeling notes:
- * - We send identity P in Step 4 in order for B to be able to lookup key k(B,P)
- *
- * MPA Attack reported by Mathuria:
- * - Type flaw MPA when in parallel with Abadi-Needham protocol.
- */
-protocol isoiec_9798_2_6_udkey
-{
-  text_1.   -> B: Text1
-       1. B -> A: B, A, Rb, Text1
-
-  text_2.   -> A: Text2
-       2. A -> P: A, P, Ra, Rb, B, Text2
-
-  text_3.   -> P: Text3, Text4, Text5
-       3. P ->  : P, A, Text5, {'isoiec_9798_2_6_ud_enc_3_1', Ra, Kab, B, Text4}k(A,P)
-                             , {'isoiec_9798_2_6_ud_enc_3_2', Rb, Kab, A, Text3}k(B,P)
-            -> A: P, A, Text5, {'isoiec_9798_2_6_ud_enc_3_1', Ra, Kab, B, Text4}k(A,P)
-                             , TokenPA_for_B
-
-  text_4.   -> A: Text6, Text7   
-       4. A ->  : A, B, Text7, P, TokenPA_for_B
-                                , {'isoiec_9798_2_6_ud_enc_4', Rpa, Rb, Text6}Kab
-            -> B: A, B, Text7, P, {'isoiec_9798_2_6_ud_enc_3_2', Rb, Kab, A, Text3}k(B,P)
-                                , {'isoiec_9798_2_6_ud_enc_4', Rpa, Rb, Text6}Kab
-       
-  text_5.   -> B: Text8, Text9
-       5. B -> A: B, A, Text9, {'isoiec_9798_2_6_ud_enc_5', Rb, Rpa, Text8}Kab
-}
-
-properties (of isoiec_9798_2_6_udkey)
-  P_secret_Kab: secret(P, -, Kab, {A, B, P})
-  A_secret_Kab: secret(A, 3, Kab, {A, B, P})
-  B_secret_Kab: secret(B, 4, Kab, {A, B, P})
-
-  // Agreement properties strengthened with respect to Cas Cremers' models:
-  //   (a) we also verify agreement on the freshness data 
-  //   (b) we also verify agreement with the trusted third party
-  //
-  A_injective_agreement_B: 
-    iagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
-
-  B_injective_agreement_A: 
-    iagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
-
-  A_injective_agreement_P: 
-    iagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
-
-  B_injective_agreement_P: 
-    iagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// 3 
+// 3
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /*
@@ -1249,7 +1009,7 @@ protocol isoiec_9798_4_1_bdkey
   leak_A. A ->  : TNA
 
   text_1.   -> A: Text1, Text2
-       1. A -> B: A, B, TNA, Text2, Text1, 
+       1. A -> B: A, B, TNA, Text2, Text1,
                   h(('CCF', k[A,B]), ('isoiec_9798_4_1_ccf_1', TNA, B, Text1))
 }
 
@@ -1273,7 +1033,7 @@ protocol isoiec_9798_4_2_bdkey
        1. B -> A: B, A, Rb, Text1
 
   text_2.   -> A: Text2, Text3
-       2. A -> B: A, B, Text3, Rb, Text2, 
+       2. A -> B: A, B, Text3, Rb, Text2,
                   h(('CCF', k[A,B]), ('isoiec_9798_4_2_ccf_2', Rb, B, Text2))
 }
 
@@ -1296,11 +1056,11 @@ protocol isoiec_9798_4_3_bdkey
   leak_B. B ->  : TNb
 
   text_1.   -> A: Text1, Text2
-       1. A -> B: A, B, TNa, Text2, Text1, 
+       1. A -> B: A, B, TNa, Text2, Text1,
                   h(('CCF', k[A,B]), ('isoiec_9798_4_3_ccf_1', TNa, B, Text1))
 
   text_2.   -> B: Text3, Text4
-       2. B -> A: B, A, TNb, Text4, Text3, 
+       2. B -> A: B, A, TNb, Text4, Text3,
                   h(('CCF', k[A,B]), ('isoiec_9798_4_3_ccf_2', TNb, A, Text3))
 }
 
@@ -1328,7 +1088,7 @@ protocol isoiec_9798_4_4_bdkey
        1. B -> A: B, A, Rb, Text1
 
   text_2.   -> A: Text2, Text3
-       2. A -> B: A, B, Ra, Text3, Text2, 
+       2. A -> B: A, B, Ra, Text3, Text2,
                   h(('CCF', k[A,B]), ('isoiec_9798_4_4_ccf_2', Ra, Rb, B, Text2))
 
   text_3.   -> B: Text4, Text5
@@ -1474,5 +1234,386 @@ properties (of isoiec_9798_4_4_udkey)
   B_injective_agreement:
     iagree(B_2[A,B,Ra,Rb,Text2] -> A_2[A,B,Ra,Rb,Text2], {A, B})
 
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// The 2_5 and 2_6 protocols need manual type annotations to make the parallel
+// composition proof go through. Therefore, we have to define
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+/******************************************************************************
+ * Protocol 5 (udkey and bdkey variants composed in parallel)
+ ******************************************************************************
+ *
+ * symmetric
+ * ttp
+ * four-pass
+ * mutual
+ *
+ * Modeling notes:
+ * - The use of TNb in message 4, as specified by the ISO standard, is
+ *   different from other models, in which it was TNa.
+ * - We send identity P in Step 3 in order for B to be able to lookup key k(B,P)
+ */
+protocol isoiec_9798_2_5
+{
+
+// original protocol: isoiec_9798_2_5_bdkey
+
+  leakA. A ->  : TVPa, TNa
+  leakB. B ->  : TNb
+  leakP. P ->  : TNp
+
+  text1.   -> A: Text1
+      1. A -> P: A, P, TVPa, B, Text1
+
+  text2.   -> P: Text2, Text3, Text4
+      2. P ->  : P, A, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, B, Text3 }k(A,P)
+                            , { 'isoiec_9798_2_5_enc_2_2', TNp , Kab, A, Text2 }k(B,P)
+           -> A: P, A, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, B, Text3 }k(A,P)
+                            , TokenPA_for_B
+
+  text3.   -> A: Text5, Text6
+      3. A ->  : A, B, Text6, P, TokenPA_for_B
+                               , { 'isoiec_9798_2_5_enc_3', TNa, B, Text5 }Kab
+           -> B: A, B, Text6, P, { 'isoiec_9798_2_5_enc_2_2', TNp, Kab, A, Text2 }k(B,P)
+                               , { 'isoiec_9798_2_5_enc_3', TNa, B, Text5 }Kab
+
+  text4.   -> B: Text7, Text8
+      4. B -> A: B, A, Text8, { 'isoiec_9798_2_5_enc_4', TNb, A, Text7 }Kab
+
+
+// original protocol: isoiec_9798_2_5_bdkey
+
+  leakA. Abd ->    : TVPa, TNa
+  leakB. Bbd ->    : TNb
+  leakP. Pbd ->    : TNp
+
+  text1.     -> Abd: Text1
+      1. Abd -> Pbd: Abd, Pbd, TVPa, Bbd, Text1
+
+  text2.     -> Pbd: Text2, Text3, Text4
+      2. Pbd ->    : Pbd, Abd, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, Abd, Bbd, Text3 }k[Abd,Pbd]
+                                    , { 'isoiec_9798_2_5_enc_2_2', TNp , Kab, Abd, Bbd, Text2 }k[Bbd,Pbd]
+             -> Abd: Pbd, Abd, Text4, { 'isoiec_9798_2_5_enc_2_1', TVPa, Kab, Abd, Bbd, Text3 }k[Abd,Pbd]
+                                    , TokenPA_for_B
+
+  text3.     -> Abd: Text5, Text6
+      3. Abd ->    : Abd, Bbd, Text6, Pbd, TokenPA_for_B
+                                    , { 'isoiec_9798_2_5_enc_3', TNa, Bbd, Text5 }Kab
+             -> Bbd: Abd, Bbd, Text6, Pbd, { 'isoiec_9798_2_5_enc_2_2', TNp, Kab, Abd, Bbd, Text2 }k[Bbd,Pbd]
+                                    , { 'isoiec_9798_2_5_enc_3', TNa, Bbd, Text5 }Kab
+
+  text4.     -> Bbd: Text7, Text8
+      4. Bbd -> Abd: Bbd, Abd, Text8, { 'isoiec_9798_2_5_enc_4', TNb, Abd, Text7 }Kab
+
+}
+
+property (of isoiec_9798_2_5) typing_2_5:
+  "Abd@Bbd           :: Known(Bbd_3)
+   Abd@Pbd           :: Known(Pbd_1)
+   A@B               :: Known(B_3)
+   A@P               :: Known(P_1)
+   Bbd@Pbd           :: Known(Pbd_1)
+   B@P               :: Known(P_1)
+   B@P               :: Known(P_1)
+   Kab@Abd           :: (Known(Abd_2) | Kab@Pbd)
+   Kab@Bbd           :: (Known(Bbd_3) | Kab@Pbd)
+   Kab@A             :: (Known(A_2) | Kab@P)
+   Kab@B             :: (Known(B_3) | Kab@P)
+   Pbd@Bbd           :: Known(Bbd_3)
+   P@B               :: Known(B_3)
+
+   // The following four lines are what is wrong in the automatically composed
+   // type annotation.
+   TNa@Bbd           :: (Known(Bbd_3)  | TNa@A | TNa@Abd)
+   TNa@B             :: (Known(B_3) | TNa@A | TNa@Abd)
+   TNb@Abd           :: (Known(Abd_4) | TNb@B | TNb@Bbd)
+   TNb@A             :: (Known(A_4) | TNb@B | TNb@Bbd)
+
+   TNp@Bbd           :: (Known(Bbd_3) | TNp@Pbd)
+   TNp@B             :: (Known(B_3) | TNp@P)
+   TVPa@Pbd          :: Known(Pbd_1)
+   TVPa@P            :: Known(P_1)
+   Text1@Abd         :: Known(Abd_text1)
+   Text1@Pbd         :: Known(Pbd_1)
+   Text1@A           :: Known(A_text1)
+   Text1@P           :: Known(P_1)
+   Text2@Bbd         :: Known(Bbd_3)
+   Text2@Pbd         :: Known(Pbd_text2)
+   Text2@B           :: Known(B_3)
+   Text2@P           :: Known(P_text2)
+   Text3@Abd         :: Known(Abd_2)
+   Text3@Pbd         :: Known(Pbd_text2)
+   Text3@A           :: Known(A_2)
+   Text3@P           :: Known(P_text2)
+   Text4@Abd         :: Known(Abd_2)
+   Text4@Pbd         :: Known(Pbd_text2)
+   Text4@A           :: Known(A_2)
+   Text4@P           :: Known(P_text2)
+   Text5@Abd         :: Known(Abd_text3)
+   Text5@Bbd         :: Known(Bbd_3)
+   Text5@A           :: Known(A_text3)
+   Text5@B           :: Known(B_3)
+   Text6@Abd         :: Known(Abd_text3)
+   Text6@Bbd         :: Known(Bbd_3)
+   Text6@A           :: Known(A_text3)
+   Text6@B           :: Known(B_3)
+   Text7@Abd         :: Known(Abd_4)
+   Text7@Bbd         :: Known(Bbd_text4)
+   Text7@A           :: Known(A_4)
+   Text7@B           :: Known(B_text4)
+   Text8@Abd         :: Known(Abd_4)
+   Text8@Bbd         :: Known(Bbd_text4)
+   Text8@A           :: Known(A_4)
+   Text8@B           :: Known(B_text4)
+   TokenPA_for_B@Abd :: Known(Abd_2)
+   TokenPA_for_B@A   :: Known(A_2)"
+
+
+properties (of isoiec_9798_2_5) // udkey variant
+
+  P_secret_Kab: secret(P, -, Kab, {A, B, P})
+  A_secret_Kab: secret(A, 2, Kab, {A, B, P})
+  B_secret_Kab: secret(B, 3, Kab, {A, B, P})
+
+  // Agreement properties strengthened with respect to Cas Cremers' models:
+  //   (a) we also verify agreement on the freshness data TNa, TNb
+  //   (b) we also verify agreement with the trusted third party
+  //
+  A_injective_agreement_B:
+    iagree(A_4[A,B,P,Kab,TNa,Text5,TNb,Text7] -> B_4[A,B,P,Kab,TNa,Text5,TNb,Text7], {A, B, P})
+
+  // Injectivity agreement does not hold. See
+  //
+  // NO injective agreement can be proven. There may be several B-threads
+  // communicating with the same A-thread! Checking the 'TNb' timestamp in
+  // later steps could be used to remove this problem, up to the clock
+  // resolution.
+  B_non_injective_agreement_A:
+    niagree(B_3[A,B,P,Kab,TNa,Text5] -> A_3[A,B,P,Kab,TNa,Text5], {A, B, P})
+
+  A_injective_agreement_P:
+    iagree(A_2[A,B,P,Kab,TVPa,Text3] -> P_2[A,B,P,Kab,TVPa,Text3], {A, B, P})
+
+  // No injective agreement, as the TTP does not receive any message from 'B'.
+  B_non_injective_agreement_P:
+    niagree(B_3[A,B,P,Kab,TNp,Text2] -> P_2[A,B,P,Kab,TNp,Text2], {A, B, P})
+
+
+properties (of isoiec_9798_2_5) // bdkey variant
+
+  Pbd_secret_Kab: secret(Pbd, -, Kab, {Abd, Bbd, Pbd})
+  Abd_secret_Kab: secret(Abd, 2, Kab, {Abd, Bbd, Pbd})
+  Bbd_secret_Kab: secret(Bbd, 3, Kab, {Abd, Bbd, Pbd})
+
+  // Agreement properties strengthened with respect to Cas Cremers' models:
+  //   (a) we also verify agreement on the freshness data TNa, TNb
+  //   (b) we also verify agreement with the trusted third party
+  //
+  Abd_injective_agreement_Bbd:
+    iagree(Abd_4[Abd,Bbd,Pbd,Kab,TNa,Text5,TNb,Text7]
+        -> Bbd_4[Abd,Bbd,Pbd,Kab,TNa,Text5,TNb,Text7], {Abd, Bbd, Pbd})
+
+  // Injective agreement does not hold. See
+  // isoiec_9798_2_5_special_TTP_bdkey for more information.
+  Bbd_non_injective_agreement_Abd:
+    niagree(Bbd_3[Abd,Bbd,Pbd,Kab,TNa,Text5]
+         -> Abd_3[Abd,Bbd,Pbd,Kab,TNa,Text5], {Abd, Bbd, Pbd})
+
+  Abd_injective_agreement_Pbd:
+    iagree(Abd_2[Abd,Bbd,Pbd,Kab,TVPa,Text3]
+        -> Pbd_2[Abd,Bbd,Pbd,Kab,TVPa,Text3], {Abd, Bbd, Pbd})
+
+  // Injective agreement does not hold. See
+  // isoiec_9798_2_5_special_TTP_bdkey for more information.
+  Bbd_non_injective_agreement_Pbd:
+    niagree(Bbd_3[Abd,Bbd,Pbd,Kab,TNp,Text2]
+         -> Pbd_2[Abd,Bbd,Pbd,Kab,TNp,Text2], {Abd, Bbd, Pbd})
+
+*/
+
+/******************************************************************************
+ * Protocol 6
+ ******************************************************************************
+ *
+ * symmetric
+ * ttp
+ * five-pass
+ * mutual
+ *
+ * Modeling notes:
+ * - We send identity P in Step 4 in order for B to be able to lookup key k(B,P)
+ *
+ * MPA Attack reported by Mathuria:
+ * - Type flaw MPA when in parallel with Abadi-Needham protocol.
+ */
+protocol isoiec_9798_2_6
+{
+
+// original protocol: isoiec_9798_2_6_udkey
+
+  text1.   -> B: Text1
+      1. B -> A: B, A, Rb, Text1
+
+  text2.   -> A: Text2
+      2. A -> P: A, P, Ra, Rb, B, Text2
+
+  text3.   -> P: Text3, Text4, Text5
+      3. P ->  : P, A, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, B, Text4}k(A,P)
+                            , {'isoiec_9798_2_6_enc_3_2', Rb, Kab, A, Text3}k(B,P)
+           -> A: P, A, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, B, Text4}k(A,P)
+                            , TokenPA_for_B
+
+  text4.   -> A: Text6, Text7
+      4. A ->  : A, B, Text7, P, TokenPA_for_B
+                               , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
+           -> B: A, B, Text7, P, {'isoiec_9798_2_6_enc_3_2', Rb, Kab, A, Text3}k(B,P)
+                               , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
+
+  text5.   -> B: Text8, Text9
+      5. B -> A: B, A, Text9, {'isoiec_9798_2_6_enc_5', Rb, Rpa, Text8}Kab
+
+
+//original protocol isoiec_9798_2_6_bdkey
+
+  text1.     -> Bbd: Text1
+      1. Bbd -> Abd: Bbd, Abd, Rb, Text1
+
+  text2.     -> Abd: Text2
+      2. Abd -> Pbd: Abd, Pbd, Ra, Rb, Bbd, Text2
+
+  text3.     -> Pbd: Text3, Text4, Text5
+      3. Pbd ->    : Pbd, Abd, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, Abd, Bbd, Text4}k[Abd,Pbd]
+                                    , {'isoiec_9798_2_6_enc_3_2', Rb, Kab, Abd, Bbd, Text3}k[Bbd,Pbd]
+             -> Abd: Pbd, Abd, Text5, {'isoiec_9798_2_6_enc_3_1', Ra, Kab, Abd, Bbd, Text4}k[Abd,Pbd]
+                                    , TokenPA_for_B
+
+  text4.     -> Abd: Text6, Text7
+      4. Abd ->    : Abd, Bbd, Text7, Pbd, TokenPA_for_B
+                                         , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
+             -> Bbd: Abd, Bbd, Text7, Pbd, {'isoiec_9798_2_6_enc_3_2', Rb, Kab, Abd, Bbd, Text3}k[Bbd,Pbd]
+                                         , {'isoiec_9798_2_6_enc_4', Rpa, Rb, Text6}Kab
+
+  text5.     -> Bbd: Text8, Text9
+      5. Bbd -> Abd: Bbd, Abd, Text9, {'isoiec_9798_2_6_enc_5', Rb, Rpa, Text8}Kab
+}
+
+
+property (of isoiec_9798_2_6) typing_2_6:
+  "Abd@Pbd           :: Known(Pbd_2)
+   A@P               :: Known(P_2)
+   Bbd@Abd           :: Known(Abd_1)
+   Bbd@Pbd           :: Known(Pbd_2)
+   B@A               :: Known(A_1)
+   B@P               :: Known(P_2)
+   Kab@Abd           :: (Known(Abd_3) | Kab@Pbd)
+   Kab@Bbd           :: (Known(Bbd_4) | Kab@Pbd)
+   Kab@A             :: (Known(A_3) | Kab@P)
+   Kab@B             :: (Known(B_4) | Kab@P)
+   Pbd@Bbd           :: Known(Bbd_4)
+   P@B               :: Known(B_4)
+   Ra@Pbd            :: Known(Pbd_2)
+   Ra@P              :: Known(P_2)
+   Rb@Abd            :: Known(Abd_1)
+   Rb@Pbd            :: Known(Pbd_2)
+   Rb@A              :: Known(A_1)
+   Rb@P              :: Known(P_2)
+
+   // The following two lines are different from the automatically computed
+   // type invariant for the composed protocols.
+   Rpa@Bbd           :: (Known(Bbd_4) | Rpa@A | Rpa@Abd)
+   Rpa@B             :: (Known(B_4) | Rpa@A | Rpa@Abd)
+
+   Text1@Abd         :: Known(Abd_1)
+   Text1@Bbd         :: Known(Bbd_text1)
+   Text1@A           :: Known(A_1)
+   Text1@B           :: Known(B_text1)
+   Text2@Abd         :: Known(Abd_text2)
+   Text2@Pbd         :: Known(Pbd_2)
+   Text2@A           :: Known(A_text2)
+   Text2@P           :: Known(P_2)
+   Text3@Bbd         :: Known(Bbd_4)
+   Text3@Pbd         :: Known(Pbd_text3)
+   Text3@B           :: Known(B_4)
+   Text3@P           :: Known(P_text3)
+   Text4@Abd         :: Known(Abd_3)
+   Text4@Pbd         :: Known(Pbd_text3)
+   Text4@A           :: Known(A_3)
+   Text4@P           :: Known(P_text3)
+   Text5@Abd         :: Known(Abd_3)
+   Text5@Pbd         :: Known(Pbd_text3)
+   Text5@A           :: Known(A_3)
+   Text5@P           :: Known(P_text3)
+   Text6@Abd         :: Known(Abd_text4)
+   Text6@Bbd         :: Known(Bbd_4)
+   Text6@A           :: Known(A_text4)
+   Text6@B           :: Known(B_4)
+   Text7@Abd         :: Known(Abd_text4)
+   Text7@Bbd         :: Known(Bbd_4)
+   Text7@A           :: Known(A_text4)
+   Text7@B           :: Known(B_4)
+   Text8@Abd         :: Known(Abd_5)
+   Text8@Bbd         :: Known(Bbd_text5)
+   Text8@A           :: Known(A_5)
+   Text8@B           :: Known(B_text5)
+   Text9@Abd         :: Known(Abd_5)
+   Text9@Bbd         :: Known(Bbd_text5)
+   Text9@A           :: Known(A_5)
+   Text9@B           :: Known(B_text5)
+   TokenPA_for_B@Abd :: Known(Abd_3)
+   TokenPA_for_B@A   :: Known(A_3)"
+
+
+/*
+properties (of isoiec_9798_2_6) //udkey variant
+
+  P_secret_Kab: secret(P, -, Kab, {A, B, P})
+  A_secret_Kab: secret(A, 3, Kab, {A, B, P})
+  B_secret_Kab: secret(B, 4, Kab, {A, B, P})
+
+  // Agreement properties strengthened with respect to Cas Cremers' models:
+  //   (a) we also verify agreement on the freshness data
+  //   (b) we also verify agreement with the trusted third party
+  //
+  A_injective_agreement_B:
+    iagree(A_5[A,B,P,Kab,Rpa,Rb,Text6,Text8] -> B_5[A,B,P,Kab,Rpa,Rb,Text6,Text8], {A, B, P})
+
+  B_injective_agreement_A:
+    iagree(B_4[A,B,P,Kab,Rpa,Rb,Text6] -> A_4[A,B,P,Kab,Rpa,Rb,Text6], {A, B, P})
+
+  A_injective_agreement_P:
+    iagree(A_3[A,B,P,Ra,Kab,Text4] -> P_3[A,B,P,Ra,Kab,Text4], {A, B, P})
+
+  B_injective_agreement_P:
+    iagree(B_4[A,B,P,Rb,Kab,Text3] -> P_3[A,B,P,Rb,Kab,Text3], {A, B, P})
+
+
+properties (of isoiec_9798_2_6) //bdkey variant
+
+  Pbd_secret_Kab: secret(Pbd, -, Kab, {Abd, Bbd, Pbd})
+  Abd_secret_Kab: secret(Abd, 3, Kab, {Abd, Bbd, Pbd})
+  Bbd_secret_Kab: secret(Bbd, 4, Kab, {Abd, Bbd, Pbd})
+
+  // Agreement properties strengthened with respect to Cas Cremers' models:
+  //   (a) we also verify agreement on the freshness data
+  //   (b) we also verify agreement with the trusted third party
+  //
+  Abd_injective_agreement_Bbd:
+    iagree(Abd_5[Abd,Bbd,Pbd,Kab,Rpa,Rb,Text6,Text8]
+        -> Bbd_5[Abd,Bbd,Pbd,Kab,Rpa,Rb,Text6,Text8], {Abd, Bbd, Pbd})
+
+  Bbd_injective_agreement_Abd:
+    iagree(Bbd_4[Abd,Bbd,Pbd,Kab,Rpa,Rb,Text6]
+        -> Abd_4[Abd,Bbd,Pbd,Kab,Rpa,Rb,Text6], {Abd, Bbd, Pbd})
+
+  Abd_injective_agreement_Pbd:
+    iagree(Abd_3[Abd,Bbd,Pbd,Ra,Kab,Text4]
+        -> Pbd_3[Abd,Bbd,Pbd,Ra,Kab,Text4], {Abd, Bbd, Pbd})
+
+  Bbd_injective_agreement_Pbd:
+    iagree(Bbd_4[Abd,Bbd,Pbd,Rb,Kab,Text3]
+        -> Pbd_3[Abd,Bbd,Pbd,Rb,Kab,Text3], {Abd, Bbd, Pbd})
+*/
 
 end

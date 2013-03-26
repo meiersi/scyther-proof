@@ -32,27 +32,30 @@ case-studies-journal-html:
 #   - newest scyther-proof with Isabelle support 
 #     (build according to: https://svn.inf.ethz.ch/svn/basin/infsec/trunk/projects/FOSSP/espl/README)
 
+ISO_SAME_KEY = iso9798/isoiec-9798-2-bdkey.spthy iso9798/isoiec-9798-2-udkey.spthy iso9798/isoiec-9798-3.spthy iso9798/isoiec-9798-4-bdkey.spthy iso9798/isoiec-9798-4-udkey.spthy
+ISO_ALL = iso9798/isoiec-9798.spthy $(ISO_SAME_KEY)
+
 iso9798-generate-proofs:
-	scyther-proof iso9798/*.spthy --shortest -Oiso9798/isabelle-proofs --ASCII
+	scyther-proof $(ISO_ALL) --shortest -Oiso9798/isabelle-proofs --ASCII
 
 iso9798-generate-and-check-proofs:
-	scyther-proof iso9798/*.spthy --shortest -Oiso9798/isabelle-proofs --isabelle
+	scyther-proof $(ISO_ALL) --shortest -Oiso9798/isabelle-proofs --isabelle
 
 iso9798-generate-check-and-visualize-proofs:
-	scyther-proof iso9798/*.spthy --shortest -Oiso9798/proofs-visualized --isabelle --html
+	scyther-proof $(ISO_ALL) --shortest -Oiso9798/proofs-visualized --isabelle --html
 
 iso9798-visualize-proofs:
-	scyther-proof iso9798/*.spthy --shortest -Oiso9798/proofs-visualized --html
+	scyther-proof $(ISO_ALL) --shortest -Oiso9798/proofs-visualized --html
 
 iso9798-generate-parallel-proofs:
-	scyther-proof iso9798/*.spthy --compose-parallel --shortest -Oiso9798/isabelle-parallel-proofs --ASCII
+	scyther-proof $(ISO_ALL) --compose-parallel --shortest -Oiso9798/isabelle-parallel-proofs --ASCII
 	
 iso9798-generate-and-check-parallel-proofs:
-	scyther-proof iso9798/*.spthy --compose-parallel --shortest -Oiso9798/isabelle-parallel-proofs --isabelle
+	scyther-proof $(ISO_SAME_KEY) --compose-parallel --shortest -Oiso9798/isabelle-parallel-proofs --isabelle
 
 iso9798-generate-check-and-visualize-parallel-proofs:
-	scyther-proof iso9798/*.spthy --compose-parallel --shortest -Oiso9798/parallel-proofs-visualized --isabelle --html
+	scyther-proof $(ISO_SAME_KEY) --compose-parallel --shortest -Oiso9798/parallel-proofs-visualized --isabelle --html
 
 iso9798-visualize-parallel-proofs:
-	scyther-proof iso9798/*.spthy --compose-parallel --shortest -Oiso9798/parallel-proofs-visualized --html
+	scyther-proof $(ISO_ALL) --compose-parallel --shortest -Oiso9798/parallel-proofs-visualized --html
 	
