@@ -713,7 +713,19 @@ lemma notin_KnownT_append_StepE [dest!]:
    m \<notin> knows t"
   by(auto simp: KnownT_def)
 
+lemma in_SumT_NonceT_NonceTE [elim!]:
+  "\<lbrakk> m \<in> SumT (NonceT Ro n) (NonceT Ro' n') i q; 
+     m \<in> NonceT Ro n i q \<Longrightarrow> R; 
+     m \<in> NonceT Ro' n' i q \<Longrightarrow> R 
+   \<rbrakk> \<Longrightarrow> R"
+  by(auto simp: SumT_def)
 
+(* TODO: Add more of the restricted SumT unfoldings analogous to the ones above.
+   We don't unfold SumT eagerly, as this would result in too many branches being created.
+   The above lemma is a hack to get triple types of the form SumT KnownT (SumT NonceT NonceT)
+   to work. The proper way would be to only expand types of variables that are being analyzed
+   by the decrChain function.
+*)
 
 text{* Direct unfoldings *}
 
