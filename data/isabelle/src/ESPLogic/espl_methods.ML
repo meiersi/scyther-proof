@@ -47,7 +47,7 @@ open ESPL_Utils;
 fun err_no_matching_rule ctxt raw_rules knows_thm =
   error (Pretty.string_of (Pretty.block (Pretty.fbreaks
             [ Pretty.str "none of the rules:"
-            , Pretty.indent 2 (Display.pretty_thms ctxt raw_rules)
+            , Pretty.indent 2 (Proof_Context.pretty_fact ctxt ("", raw_rules))
             , Pretty.str "resolved against:"
             , Pretty.indent 2 (Display.pretty_thm ctxt knows_thm)
             ])))
@@ -65,7 +65,7 @@ fun finalize_knows_cases ctxt minimal facts case_th =
     val facts'    = filter (not o is_hint_thm) facts;
     val final_tac = ALLGOALS (
           (if minimal then 
-             TRY o Simplifier.full_simp_tac (simpset_of ctxt)
+             TRY o Simplifier.full_simp_tac ctxt
            else
              TRY o Method.insert_tac facts' THEN'
              TRY o (
@@ -88,7 +88,6 @@ fun sources_tac ctxt minimal msg_t opt_raw_rule facts =
   let
     val thy = Proof_Context.theory_of ctxt;
     val cert = Thm.cterm_of thy;
-    val ss = simpset_of ctxt;
 
     val raw_rules = case opt_raw_rule of
         SOME th => [th]
@@ -115,7 +114,7 @@ fun sources_tac ctxt minimal msg_t opt_raw_rule facts =
         (ALLGOALS (assume_tac ORELSE' eresolve_tac predOrd_elim_ths)
          ORELSE auto_tac (ctxt addIs predOrd_elim_ths))
         )
-      |> simplify ss
+      |> simplify ctxt
 
     val (cases, rule) = 
       case get_first (try (curry (op RS) knows_thm)) raw_rules of
@@ -183,7 +182,7 @@ fun prefix_close_thms ctxt facts =
   let
     val prefixClose_th = Proof_Context.get_thm ctxt "ext_prefixClose";
     fun close step roleMap = [step, roleMap] MRS prefixClose_th;
-    val expand = Simplifier.simplify (Simplifier.simpset_of ctxt);
+    val expand = Simplifier.simplify ctxt;
     val distinct_prop = distinct (Thm.eq_thm);
     (* fun new_fact th = 
         forall (not_equal (Thm.prop_of th) o Thm.prop_of) facts; *)
@@ -266,9 +265,7 @@ fun completeness_case_names th =
 *)
 fun completeness_cases_attrib ctxt th =
   let
-    val cs = Classical.get_cs ctxt;
-    val ss = (Context.cases Simplifier.global_simpset_of Simplifier.simpset_of ctxt)
-             addsimps @{thms finite_setdiff_compute};
+    val ss = Context.proof_of ctxt addsimps @{thms finite_setdiff_compute};
     fun add_case_info th = th
       |> Rule_Cases.add_consumes 0
       |> Rule_Cases.name (completeness_case_names th)

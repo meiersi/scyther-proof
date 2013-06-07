@@ -66,7 +66,7 @@ text{*
   with existing constants, we call the $C$ role client and 
   the $S$ role server.
 *}
-
+;
 role client
 where "client =
   [ Send ''1'' (PEnc (sLN ''k'') (sPK ''s''))
@@ -75,13 +75,13 @@ where "client =
 
 thm client.unfold
 thm client_1.sendStep_conv
-
+;
 role server
 where "server =
   [ Recv ''1'' (PEnc (sLMV ''v'') (sPK ''s''))
   , Send ''2'' (PHash (sLMV ''v''))
   ]"
-
+;
 protocol CR
 where "CR = {client,server}"
 
@@ -171,7 +171,7 @@ text{*
   the following type invariant.
 *}
 
-
+;
 type_invariant atomic_CR for CR
 where "atomic_CR = weakly_atomic"
 

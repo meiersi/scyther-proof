@@ -183,10 +183,10 @@ ML{*
 
 (* Tries to derive 'False' from equality of sizes of equated terms.
 *)
-fun inequal_sizes ss eq_th =
+fun inequal_sizes ctxt eq_th =
   let
     val opt_size_eq = 
-      SOME (simplify ss (eq_th RS  @{thm eq_imp_size_eq}))
+      SOME (simplify ctxt (eq_th RS  @{thm eq_imp_size_eq}))
       handle THM _ => NONE
   in
     case opt_size_eq of
@@ -204,7 +204,7 @@ fun unify do_occurs_check ctxt ths =
   let
     (* TODO: Remove hack by using Named_Thms data functor. *)
     val thm_by_name = Proof_Context.get_thm ctxt;
-    val ss = simpset_of ctxt 
+    val ss = ctxt 
       delsimps map thm_by_name ["tid_eq_commute", "reorient_store_eq_store"];
 
     (* substitute an equality theorem in the given list of 'done' and 
