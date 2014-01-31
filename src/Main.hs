@@ -152,7 +152,7 @@ setupMainMode = do
           , "    " ++ "http://www.graphviz.org/"
           , "  "
           , "  The '--isabelle' flag requires the 'Isabelle2013-2' release of Isabelle/HOL:"
-          , "    " ++ "http://isabelle.in.tum.de/website-Isabelle2013-2/index.html"
+          , "    " ++ "http://isabelle.in.tum.de/website-Isabelle2013-2/"
           , ""
           , "  Check the '" ++ readmePath ++ "' file for instructions on how to load the generated theory files in Isabelle's interactive mode."
           ]
@@ -763,7 +763,7 @@ ensureIsabelleESPL isabelle = do
           , " " ++ programName ++ " requires Isabelle2013-2."
           , " Proof checking is likely not to work."
           , " Please download Isabelle2013-2 from:"
-          , "   http://isabelle.in.tum.de/website-Isabelle2013-2/index.html"
+          , "   http://isabelle.in.tum.de/website-Isabelle2013-2/"
           ]
 
     checkLogics out _

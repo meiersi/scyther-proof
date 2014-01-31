@@ -58,7 +58,7 @@ Last Updated:  2014-01-31 by Andreas Lochbihler <andreas.lochbihler@inf.ethz.ch>
 Download and install full Isabelle2013-2 according to the installation
 instructions at
 
-    http://isabelle.in.tum.de/website-Isabelle2013-2/download_x86-linux.html
+    http://isabelle.in.tum.de/website-Isabelle2013-2/
 
 The first time you call `scyther-proof` with the `--isabelle` flag it will
 build the logic image of the Isabelle/HOL theories formalizing the security
