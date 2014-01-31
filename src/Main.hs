@@ -62,7 +62,7 @@ versionStr = concat
   [ programName
   , " "
   , showVersion version
-  , ", (C) Simon Meier, Andreas Lochbihler, ETH Zurich, 2009-2013"
+  , ", (C) Simon Meier, Andreas Lochbihler, ETH Zurich, 2009-2014"
   ]
 
 -- | Version string with HTML markup.
@@ -74,7 +74,7 @@ htmlVersionStr = concat
     , ", &copy; "
     , link "https://github.com/meiersi/scyther-proof" "Simon Meier"
     , link "http://github.com/meiersi" "Andreas Lochbihler"
-    , ", ETH Zurich, 2009-2013"
+    , ", ETH Zurich, 2009-2014"
     ]
   where
     link href name =
@@ -151,8 +151,8 @@ setupMainMode = do
           , "  The '--html' flag requires the 'dot' tool from GraphViz available at:"
           , "    " ++ "http://www.graphviz.org/"
           , "  "
-          , "  The '--isabelle' flag requires the 'Isabelle-2013' release of Isabelle/HOL:"
-          , "    " ++ "http://isabelle.in.tum.de/website-Isabelle2013/index.html"
+          , "  The '--isabelle' flag requires the 'Isabelle2013-2' release of Isabelle/HOL:"
+          , "    " ++ "http://isabelle.in.tum.de/website-Isabelle2013-2/index.html"
           , ""
           , "  Check the '" ++ readmePath ++ "' file for instructions on how to load the generated theory files in Isabelle's interactive mode."
           ]
@@ -756,14 +756,14 @@ ensureIsabelleESPL isabelle = do
     putStrLn ""
   where
     checkVersion out _
-      | "Isabelle2013" `isInfixOf` out = Right $ init out ++ ". OK."
+      | "Isabelle2013-2" `isInfixOf` out = Right $ init out ++ ". OK."
       | otherwise                        = Left  $ unlines $
           [ "WARNING:"
           , ""
-          , " " ++ programName ++ " requires Isabelle2013."
+          , " " ++ programName ++ " requires Isabelle2013-2."
           , " Proof checking is likely not to work."
-          , " Please download Isabelle2013 from:"
-          , "   http://isabelle.in.tum.de/website-Isabelle2013/index.html"
+          , " Please download Isabelle2013-2 from:"
+          , "   http://isabelle.in.tum.de/website-Isabelle2013-2/index.html"
           ]
 
     checkLogics out _
