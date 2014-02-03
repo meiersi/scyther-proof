@@ -174,8 +174,8 @@ fun setup_rolestep mk_binding ann_defs lthy =
   let
     val ((msg_const,msg_def),(step_const,step_def)) = ann_defs;
 
-    val ss_step = Simplifier.simpset_of lthy addsimps [step_def];
-    val ss_full = ss_step addsimps [msg_def];
+    val ss_step = lthy addsimps [step_def] |> simpset_of;
+    val ss_full = lthy addsimps [step_def, msg_def] |> simpset_of;
 
     val sendStep_t = @{const sendStep} $ step_const;
     val noteStep_t = @{const noteStep} $ step_const;
@@ -258,14 +258,15 @@ fun setup_role mk_binding (defs as ((role_const, role_def), steps)) ctxt =
     val step_defs = map (snd o snd) steps;
     val step_consts = map (fst o snd) steps;
 
-    val ss_role = Simplifier.simpset_of ctxt addsimps 
-                    [role_def, @{thm prefixClose_def}];
-    val ss_full = ss_role addsimps (pat_defs @ step_defs @
-      @{thms wf_role_def distinct_list_def wf_role_axioms_def});
+    val ss_role = ctxt addsimps [role_def, @{thm prefixClose_def}] |> simpset_of;
+    val ss_full = ctxt addsimps ([role_def, @{thm prefixClose_def}] @ pat_defs @ step_defs @
+      @{thms wf_role_def distinct_list_def wf_role_axioms_def}) |> simpset_of
 
-    val simp_tactic = K (FIRSTGOAL (Simplifier.full_simp_tac ss_full));
+    fun simp_tactic {prems, context} = FIRSTGOAL (Simplifier.full_simp_tac (put_simpset ss_full context));
 
     val distinct_steps_thms = prove_distinctness ctxt simp_tactic step_consts;
+
+    val ss_prefixClose = ctxt addsimps ([role_def, @{thm prefixClose_def}] @ distinct_steps_thms) |> simpset_of;
 
     val wf_goal = HOLogic.mk_Trueprop (@{const wf_role} $ role_const);
 
@@ -274,15 +275,13 @@ fun setup_role mk_binding (defs as ((role_const, role_def), steps)) ctxt =
     val lastComStep_t = @{const lastComStep} $ role_const;
     val firstComStep_t = @{const firstComStep} $ role_const;
 
-    val ss_prefixClose = ss_role addsimps distinct_steps_thms;
-
-    fun mk_prefixClose_thm step_def =
+    fun mk_prefixClose_thm ctxt step_def =
       let
         val step = step_def |> Thm.prop_of |> dest_HOL_def |> #1;
         val t =  @{const prefixClose} $ (Free ("s", @{typ store})) $
          (Free ("t", @{typ explicit_trace})) $
          role_const $ step $ (Free ("i", @{typ tid}));
-      in expand_term ss_prefixClose t end
+      in expand_term ss_prefixClose ctxt t end
 
     fun pat_def_msgvars pat_def =
       pat_def |> Thm.prop_of |> dest_HOL_def |> #2 |> pat_msgvars;
@@ -299,11 +298,11 @@ fun setup_role mk_binding (defs as ((role_const, role_def), steps)) ctxt =
       |> #2 o notes_proven simp_tactic
         [ (mk_binding "wf_role",    [([wf_goal],[att_iff_add])]) ]
     (* distinct steps and prefixClose expansions *)
-      |> #2 o Local_Theory.notes
+      |> #2 o (fn ctxt => Local_Theory.notes
         [ (mk_binding "distinct_steps",    [(distinct_steps_thms,[att_iff_add])]) 
         , (mk_binding "prefixClose_convs", 
-            [(map mk_prefixClose_thm step_defs, [att_iff_add])])
-        ]
+            [(map (mk_prefixClose_thm ctxt) step_defs, [att_iff_add])])
+        ] ctxt)
     (* expansions *)  
       |> notes_expansion ss_role
         [ (mk_binding "in_set_conv", [([in_set_t],[att_iff_add])])
@@ -364,8 +363,7 @@ fun setup_proto mk_binding (ann_def as (proto_const, proto_def)) ctxt =
       |> dest_HOL_def |> #2 |> HOLogic.dest_set;
     val role_unfolds = flat (map (get_unfold_thms ctxt) role_consts);
 
-    val proto_ss = Simplifier.simpset_of ctxt addsimps 
-      (proto_def :: @{thms wf_proto_def});
+    val proto_ss = ctxt addsimps (proto_def :: @{thms wf_proto_def});
     val full_ss = proto_ss addsimps role_unfolds;
 
     fun simp_tactic ss = K (FIRSTGOAL (Simplifier.full_simp_tac ss));
@@ -387,7 +385,7 @@ fun setup_proto mk_binding (ann_def as (proto_const, proto_def)) ctxt =
         , (mk_binding "wf_proto",       [([wf_proto_thm], [att_iff_add])])
         ]
     (* expansions *)  
-      |> #2 o notes_expansion proto_ss
+      |> #2 o notes_expansion (proto_ss |> simpset_of)
         [ (mk_binding "in_set_conv",    [([in_set_t],[att_iff_add])])
         ]
     (* restore annotated definition *)
@@ -545,13 +543,12 @@ fun mk_case_name_hint thy name =
 (* Insert the case names into a theorem *)
 fun insert_case_names ctxt th =
   let
-    val thy           = Proof_Context.theory_of ctxt;
     val cases         = source_case_names th;
-    val case_hint     = Hints.mk_hint_thm thy "case_name" o HOLogic.mk_string o nth cases;
+    val case_hint     = Hints.mk_hint_thm ctxt "case_name" o HOLogic.mk_string o nth cases;
     fun ins_tac (_,i) = Method.insert_tac [case_hint (i-1)] i;
   in
     HOL_Ext.refine_rule ctxt 
-      (K (ALLGOALS (Hints.remove_all_hints_tac THEN' SUBGOAL ins_tac))) th
+      (K (ALLGOALS (Hints.remove_all_hints_tac ctxt THEN' SUBGOAL ins_tac))) th
   end
 
 
@@ -627,7 +624,7 @@ fun type_elim_tac ctxt ty_elim_ths =
       EVERY'
         [ etac ty_elim_th
         , assume_tac
-        , TRY o full_simp_tac (simpset_of ctxt)
+        , TRY o full_simp_tac ctxt
         , TRY o (REPEAT o etac @{thm conjE})
         , TRY o Orders.order_tac ctxt []
         ]
@@ -640,7 +637,7 @@ fun type_elim_tac ctxt ty_elim_ths =
 fun expand_knows_cases_tac ctxt ty_elim_ths =
   REPEAT_DETERM1 (
     FIRST [ safe_tac ctxt
-          , CHANGED_PROP (TRYALL (full_simp_tac (simpset_of ctxt)))
+          , CHANGED_PROP (TRYALL (full_simp_tac ctxt))
           , CHANGED_PROP (TRYALL (type_elim_tac ctxt ty_elim_ths))
           ] 
   );
@@ -753,9 +750,8 @@ fun setup_typing mk_binding ann_def ctxt =
   let
     val (typ_const,typ_def) = ann_def;
 
-    val autom_tac = auto_tac (map_simpset (fn ss => ss addsimps [typ_def]) ctxt)
-    val ss_full = Simplifier.simpset_of ctxt 
-               addsimps [typ_def] addsimps @{thms mk_typing_def};
+    val autom_tac = auto_tac (ctxt addsimps [typ_def])
+    val ss_full = ctxt addsimps [typ_def] addsimps @{thms mk_typing_def} |> simpset_of;
     
     val vars = typ_def |> Thm.prop_of 
       |> ESPL_Utils.dest_HOL_def |> snd |> dest_mk_typing |> map fst;

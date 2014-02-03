@@ -40,14 +40,11 @@ signature HINTS =
 sig
   val dest_hint: term -> string * term
   val mk_hint: string -> term -> term
-  val mk_hint_thm: theory -> string -> term -> thm
+  val mk_hint_thm: Proof.context -> string -> term -> thm
   val gather: (string * term -> bool) -> term list -> (string * term) list
   val gather_by_name: string -> term list -> term list
-  val remove_all_hints_tac: int -> tactic
+  val remove_all_hints_tac: Proof.context -> int -> tactic
 end;
-*}
-
-ML{*
 
 structure Hints: HINTS =
 struct 
@@ -65,7 +62,7 @@ fun gather p = filter p o gather_props dest_hint
 fun gather_by_name name = map snd o gather (equal name o fst)
 
 (* A tactic removing all hints in the given subgoal *)
-val remove_all_hints_tac = full_simp_tac (HOL_ss addsimps @{thms remove_hints})
+fun remove_all_hints_tac ctxt = full_simp_tac (put_simpset HOL_ss ctxt addsimps @{thms remove_hints})
 
 (* create a hint term *)
 fun mk_hint name t =
@@ -77,12 +74,12 @@ fun mk_hint name t =
   end;
 
 (* create a hint theorem *)
-fun mk_hint_thm thy name t =
+fun mk_hint_thm ctxt name t =
   let
     val hint_ct = mk_hint name t |> HOLogic.mk_Trueprop
-                                 |> Thm.cterm_of thy;
+                                 |> Thm.cterm_of (Proof_Context.theory_of ctxt);
   in
-    Goal.prove_internal [] hint_ct (K (ALLGOALS remove_all_hints_tac))
+    Goal.prove_internal [] hint_ct (K (ALLGOALS (remove_all_hints_tac ctxt)))
   end;
 
 end;

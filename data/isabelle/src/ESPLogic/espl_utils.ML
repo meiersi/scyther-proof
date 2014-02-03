@@ -19,15 +19,15 @@ sig
 
   (* Pure specific functions *)
   val local_standard': thm -> thm
-  val expand_term: simpset -> term -> thm
-  val thms_to_simpset: Proof.context -> thm list -> simpset
+  val expand_term: simpset -> Proof.context -> term -> thm
+  val thms_to_simpset: Proof.context -> thm list -> Proof.context
   val prove_prop 
      : Proof.context -> ({prems: thm list, context: Proof.context} -> tactic) -> term -> thm
   val notes_expansion
      : simpset -> (Attrib.binding * (term list * Args.src list) list) list ->
        local_theory -> (string * thm list) list * local_theory
   val note_expansion
-     : simpset -> Attrib.binding * term list -> 
+     : simpset -> Attrib.binding * term list ->
        local_theory -> (string * thm list) * local_theory
   val notes_proven
      : ({prems: thm list, context: Proof.context} -> tactic) ->
@@ -114,9 +114,9 @@ val local_standard' =
 (* Generate the theorem proving the expansion of a term wrto to the given
    simpset and convert it into a rule.
 *)
-fun expand_term ss t = t
-  |> Thm.cterm_of (Proof_Context.theory_of (Raw_Simplifier.the_context ss))
-  |> Simplifier.rewrite ss
+fun expand_term ss ctxt t = t
+  |> Thm.cterm_of (Proof_Context.theory_of ctxt)
+  |> Simplifier.rewrite (put_simpset ss ctxt)
   |> (fn conv => conv RS @{thm meta_eq_to_obj_eq}) 
   |> local_standard'
 
@@ -124,15 +124,14 @@ fun expand_term ss t = t
 fun prove_prop ctxt mk_tactic goal = Goal.prove ctxt [] [] goal mk_tactic;
 
 (* create a simpset consisting only of the given theorems in the given context *)
-fun thms_to_simpset ctxt ths = 
-  Simplifier.context ctxt (Raw_Simplifier.empty_ss addsimps ths);
+fun thms_to_simpset ctxt ths = empty_simpset ctxt addsimps ths;
 
 (* Expand a list of terms and note the resulting theorems. *)
-fun notes_expansion ss to_expand = 
-  Local_Theory.notes (map (apsnd (map (apfst (map (expand_term ss))))) to_expand);
+fun notes_expansion ss to_expand lthy =
+  Local_Theory.notes (map (apsnd (map (apfst (map (expand_term ss lthy))))) to_expand) lthy;
 
 (* Expand a term and note the resulting theorem. *)
-fun note_expansion ss (a, ts) = 
+fun note_expansion ss (a, ts) =
   notes_expansion ss [(a, [(ts, [])])] #>> the_single;
 
 (* Prove a list of propositions and note the resulting theorems *)
