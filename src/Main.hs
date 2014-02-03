@@ -29,7 +29,7 @@ import System.Environment
 import System.Process
 
 import System.Console.CmdArgs.Text
-import System.Console.CmdArgs.Explicit
+import System.Console.CmdArgs.Explicit hiding (complete)
 
 import Extension.Prelude
 
@@ -120,7 +120,7 @@ withArguments argMode io = do
     processArgs argMode >>= run
   where
     run as
-      | argExists "help"    as = print $ helpText HelpFormatAll argMode
+      | argExists "help"    as = print $ helpText [] HelpFormatAll argMode
       | argExists "version" as = putStrLn versionStr
       | otherwise              = io as
 
@@ -158,7 +158,7 @@ setupMainMode = do
           ]
       )
       { modeCheck      = upd "mode" "translate"
-      , modeArgs       = Just $ flagArg (upd "inFile") "FILES"
+      , modeArgs       = ([], Just $ flagArg (upd "inFile") "FILES")
       , modeGroupFlags = Group
           { groupUnnamed =
               [ flagNone ["first", "f"] (addArg "strategy" "first")
@@ -239,11 +239,12 @@ setupMainMode = do
         , modeNames      = [name]
         , modeValue      = []
         , modeCheck      = upd "mode" name
+        , modeExpandAt   = True
         , modeReform     = const Nothing-- no reform possibility
         , modeHelp       = help
         , modeHelpSuffix = helpSuffix
-        , modeArgs       = Nothing    -- no positional arguments
-        , modeGroupFlags = toGroup [] -- no flags
+        , modeArgs       = ([], Nothing) -- no positional arguments
+        , modeGroupFlags = toGroup []    -- no flags
         }
 
     outputFlags =
@@ -259,7 +260,7 @@ errHelpExit msg = do
   putStrLn $ "error: " ++ msg
   putStrLn $ ""
   putStrLn $ showText (Wrap 100)
-           $ helpText HelpFormatDefault mainMode
+           $ helpText [] HelpFormatDefault mainMode
   exitFailure
 
 
