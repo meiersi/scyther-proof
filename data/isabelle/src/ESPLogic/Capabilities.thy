@@ -27,10 +27,10 @@ where
   "unionPart P1 P2 q = P1 q \<union> P2 q" 
 
 notation (xsymbols)
-  unionPart (infix "\<union>\<^isub>P" 65)
+  unionPart (infix "\<union>\<^sub>P" 65)
 
 lemma union_unionPart_conv:
-  "(a \<in> ((P1 \<union>\<^isub>P P2) q)) = (a \<in> (P1 q \<union> P2 q))"
+  "(a \<in> ((P1 \<union>\<^sub>P P2) q)) = (a \<in> (P1 q \<union> P2 q))"
 by (fastforce simp add: unionPart_def)
 
 
@@ -90,21 +90,21 @@ where
   "interCap C1 C2 = (\<lambda> q. C1 q \<inter> C2 q)"
 
 notation (xsymbols)
-  interCap  (infix "\<inter>\<^isub>C" 65)
+  interCap  (infix "\<inter>\<^sub>C" 65)
 
 definition unionCap :: "capability \<Rightarrow> capability \<Rightarrow> capability" (infix "UNC" 65)
 where
   "unionCap C1 C2 = (\<lambda> q. C1 q \<union> C2 q)" 
 
 notation (xsymbols)
-  unionCap  (infix "\<union>\<^isub>C" 65)
+  unionCap  (infix "\<union>\<^sub>C" 65)
 
 lemma union_unionCap_conv:
-  "(a \<in> ((C1 \<union>\<^isub>C C2) q)) = (a \<in> (C1 q \<union> C2 q))"
+  "(a \<in> ((C1 \<union>\<^sub>C C2) q)) = (a \<in> (C1 q \<union> C2 q))"
 by (fastforce simp add: unionCap_def)
 
 lemma inter_interCap_conv:
-  "(a \<in> ((C1 \<inter>\<^isub>C C2) q)) = (a \<in> (C1 q \<inter> C2 q))"
+  "(a \<in> ((C1 \<inter>\<^sub>C C2) q)) = (a \<in> (C1 q \<inter> C2 q))"
 by (fastforce simp add: interCap_def)
 
 
