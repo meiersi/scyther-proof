@@ -95,7 +95,7 @@ next
 qed
 
 
-text{* Specialized instances of nextRel_rev for Snoc appends *}
+text{* Specialized instances of @{text "nextRel_rev"} for Snoc appends *}
 lemma nextRel_Snoc_simps:
   "nextRel (xs@[a])   x y = nextRel (a#rev xs)   y x"
   "nextRel (xs@[a,b]) x y = nextRel (b#a#rev xs) y x"

@@ -29,7 +29,7 @@ text{*
 
 subsubsection{* General Cryptographic Messages *}
 
-notation (xsymbols) ExecMessage.inv  ("[_]\<^isup>-\<^isup>1" [60] 58)
+notation (xsymbols) ExecMessage.inv  ("[_]\<^sup>-\<^sup>1" [60] 58)
 
 
 subsubsection{* Specification Messages *}
