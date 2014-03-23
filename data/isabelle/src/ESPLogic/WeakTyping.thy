@@ -43,7 +43,7 @@ definition approx :: "typing \<Rightarrow> state set"
 where "approx typing \<equiv> {q. case q of (t,r,s) \<Rightarrow>
   \<forall> (i,step) \<in> steps t. 
     \<forall> R. roleMap r i = Some R \<longrightarrow>
-      (\<forall> n. MVar n \<in> FV (stepPat step) \<longrightarrow>
+      (\<forall> n. MVar n \<in> FV_rolestep step \<longrightarrow>
          s (MVar n, i) \<in> typing (R, n) i (t,r,s)
       )}"
 
@@ -63,7 +63,7 @@ lemma approx_unfold:
   "((t,r,s) \<in> approx typing) = 
    (\<forall> (i,step) \<in> steps t. 
       \<forall> R. roleMap r i = Some R \<longrightarrow>
-        (\<forall> n. MVar n \<in> FV (stepPat step) \<longrightarrow>
+        (\<forall> n. MVar n \<in> FV_rolestep step \<longrightarrow>
            s (MVar n, i) \<in> typing (R, n) i (t,r,s)))"
 by (auto simp: approx_def)
 
@@ -72,7 +72,7 @@ lemma in_approxI:
     "\<And> i step R n.
      \<lbrakk> (i,step) \<in> steps t;
        roleMap r i = Some R;
-       MVar n \<in> FV (stepPat step)
+       MVar n \<in> FV_rolestep step
      \<rbrakk>
        \<Longrightarrow> s (MV n i) \<in> typing (R, n) i (t,r,s)"
   shows "(t,r,s) \<in> approx typing"
@@ -82,7 +82,7 @@ lemma in_approxD:
   assumes approx: "(t,r,s) \<in> approx typing"
   and asms: "(i,step) \<in> steps t"
             "roleMap r i = Some R"
-            "MVar n \<in> FV (stepPat step)"
+            "MVar n \<in> FV_rolestep step"
   shows "s (MV n i) \<in> typing (R, n) i (t,r,s)"
 using approx asms
 by (auto simp: approx_unfold)
@@ -247,23 +247,80 @@ lemma monoTyp_appendD:
   by (rule monoTyp_freeD) auto
 
 
+(* TODO move? *)
+lemma sourced_imp_FV: "v \<in> sourced_vars st \<Longrightarrow> MVar v \<in> FV_rolestep st"
+by (cases st, auto)
+
+lemma used_imp_FV: "v : used_vars st \<Longrightarrow> MVar v \<in> FV_rolestep st"
+by (cases st, auto)
+
+lemma (in reachable_thread) done_typing_step:
+  assumes step_typ:
+    "\<And> step.
+     \<lbrakk> (i, step) \<in> steps t;
+       MVar v \<in> FV_rolestep step
+     \<rbrakk> \<Longrightarrow> s (MV v i) \<in> typing (done @ todo, v) i (t, r, s)"
+  and have_done: "step \<in> set done"
+  and have_FV: "MVar v \<in> FV_rolestep step"
+  shows "s (MV v i) \<in> typing (done @ todo, v) i (t, r, s)"
+proof (cases "step \<in> skipped")
+  case False
+  thus ?thesis using have_done have_FV step_typ by (auto dest: used_imp_FV)
+next
+  case True
+  note inSkipped = this
+  then obtain l ty pt
+    where noteEq: "(Note l ty pt) = step"
+    by(auto dest!: note_in_skipped)
+  hence "\<exists> step'. listOrd (done@todo) step' (Note l ty pt) \<and> v \<in> sourced_vars step'"
+    using inSkipped have_done have_FV
+    apply -
+    apply(subgoal_tac "v \<in> used_vars step")
+      apply(subgoal_tac "Note l ty pt \<in> set (done@todo)")
+        apply(drule source_use_ord)
+    by auto
+  then obtain step'
+    where roleBefore: "listOrd (done@todo) step' (Note l ty pt)"
+    and varSourced: "v \<in> sourced_vars step'"
+    by blast
+  hence varOfRecv: "MVar v \<in> FV_rolestep step'"
+    by (fastforce dest: sourced_imp_FV)
+  have notNote: "\<not> noteStep step'"
+    using varSourced by (fastforce dest: note_source)
+  have "step' \<in> set done" 
+    using roleBefore have_done noteEq
+    apply -
+    apply(drule listOrd_append[THEN iffD1])
+    apply(case_tac "listOrd done step' (Note l ty pt)")
+      apply(fastforce dest: in_set_listOrd1)
+    apply(case_tac "listOrd todo step' (Note l ty pt)")
+      apply(fastforce dest: in_set_listOrd2 done_notin_todoD)
+    apply(case_tac "step' \<in> set done \<and> Note l ty pt \<in> set todo")
+    by(auto dest: done_notin_todoD)
+  hence "(i, step') \<in> steps t" using notNote by (cases step', auto)
+  thus ?thesis
+    using varOfRecv by (auto intro!: step_typ thread_exists)
+qed
+
 lemma (in reachable_state) reachable_in_approxI:
   assumes monoTyp: "monoTyp typing"
   and recv_case:
-    "\<And> t r s i done todo skipped m R step n.
+    "\<And> t r s i done todo skipped m m2 R step n.
      \<lbrakk> R \<in> P; 
        roleMap r i = Some R;
        (done, step # todo) \<in> set (splits R);
-       recvStep step;
-       MVar n \<in> FV (stepPat step);
-       \<forall> step' \<in> set done. MVar n \<notin> FV (stepPat step');
+       recvStep step \<or> matchStep step;
+       n \<in> sourced_vars step;
+       \<forall> step' \<in> set done. MVar n \<notin> FV_rolestep step';
        hint ''completenessCase'' (step, n);
        
        (t,r,s) \<in> reachable P;
        (t,r,s) \<in> approx typing;
        r i = Some (done, step # todo, skipped);
-       Some m = inst s i (stepPat step);
-       m \<in> knows t
+       
+       recvStep step \<Longrightarrow> Some m = inst s i (stepPat step) \<and> m \<in> knows t;
+       matchStep step \<Longrightarrow> Some m = inst s i (fst (matchPats step)) \<and>
+         Some m2 = inst s i (snd (matchPats step)) \<and> m = m2
      \<rbrakk> \<Longrightarrow> 
         s (MV n i) \<in> typing (R, n) i (t @ [Step (i, step)], r(i \<mapsto> (done @ [step], todo, skipped)), s)"
   shows "(t,r,s) \<in> approx typing"
@@ -272,36 +329,35 @@ proof -
     have
      "\<lbrakk> r i = Some (done, todo, skipped);
         (i,step) \<in> steps t;
-        MVar n \<in> FV (stepPat step)
+        MVar n \<in> FV_rolestep step
       \<rbrakk> \<Longrightarrow> s (MV n i) \<in> typing (done@todo, n) i (t,r,s)"
     proof(induct arbitrary: i "done" todo step n skipped rule: reachable_induct)
       case (send t r s i "done" l pt todo skipped m i' done' todo' step n skipped')
       then interpret th1: 
-	reachable_thread P t r s i "done" "Send l pt # todo" skipped
-	by unfold_locales auto
+        reachable_thread P t r s i "done" "Send l pt # todo" skipped
+        by unfold_locales auto
       from send 
       have "(i', step) \<in> steps t \<or> (i' = i) \<and> step = Send l pt"
-	(is "?old \<or> ?new") by auto
+        (is "?old \<or> ?new") by auto
       moreover
       { assume ?old
-	hence "s(MV n i') \<in> typing (done'@todo', n) i' (t,r,s)"
-	  using send by (auto split: if_splits)
-	hence ?case
-	proof(rule monoTyp_freeD[OF monoTyp])
-	qed (auto simp: th1.thread_exists)
+        hence "s(MV n i') \<in> typing (done'@todo', n) i' (t,r,s)"
+          using send by (auto split: if_splits)
+        hence ?case
+        proof(rule monoTyp_freeD[OF monoTyp])
+        qed (auto simp: th1.thread_exists)
       }
       moreover
       { let ?role = "done @ Send l pt # todo"
-	note IH = send(2)
-	assume "?new"
-        hence "MVar n \<in> FV pt"
-          using send by auto
-        then obtain l' msg' 
-          where "(i, Recv l' msg') \<in> steps t" 
-                "MVar n \<in> FV msg'"
-          by (fastforce dest!: th1.send_step_FV[OF th1.thread_exists])
+        note IH = send(2)
+        assume "?new"
+        moreover hence "n \<in> used_vars step" using send by auto
+        ultimately obtain step' 
+          where "(i, step') \<in> steps t" 
+                "n \<in> sourced_vars step'"   
+          by (fastforce dest!: th1.source_step[OF th1.thread_exists])
         hence typed: "s (MV n i) \<in> typing (?role, n) i (t, r, s)"
-          by (auto dest: IH[OF th1.thread_exists])
+          by (auto dest: IH[OF th1.thread_exists] elim: sourced_imp_FV)
         have "done'@todo' = ?role"
           using send `?new` by auto
         hence ?case using `?new`
@@ -313,16 +369,16 @@ proof -
     next
       case (recv t r s i "done" l pt todo skipped m i' done' todo' step n skipped') then
       interpret th1: 
-	reachable_thread P t r s i "done" "Recv l pt # todo" skipped
-	by unfold_locales auto
+        reachable_thread P t r s i "done" "Recv l pt # todo" skipped
+        by unfold_locales auto
       from recv
       have "(i', step) \<in> steps t \<or> (i' = i) \<and> step = Recv l pt"
-	(is "?old \<or> ?new") by auto
+        (is "?old \<or> ?new") by auto
       moreover
       { assume ?old
-	hence "s(MV n i') \<in> typing (done'@todo', n) i' (t,r,s)"
-	  using recv by (auto split: if_splits)
-	hence ?case using `?old`
+        hence "s(MV n i') \<in> typing (done'@todo', n) i' (t,r,s)"
+          using recv by (auto split: if_splits)
+        hence ?case using `?old`
           apply -
           apply(rule monoTyp_freeD[OF monoTyp])
           apply(auto simp: th1.thread_exists)
@@ -331,86 +387,31 @@ proof -
       moreover
       { let ?role = "done @ Recv l pt # todo"
         note IH = recv(2)
-	assume "?new"
+        assume "?new"
         hence cur_thread: "?role = done' @ todo'" "i = i'" 
           using recv by auto
         have ?case
-        proof(cases "\<exists> step' \<in> set done.  MVar n \<in> FV (stepPat step')")
+        proof(cases "\<exists> step' \<in> set done.  MVar n \<in> FV_rolestep step'")
           case True
           with recv
-          obtain step'' 
-            where FV: "MVar n \<in> FV (stepPat step'')" 
-            and step'': "step'' \<in> set done"
+          obtain step'
+            where FV: "MVar n \<in> FV_rolestep step'" 
+            and step': "step' \<in> set done"
             by auto
-          thus ?thesis 
-          proof(cases "step'' \<in> skipped")
-            case False
-            then obtain step' 
-              where FV: "MVar n \<in> FV (stepPat step')" 
-              and notinSkipped: "step' \<notin> skipped"
-              and step': "(i,step') \<in> steps t"
-              using FV step''
-              by(auto simp add: th1.in_steps_conv_done_skipped)
-            hence "s (MV n i) \<in> typing (?role, n) i (t, r, s)"
-              by (auto intro!: IH th1.thread_exists)
-            hence "s (MV n i') \<in> typing (done'@todo', n) i' (t, r, s)"
-              using cur_thread by simp
-            thus ?thesis
-              apply -
-              apply(rule monoTyp_freeD[OF monoTyp])
-              apply(auto simp: th1.thread_exists)
-              done
-          next
-            case True
-            then obtain step'
-              where FV: "MVar n \<in> FV (stepPat step')" 
-              and inSkipped: "step' \<in> skipped"
-              and inDone: "step' \<in> set done"
-              using FV step''
-              by auto
-            then obtain l' ty' pt'
-              where noteEq: "(Note l' ty' pt') = step'"
-              by(auto dest!: th1.note_in_skipped)
-
-            hence "\<exists> l'' pt''. listOrd ?role (Recv l'' pt'') (Note l' ty' pt') \<and> MVar n \<in> FV (stepPat (Recv l'' pt''))"
-              using FV inSkipped inDone 
-              apply -
-              apply(drule FV_FMV_conv[THEN iffD2])
-              apply(subgoal_tac "Note l' ty' pt' \<in> set ?role")
-                apply(drule th1.Note_FV)
-              by (auto dest: FV_FMV_conv[THEN iffD1])
-            then obtain l'' pt''
-              where roleBefore: "listOrd ?role (Recv l'' pt'') (Note l' ty' pt')"
-              and varOfRecv: "MVar n \<in> FV (stepPat (Recv l'' pt''))"
-              by  auto
-            hence "Recv l'' pt'' \<in> set done" 
-              using inDone noteEq
-              apply -
-              apply(drule listOrd_append[THEN iffD1])
-              apply(case_tac "listOrd done (Recv l'' pt'') (Note l' ty' pt')")
-                apply(fastforce dest: in_set_listOrd1)
-              apply(case_tac "listOrd (Recv l pt # todo) (Recv l'' pt'') (Note l' ty' pt')")
-                apply(fastforce dest: in_set_listOrd2 th1.done_notin_todoD)
-              apply(case_tac "Recv l'' pt'' \<in> set done \<and> Note l' ty' pt' \<in> set (Recv l pt # todo)")
-              by(auto dest: th1.done_notin_todoD)
-            hence "(i, Recv l'' pt'') \<in> steps t" by auto
-
-            hence "s (MV n i) \<in> typing (?role, n) i (t, r, s)"
-              using varOfRecv by (auto intro!: IH th1.thread_exists)
-            hence "s (MV n i') \<in> typing (done'@todo', n) i' (t, r, s)"
-              using cur_thread by simp
-            thus ?thesis
-              apply -
-              apply(rule monoTyp_freeD[OF monoTyp])
-              apply(auto simp: th1.thread_exists)
-              done
-          qed
+          hence "s (MV n i) \<in> typing (done'@todo', n) i (t, r, s)"
+            using th1.thread_exists cur_thread IH
+            by (metis th1.done_typing_step)
+          thus ?thesis using `?new`
+            apply -
+            apply(rule monoTyp_freeD[OF monoTyp])
+            apply(auto simp: th1.thread_exists)
+            done
         next
           case False
             moreover have "(t, r, s) \<in> approx typing"
               by (auto simp: approx_unfold dest!: IH roleMap_SomeD)
-            moreover have "MVar n \<in> FV pt" 
-              using `MVar n \<in> FV (stepPat step)` `?new` by auto
+            moreover note `?new`
+            moreover note `MVar n \<in> FV_rolestep step`
             moreover note `Some m = inst s i pt`
             moreover note `m \<in> knows t`
             moreover note cur_thread[symmetric]
@@ -421,6 +422,7 @@ proof -
               apply(rule recv_case)
               apply(simp_all add: th1.role_in_P th1.roleMap th1.thread_exists 
                                 in_set_splits_conv remove_hints)
+              apply(blast)
               done
          qed
       }
@@ -428,30 +430,32 @@ proof -
     next
       case (compr t r s i "done" l ty pt todo skipped m i' done' todo' step n skipped')
       then interpret th1: 
-	reachable_thread P t r s i "done" "Note l ty pt # todo" skipped
-	by unfold_locales auto
+        reachable_thread P t r s i "done" "Note l ty pt # todo" skipped
+        by unfold_locales auto
       from compr
       have "(i', step) \<in> steps t \<or> (i' = i) \<and> step = Note l ty pt"
-	(is "?old \<or> ?new") by auto
+        (is "?old \<or> ?new") by auto
       moreover
       { assume ?old
-	hence "s(MV n i') \<in> typing (done'@todo', n) i' (t,r,s)"
-	  using compr by (auto split: if_splits)
-	hence ?case
-	proof(rule monoTyp_freeD[OF monoTyp])
-	qed (auto simp: th1.thread_exists)
+        hence "s(MV n i') \<in> typing (done'@todo', n) i' (t,r,s)"
+          using compr by (auto split: if_splits)
+        hence ?case
+        proof(rule monoTyp_freeD[OF monoTyp])
+        qed (auto simp: th1.thread_exists)
       }
       moreover
       { let ?role = "done @ Note l ty pt # todo"
-	note IH = compr(2)
-	assume "?new"
-        hence "MVar n \<in> FV pt"
+        note IH = compr(2)
+        assume "?new"
+        hence "n \<in> used_vars (Note l ty pt)"
           using compr by auto
-        then obtain l' msg' 
-          where "(i, Recv l' msg') \<in> steps t" 
-                "MVar n \<in> FV msg'"
-          by (fastforce dest!: th1.note_step_FV[OF th1.thread_exists])
-        hence typed: "s (MV n i) \<in> typing (?role, n) i (t, r, s)"
+        then obtain step' 
+          where "(i, step') \<in> steps t" 
+                "n \<in> sourced_vars step'"
+          by (fastforce dest!: th1.source_step[OF th1.thread_exists])
+        moreover hence "MVar n \<in> FV_rolestep step'"
+          by (fastforce dest: sourced_imp_FV)
+        ultimately have typed: "s (MV n i) \<in> typing (?role, n) i (t, r, s)"
           by (auto dest: IH[OF th1.thread_exists])
         have "done'@todo' = ?role"
           using compr `?new` by auto
@@ -464,15 +468,126 @@ proof -
     next
       case (skip t r s i "done" l ty pt todo skipped i' done' todo' step n skipped')
       then interpret th1: 
-	reachable_thread P t r s i "done" "Note l ty pt # todo" skipped
-	by unfold_locales auto
+        reachable_thread P t r s i "done" "Note l ty pt # todo" skipped
+        by unfold_locales auto
       from skip
       have "(i', step) \<in> steps t" (is "?old") by auto
-	hence "s(MV n i') \<in> typing (done'@todo', n) i' (t,r,s)"
-	  using skip by (auto split: if_splits)
-	thus ?case
-	proof(rule monoTyp_freeD[OF monoTyp])
-	qed (auto simp: th1.thread_exists)
+      hence "s(MV n i') \<in> typing (done'@todo', n) i' (t,r,s)"
+        using skip by (auto split: if_splits)
+      thus ?case
+      proof(rule monoTyp_freeD[OF monoTyp])
+      qed (auto simp: th1.thread_exists)
+    next
+      case (match t r s i "done" l ptl ptr todo skipped ml mr i' done' todo' step n skipped') then
+      interpret th1:
+        reachable_thread P t r s i "done" "Match l ptl ptr # todo" skipped
+        by unfold_locales auto
+      from match
+      have "(i', step) \<in> steps t \<or> (i' = i) \<and> step = Match l ptl ptr"
+        (is "?old \<or> ?new") by auto
+      moreover
+      { assume ?old
+        hence "s (MV n i') \<in> typing (done'@todo', n) i' (t,r,s)"
+          using match by (auto split: if_splits)
+        hence ?case
+        proof (rule monoTyp_freeD[OF monoTyp])
+        qed (auto simp: th1.thread_exists)
+      }
+      moreover
+      { let ?role = "done @ Match l ptl ptr # todo"
+        note IH = match(2)
+        assume "?new"
+        hence cur_thread: "?role = done' @ todo'" "i = i'" and
+              match_FV: "n \<in> used_vars step \<or> n \<in> sourced_vars step"
+          using match by auto
+        from match_FV have ?case proof
+          assume "n \<in> used_vars step"
+          with `?new` obtain step' 
+            where "(i, step') \<in> steps t" 
+                  "n \<in> sourced_vars step'"   
+            by (fastforce dest!: th1.source_step[OF th1.thread_exists])
+          hence typed: "s (MV n i) \<in> typing (?role, n) i (t, r, s)"
+            by (auto dest: IH[OF th1.thread_exists] elim: sourced_imp_FV)
+          thus ?case using `?new` cur_thread(1)
+            apply -
+            apply(rule monoTyp_freeD[OF monoTyp])
+            by (auto intro!: typed simp: th1.thread_exists)
+        next
+          assume "n \<in> sourced_vars step"
+          thus ?case
+          proof (cases "\<exists> step' \<in> set done.  MVar n \<in> FV_rolestep step'")
+            case True
+            with match
+            obtain step' 
+              where FV: "MVar n \<in> FV_rolestep step'" 
+              and step': "step' \<in> set done"
+              by auto
+            hence "s (MV n i) \<in> typing (done'@todo', n) i (t, r, s)"
+              using th1.thread_exists cur_thread IH
+              by (metis th1.done_typing_step)
+            thus ?thesis using `?new`
+              apply -
+              apply(rule monoTyp_freeD[OF monoTyp])
+              apply(auto simp: th1.thread_exists)
+              done
+          next
+            case False
+              moreover have "(t, r, s) \<in> approx typing"
+                by (auto simp: approx_unfold dest!: IH roleMap_SomeD)
+              moreover note `?new`
+              moreover note `n \<in> sourced_vars step`
+              moreover note `Some ml = inst s i ptl`
+              moreover note `Some mr = inst s i ptr`
+              moreover note `ml = mr`
+              moreover note cur_thread[symmetric]
+            
+              ultimately show ?thesis
+                apply -
+                apply(clarsimp simp del: fun_upd_apply)
+                apply(rule recv_case)
+                apply(simp_all add: th1.role_in_P th1.roleMap th1.thread_exists 
+                                  in_set_splits_conv remove_hints)
+                apply(blast)
+                done
+          qed
+        qed
+      }
+      ultimately show ?case by fastforce
+    next
+      case (notMatch t r s i "done" l ptl ptr todo skipped ml mr i' done' todo' step n skipped')
+      then interpret th1: 
+        reachable_thread P t r s i "done" "NotMatch l ptl ptr # todo" skipped
+        by unfold_locales auto
+      from notMatch
+      have "(i', step) \<in> steps t \<or> (i' = i) \<and> step = NotMatch l ptl ptr"
+        (is "?old \<or> ?new") by auto
+      moreover
+      { assume ?old
+        hence "s (MV n i') \<in> typing (done'@todo', n) i' (t,r,s)"
+          using notMatch by (auto split: if_splits)
+        hence ?case
+        proof(rule monoTyp_freeD[OF monoTyp])
+        qed (auto simp: th1.thread_exists)
+      }
+      moreover
+      { let ?role = "done @ NotMatch l ptl ptr # todo"
+        note IH = notMatch(2)
+        assume ?new
+        moreover hence "n \<in> used_vars step" using notMatch by auto
+        ultimately obtain step' 
+          where "(i, step') \<in> steps t" 
+                "n \<in> sourced_vars step'"   
+          by (fastforce dest!: th1.source_step[OF th1.thread_exists])
+        hence typed: "s (MV n i) \<in> typing (?role, n) i (t, r, s)"
+          by (auto dest: IH[OF th1.thread_exists] elim: sourced_imp_FV)
+        have "done'@todo' = ?role"
+          using notMatch `?new` by auto
+        hence ?case using `?new`
+          apply -
+          apply(rule monoTyp_freeD[OF monoTyp])
+          by (auto intro!: typed simp: th1.thread_exists)
+      }
+      ultimately show ?case by fast
     qed (auto intro: monoTyp_appendD[OF monoTyp])
   }
   thus ?thesis unfolding approx_unfold by(auto elim!: roleMap_SomeE)
@@ -488,31 +603,33 @@ text{*
 lemma (in reachable_state) reachable_in_approxI_ext:
   assumes monoTyp: "monoTyp typing"
   and recv_case:
-    "\<And> t r s i done todo skipped m R step n.
+    "\<And> t r s i done todo skipped m m2 R step n.
      \<lbrakk> R \<in> P; 
        roleMap r i = Some R;
        (done, step # todo) \<in> set (splits R);
-       recvStep step;
-       MVar n \<in> foldl (\<lambda> fv step'. fv - FV (stepPat step')) (FV (stepPat step)) done;
+       recvStep step \<or> matchStep step;
+       n \<in> foldl (\<lambda> fv step'. fv - sourced_vars step') (sourced_vars step) done;
        hint ''completenessCase'' (step, n);
        
        (t,r,s) \<in> reachable P;
        (t,r,s) \<in> approx typing;
-       r i = Some (done, step # todo ,skipped);
-       Some m = inst s i (stepPat step);
-       m \<in> knows t
+       r i = Some (done, step # todo, skipped);
+
+       recvStep step \<Longrightarrow> Some m = inst s i (stepPat step) \<and> m \<in> knows t;
+       matchStep step \<Longrightarrow> Some m = inst s i (fst (matchPats step)) \<and>
+         Some m2 = inst s i (snd (matchPats step)) \<and> m = m2
      \<rbrakk> \<Longrightarrow> 
         s (MV n i) \<in> typing (R, n) i ( t @ [Step (i, step)], r(i \<mapsto> (done @ [step], todo, skipped)), s)"
   shows "(t,r,s) \<in> approx typing"
 proof(induct rule: reachable_in_approxI[OF monoTyp])
-  case (1 t r s i "done" todo skipped m R step n)
+  case (1 t r s i "done" todo skipped m m2 R step n)
   { fix v V
     assume "v \<in> V"
-      and "\<forall>step'\<in>set done. v \<notin> FV (stepPat step')"
-    hence "v \<in> foldl (\<lambda> fv step'. fv - FV (stepPat step')) V done"
-      by (induct "done" arbitrary: V) auto
+      and "\<forall>step'\<in>set done. MVar v \<notin> FV_rolestep step'"
+    hence "v \<in> foldl (\<lambda> fv step'. fv - sourced_vars step') V done"
+      by (induct "done" arbitrary: V, auto intro!: sourced_imp_FV)
   }
-  hence "MVar n \<in> foldl (\<lambda> fv step'. fv - FV (stepPat step')) (FV (stepPat step)) done"
+  hence "n \<in> foldl (\<lambda> fv step'. fv - sourced_vars step') (sourced_vars step) done"
   using 1 by auto
   thus ?case using 1
     apply(subgoal_tac "True")
@@ -875,7 +992,7 @@ lemma (in typed_state) knows_cases:
            hint ''case_name'' ''fake''
    ) \<or>
    (\<exists> R \<in> P. \<exists> i. roleMap r i = Some R \<and> 
-      (\<exists> step \<in> set R. 
+      (\<exists> step \<in> set R.
          (sendStep step \<or> noteStep step) \<and>
          (\<exists> m. Some m = inst s i (stepPat step) \<and> decrChain [] t {St (i, step)} m m') \<and>
          prefixClose s t R step i \<and>

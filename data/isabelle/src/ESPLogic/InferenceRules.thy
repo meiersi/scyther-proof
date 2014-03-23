@@ -286,9 +286,9 @@ proof -
     hence steps: "(i, st) \<in> steps t" "(i, st') \<in> steps t"
       by(auto dest: this_thread.in_steps_conv_done_skipped[THEN iffD1])
     { assume "recvStep st" then
-      obtain l pt where "st = Recv l pt" by (cases st) auto
+      obtain l v where "st = Recv l v" by (cases st) auto
       hence "\<exists> m. Some m = inst s i (stepPat st) \<and> Ln m \<prec> St (i, st)"
-	using steps by(auto intro!: Ln_before_inp)
+        using steps by (auto dest: Ln_before_inp)
     }
     note input = this
 
@@ -312,7 +312,7 @@ lemma ext_prefixClose:
   "\<lbrakk> (i, step) \<in> steps t; roleMap r i = Some R \<rbrakk> \<Longrightarrow>
    prefixClose s t R step i \<and> 
    (recvStep step \<longrightarrow> (\<exists> m. Some m = inst s i (stepPat step) \<and> Ln m \<prec> St (i, step)))"
-  by (cases step) (fastforce intro!: prefixCloseI Ln_before_inp)+
+  by (cases step) (fastforce dest: prefixCloseI Ln_before_inp)+
 
 text{* 
   Used for prefix closing assumptions corresponding to a case of
@@ -340,7 +340,7 @@ proof -
   {
     assume recv: "recvStep (last (step#done))"
     hence last_step: "(i, last (step#done)) \<in> steps t"
-      proof
+      proof -
         obtain l pt
           where recv_eq: "(Recv l pt) = (last (step # done))"
           using recv by (fastforce dest!: recvStepD)
@@ -403,7 +403,7 @@ proof -
     hence recv: "recvStep st \<Longrightarrow> 
                  \<exists> m. Some m = inst s i (stepPat st) \<and> predOrd t (Ln m) (St (i, st))"
       using this_thread.roleMap
-      by (cases st) (auto intro!: Ln_before_inp dest: in_steps_predOrd1)
+      by (cases st) (auto dest!: Ln_before_inp in_steps_predOrd1)
     note step_ord recv
   }
   ultimately

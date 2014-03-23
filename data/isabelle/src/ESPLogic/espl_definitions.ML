@@ -22,6 +22,7 @@ sig
   val unnamed_caseN: string
 
   datatype steptyp = Recv | Send | Note of term
+    | Match of term | NotMatch of term
   val mk_rolestep: steptyp * term * term -> term
   val dest_rolestep: term -> steptyp * term * term
   val dest_role: term -> (steptyp * term * term) list
@@ -76,15 +77,21 @@ open ESPL_Utils;
 ******************************************************************************)
 
 
-datatype steptyp = Recv | Send | Note of term;
+datatype steptyp = Recv | Send | Note of term
+  | Match of term | NotMatch of term;
 
 fun mk_rolestep (Send, lbl, msg) = @{const Send} $ lbl $ msg
   | mk_rolestep (Recv, lbl, msg) = @{const Recv} $ lbl $ msg
   | mk_rolestep (Note nTy, lbl, msg) = @{const Note} $ lbl $ nTy $ msg
+  | mk_rolestep (Match pt, lbl, msg) = @{const Match} $ lbl $ pt $ msg
+  | mk_rolestep (NotMatch pt, lbl, msg) = @{const NotMatch} $ lbl $ pt $ msg
 
 fun dest_rolestep (Const (@{const_name Send},_) $ lbl $ msg)       = (Send,     lbl, msg)
   | dest_rolestep (Const (@{const_name Recv},_) $ lbl $ msg)       = (Recv,     lbl, msg)
   | dest_rolestep (Const (@{const_name Note},_) $ lbl $ nTy $ msg) = (Note nTy, lbl, msg)
+  | dest_rolestep (Const (@{const_name Match},_) $ lbl $ pt $ msg) = (Match pt, lbl, msg)
+  | dest_rolestep (Const (@{const_name NotMatch},_) $ lbl $ pt $ msg) =
+      (NotMatch pt, lbl, msg)
   | dest_rolestep t = raise TERM ("dest_rolestep", [t])
 
 val dest_role = map dest_rolestep o HOLogic.dest_list
@@ -178,9 +185,18 @@ fun setup_rolestep mk_binding ann_defs lthy =
     val ss_full = lthy addsimps [step_def, msg_def] |> simpset_of;
 
     val sendStep_t = @{const sendStep} $ step_const;
+    val recvStep_t = @{const recvStep} $ step_const;
+    val matchStep_t = @{const matchStep} $ step_const;
+    val notMatchStep_t = @{const notMatchStep} $ step_const;
     val noteStep_t = @{const noteStep} $ step_const;
     val stepPat_t = @{const stepPat} $ step_const;
+    val matchPats_t = @{const matchPats} $ step_const;
     val noteType_t = @{const noteType} $ step_const;
+
+    val sourced_vars_t = @{const sourced_vars} $ step_const;
+    val used_vars_t = @{const used_vars} $ step_const;
+    val FV_rolestep_t = @{const FV_rolestep} $ step_const;
+    val FAV_rolestep_t = @{const FAV_rolestep} $ step_const;
 
     val inst_t = @{term "inst s i"} $ msg_const;
     val FV_t = @{term "FV"} $ msg_const;
@@ -193,9 +209,17 @@ fun setup_rolestep mk_binding ann_defs lthy =
    (* step expansions *)
      |> #2 o notes_expansion ss_step
        [ (mk_binding "sendStep_conv", [([sendStep_t],[att_iff_add])]) 
+       , (mk_binding "recvStep_conv", [([recvStep_t],[att_iff_add])]) 
+       , (mk_binding "matchStep_conv", [([matchStep_t],[att_iff_add])]) 
+       , (mk_binding "notMatchStep_conv", [([notMatchStep_t],[att_iff_add])]) 
        , (mk_binding "noteStep_conv", [([noteStep_t],[att_iff_add])]) 
        , (mk_binding "stepPat_conv",  [([stepPat_t],[att_simp_add])]) 
+       , (mk_binding "matchPats_conv",  [([matchPats_t],[att_simp_add])]) 
        , (mk_binding "noteType_conv",  [([noteType_t],[att_simp_add])])
+       , (mk_binding "sourced_vars_conv",  [([sourced_vars_t],[att_simp_add])])
+       , (mk_binding "used_vars_conv",  [([used_vars_t],[att_simp_add])])
+       , (mk_binding "FV_rolestep_conv",  [([FV_rolestep_t],[att_simp_add])])
+       , (mk_binding "FAV_rolestep_conv",  [([FAV_rolestep_t],[att_simp_add])])
        ]
    (* full expansions *)
      |> notes_expansion ss_full
