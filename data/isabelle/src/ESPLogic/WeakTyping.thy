@@ -309,7 +309,7 @@ lemma (in reachable_state) reachable_in_approxI:
      \<lbrakk> R \<in> P; 
        roleMap r i = Some R;
        (done, step # todo) \<in> set (splits R);
-       recvStep step \<or> matchStep step;
+       \<not> sendStep step; \<not> noteStep step; \<not> notMatchStep step;
        n \<in> sourced_vars step;
        \<forall> step' \<in> set done. MVar n \<notin> FV_rolestep step';
        hint ''completenessCase'' (step, n);
@@ -607,7 +607,7 @@ lemma (in reachable_state) reachable_in_approxI_ext:
      \<lbrakk> R \<in> P; 
        roleMap r i = Some R;
        (done, step # todo) \<in> set (splits R);
-       recvStep step \<or> matchStep step;
+       \<not> sendStep step; \<not> noteStep step; \<not> notMatchStep step;
        n \<in> foldl (\<lambda> fv step'. fv - sourced_vars step') (sourced_vars step) done;
        hint ''completenessCase'' (step, n);
        
