@@ -150,20 +150,10 @@ where
           \<Longrightarrow> (t @ [Step (i, Recv l pt)], r(i \<mapsto> (done @ [Recv l pt], todo, skipped)), s) \<in> reachable P"
 
 | match: "\<lbrakk> (t, r, s) \<in> reachable P;
-            r i = Some (done, Match l ptl ptr # todo, skipped);
-            Some ml = inst s i ptl;
-            Some mr = inst s i ptr;
-            ml = mr
+            r i = Some (done, Match l eq mv pt # todo, skipped);
+            (Some (s (mv, i)) = inst s i pt) = eq
           \<rbrakk>
-          \<Longrightarrow> (t @ [Step (i, Match l ptl ptr)], r(i \<mapsto> (done @ [Match l ptl ptr], todo, skipped)), s) \<in> reachable P"
-
-| notMatch: "\<lbrakk> (t, r, s) \<in> reachable P;
-               r i = Some (done, NotMatch l ptl ptr # todo, skipped);
-               Some ml = inst s i ptl;
-               Some mr = inst s i ptr;
-               ml \<noteq> mr
-             \<rbrakk>
-             \<Longrightarrow> (t @ [Step (i, NotMatch l ptl ptr)], r(i \<mapsto> (done @ [NotMatch l ptl ptr], todo, skipped)), s) \<in> reachable P"
+          \<Longrightarrow> (t @ [Step (i, Match l eq mv pt)], r(i \<mapsto> (done @ [Match l eq mv pt], todo, skipped)), s) \<in> reachable P"
 
 | hash:  "\<lbrakk> (t, r, s) \<in> reachable P;
             m \<in> knows t;
@@ -185,7 +175,6 @@ where
           \<rbrakk>
           \<Longrightarrow> (t @ [Learns {Enc m k}], r, s) \<in> reachable P"
 
-
 | decr:  "\<lbrakk> (t, r, s) \<in> reachable P;
             Enc m k \<in> knows t;
             inv k \<in> knows t
@@ -203,7 +192,7 @@ begin
     [ OF reachable
     , rule_format
     , consumes 0
-    , case_names init compr skip lkr send recv match notMatch hash tuple encr decr
+    , case_names init compr skip lkr send recv match hash tuple encr decr
     ]
 end
 
@@ -359,11 +348,7 @@ lemma recv_notin_skipped [iff]:
  by (auto dest!: note_in_skipped)
 
 lemma match_notin_skipped [iff]:
-  "Match l ptl ptr \<notin> skipped"
-  by (auto dest!: note_in_skipped)
-
-lemma notMatch_notin_skipped [iff]:
-  "NotMatch l ptl ptr \<notin> skipped"
+  "Match l eq mv pt \<notin> skipped"
   by (auto dest!: note_in_skipped)
 
 
@@ -397,24 +382,14 @@ next
       using recv `i = i'` by fastforce
   qed auto
 next
-  case (match t r s i "done" l ptl ptr todo skipped ml mr i' done' todo' skipped')
+  case (match t r s i "done" l eq mv pt todo skipped i' done' todo' skipped')
   thus ?case
   proof(cases "i = i'")
     case True
     then interpret thread:
-        reachable_thread P t r s i "done" "Match l ptl ptr # todo" skipped'
+        reachable_thread P t r s i "done" "Match l eq mv pt # todo" skipped'
         using match by unfold_locales auto
       show ?thesis using match `i = i'` by fastforce 
-  qed auto
-next
-  case (notMatch t r s i "done" l ptl ptr todo skipped ml mr i' done' todo' skipped')
-  thus ?case
-  proof(cases "i = i'")
-    case True
-    then interpret thread:
-        reachable_thread P t r s i "done" "NotMatch l ptl ptr # todo" skipped'
-        using notMatch by unfold_locales auto
-      show ?thesis using notMatch `i = i'` by fastforce 
   qed auto
 next
   case (compr t r s i "done" l ty pt todo skipped m i' done' todo' skipped')  
@@ -463,15 +438,7 @@ proof(induct arbitrary: i "done" todo skipped rule rule: reachable_induct)
 qed ((unfold map_upd_Some_unfold)?, auto)+
 
 lemma in_steps_match:
-  "((Match l ptl ptr) \<in> set done) = ((i, Match l ptl ptr) \<in> steps t)"
-using thread_exists
-proof(induct arbitrary: i "done" todo skipped rule rule: reachable_induct)
-  case init
-    thus ?case by fastforce
-qed ((unfold map_upd_Some_unfold)?, auto)+
-
-lemma in_steps_notMatch:
-  "((NotMatch l ptl ptr) \<in> set done) = ((i, NotMatch l ptl ptr) \<in> steps t)"
+  "((Match l eq mv pt) \<in> set done) = ((i, Match l eq mv pt) \<in> steps t)"
 using thread_exists
 proof(induct arbitrary: i "done" todo skipped rule rule: reachable_induct)
   case init
@@ -482,11 +449,8 @@ lemmas send_steps_in_done [elim!] = iffD1[OF in_steps_send, rule_format]
 lemmas send_done_in_steps [elim!] = iffD2[OF in_steps_send, rule_format]
 lemmas recv_steps_in_done [elim!] = iffD1[OF in_steps_recv, rule_format]
 lemmas recv_done_in_steps [elim!] = iffD2[OF in_steps_recv, rule_format]
-
-lemmas match_steps_in_done    [elim!] = iffD1[OF in_steps_match, rule_format]
-lemmas match_done_in_steps    [elim!] = iffD2[OF in_steps_match, rule_format]
-lemmas notMatch_steps_in_done [elim!] = iffD1[OF in_steps_notMatch, rule_format]
-lemmas notMatch_done_in_steps [elim!] = iffD2[OF in_steps_notMatch, rule_format]
+lemmas match_steps_in_done [elim!] = iffD1[OF in_steps_match, rule_format]
+lemmas match_done_in_steps [elim!] = iffD2[OF in_steps_match, rule_format]
 
 lemma not_note_done_in_steps:
   assumes "step \<in> set done"
@@ -534,19 +498,16 @@ lemma in_steps_in_done:
   shows 
     "step \<in> set done"
 proof(cases step)
-  case (Send l pt)
+  case Send
     thus ?thesis using inSteps by (fastforce dest: in_steps_send[THEN iffD2])
 next
-  case (Recv l pt)
+  case Recv
     thus ?thesis using inSteps by (fastforce dest: in_steps_recv[THEN iffD2])
 next
-  case (Match l ptl ptr)
+  case Match
     thus ?thesis using inSteps by (fastforce dest: in_steps_match[THEN iffD2])
 next
-  case (NotMatch l ptl ptr)
-    thus ?thesis using inSteps by (fastforce dest: in_steps_notMatch[THEN iffD2])
-next
-  case (Note l ty pt)
+  case Note
     thus ?thesis using inSteps by (fastforce simp add: in_steps_conv_done_skipped)
 qed
 
@@ -611,24 +572,14 @@ next
           by fastforce
   qed fastforce
 next
-  case (match t r s i "done" l ptl ptr todo skipped ml mr i' done' todo' skipped')
+  case (match t r s i "done" l eq mv pt todo skipped i' done' todo' skipped')
   from match show ?case 
   proof(cases "i = i'")
     case True
       interpret this_thread:
-          reachable_thread P t r s i' "done" "Match l ptl ptr # todo'" skipped'
+          reachable_thread P t r s i' "done" "Match l eq mv pt # todo'" skipped'
           using match `i = i'` by unfold_locales auto
        show ?thesis using match `i = i'` by fastforce
-  qed fastforce
-next
-  case (notMatch t r s i "done" l ptl ptr todo skipped ml mr i' done' todo' skipped')
-  from notMatch show ?case 
-  proof(cases "i = i'")
-    case True
-      interpret this_thread:
-          reachable_thread P t r s i' "done" "NotMatch l ptl ptr # todo'" skipped'
-          using notMatch `i = i'` by unfold_locales auto
-       show ?thesis using notMatch `i = i'` by fastforce
   qed fastforce
 next
   case (compr t r s i "done" l ty msg todo skipped m i' done' todo' skipped')
@@ -677,23 +628,12 @@ by(auto dest: in_set_listOrd1 todo_notin_doneD listOrd_done_imp_listOrd_trace in
 lemma listOrd_match_role_imp_listOrd_trace:
   assumes facts:
     "(i, step) \<in> steps t"
-    "listOrd (done @ todo) (Match l ptl ptr) step"
+    "listOrd (done @ todo) (Match l eq mv pt) step"
   shows
-    "listOrd t (Step (i, Match l ptl ptr)) (Step (i, step))" 
+    "listOrd t (Step (i, Match l eq mv pt)) (Step (i, step))"
 using distinct
 using facts
 by(auto dest: in_set_listOrd1 todo_notin_doneD listOrd_done_imp_listOrd_trace in_set_listOrd2  listOrd_append[THEN iffD1] in_steps_conv_done_skipped[THEN iffD1])
-
-lemma listOrd_notMatch_role_imp_listOrd_trace:
-  assumes facts:
-    "(i, step) \<in> steps t"
-    "listOrd (done @ todo) (NotMatch l ptl ptr) step"
-  shows
-    "listOrd t (Step (i, NotMatch l ptl ptr)) (Step (i, step))" 
-using distinct
-using facts
-by(auto dest: in_set_listOrd1 todo_notin_doneD listOrd_done_imp_listOrd_trace in_set_listOrd2  listOrd_append[THEN iffD1] in_steps_conv_done_skipped[THEN iffD1])
-
 
 lemma roleOrd_notSkipped_imp_listOrd_trace:
   assumes facts:
@@ -744,10 +684,10 @@ proof -
   then obtain sstep
     where "listOrd ?role sstep ustep"
     and is_source: "v \<in> sourced_vars sstep"
-    using useV by(fast dest!: this_thread.source_use_ord)
+    using useV by (fast dest!: this_thread.source_use_ord)
   hence "sstep \<in> set done" using this_thread.distinct
     by (auto dest: in_set_listOrd1 in_set_listOrd2)
-  moreover have "\<not> noteStep sstep" using is_source by (metis note_source)
+  moreover have "\<not> noteStep sstep" using is_source by auto
   ultimately show ?thesis using is_source
     by (auto intro: this_thread.not_note_done_in_steps)
 qed
@@ -802,16 +742,9 @@ proof(induct arbitrary: i "done" todo skipped rule: reachable_induct)
   show ?case using  `distinct' t` this_thread.distinct
     by(fastforce dest: this_thread.in_steps_in_done)
 next
-  case (match t r s i "done" l ptl ptr todo skipped ml mr)
+  case (match t r s i "done" l eq mv pt todo skipped)
   then interpret this_thread:
-    reachable_thread P t r s i "done" "Match l ptl ptr # todo" skipped
-    by unfold_locales auto
-  show ?case using `distinct' t` this_thread.distinct
-    by (fastforce dest: this_thread.in_steps_in_done)
-next
-  case (notMatch t r s i "done" l ptl ptr todo skipped ml mr)
-  then interpret this_thread:
-    reachable_thread P t r s i "done" "NotMatch l ptl ptr # todo" skipped
+    reachable_thread P t r s i "done" "Match l eq mv pt # todo" skipped
     by unfold_locales auto
   show ?case using `distinct' t` this_thread.distinct
     by (fastforce dest: this_thread.in_steps_in_done)
@@ -1221,16 +1154,10 @@ next
   from recv show ?case
     by (fastforce dest: s1.rev_knows_pairParts_closedD)
 next
-  case (match t r s i "done" l ptl ptr todo)
+  case (match t r s i "done" l eq mv pt todo)
   then interpret s1: reachable_state P t r s
     by unfold_locales
   from match show ?case
-    by (fastforce dest: s1.rev_knows_pairParts_closedD)
-next
-  case (notMatch t r s i "done" l ptl ptr todo)
-  then interpret s1: reachable_state P t r s
-    by unfold_locales
-  from notMatch show ?case
     by (fastforce dest: s1.rev_knows_pairParts_closedD)
 next
   case (init r s) thus ?case by simp
@@ -1511,7 +1438,7 @@ proof -
     }
     ultimately show ?case by fastforce
   next
-    case (match t r s i "done" l ptl ptr todo skipped)
+    case (match t r s i "done" l eq mv pt todo skipped)
     hence "?cases m' t r s" 
       (is "?ik0 \<or> ?hash \<or> ?enc \<or> ?tup \<or> ?chain t r s \<or> ?note t r s \<or> ?keys")
       by clarsimp
@@ -1521,8 +1448,8 @@ proof -
     { assume "?enc"   hence "?case" by fastforce } moreover
     { assume "?keys"  hence "?case" by fastforce } moreover
     { assume "?tup"   hence "?case" by fastforce } moreover
-    { let ?t' = "t@[Step (i, Match l ptl ptr)]"
-      and ?r' = "r(i \<mapsto> (done @ [Match l ptl ptr], todo, skipped))"
+    { let ?t' = "t@[Step (i, Match l eq mv pt)]"
+      and ?r' = "r(i \<mapsto> (done @ [Match l eq mv pt], todo, skipped))"
       assume "?chain t r s" then
       obtain i' done' todo' l' pt' skipped' m
         where thread': "r i' = Some (done', todo', skipped')"
@@ -1535,15 +1462,15 @@ proof -
         obtain done'' todo'' skipped''
         where "Send l' pt' \<in> set done''"
         and "?r' i' = Some (done'', todo'', skipped'')"
-        using `r i = Some (done, Match l ptl ptr # todo, skipped)` thread' send
+        using `r i = Some (done, Match l eq mv pt # todo, skipped)` thread' send
         by (cases "i = i'") (fastforce+)
       hence "?chain ?t' ?r' s"
         using chain msg
         by (fast intro!: decrChain_append)
       hence "?case" by auto
     } moreover
-    { let ?t' = "t@[Step (i, Match l ptl ptr)]"
-      and ?r' = "r(i \<mapsto> (done @ [Match l ptl ptr], todo, skipped))"
+    { let ?t' = "t@[Step (i, Match l eq mv pt)]"
+      and ?r' = "r(i \<mapsto> (done @ [Match l eq mv pt], todo, skipped))"
       assume "?note t r s" then
       obtain i' done' todo' skipped' l' ty' pt' m
         where thread': "r i' = Some (done', todo', skipped')"
@@ -1558,62 +1485,7 @@ proof -
         where "Note l' ty' pt' \<in> set done''"
         and "Note l' ty' pt' \<notin> skipped'' "
         and "?r' i' = Some (done'', todo'', skipped'')"
-        using `r i = Some (done, Match l ptl ptr # todo, skipped)` thread' inDone notSkipped
-        by (cases "i = i'") (fastforce+)
-      hence "?note ?t' ?r' s" using msg chain notSkipped inDone
-        by (fast intro!: decrChain_append)
-      hence "?case" by auto
-    }
-    ultimately show ?case by fastforce
-  next
-    case (notMatch t r s i "done" l ptl ptr todo skipped)
-    hence "?cases m' t r s" 
-      (is "?ik0 \<or> ?hash \<or> ?enc \<or> ?tup \<or> ?chain t r s \<or> ?note t r s \<or> ?keys")
-      by clarsimp
-    moreover
-    { assume "?ik0"   hence "?case" by blast    } moreover
-    { assume "?hash"  hence "?case" by fastforce } moreover
-    { assume "?enc"   hence "?case" by fastforce } moreover
-    { assume "?keys"  hence "?case" by fastforce } moreover
-    { assume "?tup"   hence "?case" by fastforce } moreover
-    { let ?t' = "t@[Step (i, NotMatch l ptl ptr)]"
-      and ?r' = "r(i \<mapsto> (done @ [NotMatch l ptl ptr], todo, skipped))"
-      assume "?chain t r s" then
-      obtain i' done' todo' l' pt' skipped' m
-        where thread': "r i' = Some (done', todo', skipped')"
-        and send: "Send l' pt' \<in> set done'"
-        and msg:  "Some m = inst s i' pt'"
-        and chain:"decrChain [] t {St (i', Send l' pt')} m m'"
-        by auto
-      then interpret th1: reachable_thread P t r s i' done' todo' skipped'
-        using notMatch by unfold_locales auto
-        obtain done'' todo'' skipped''
-        where "Send l' pt' \<in> set done''"
-        and "?r' i' = Some (done'', todo'', skipped'')"
-        using `r i = Some (done, NotMatch l ptl ptr # todo, skipped)` thread' send
-        by (cases "i = i'") (fastforce+)
-      hence "?chain ?t' ?r' s"
-        using chain msg
-        by (fast intro!: decrChain_append)
-      hence "?case" by auto
-    } moreover
-    { let ?t' = "t@[Step (i, NotMatch l ptl ptr)]"
-      and ?r' = "r(i \<mapsto> (done @ [NotMatch l ptl ptr], todo, skipped))"
-      assume "?note t r s" then
-      obtain i' done' todo' skipped' l' ty' pt' m
-        where thread': "r i' = Some (done', todo', skipped')"
-        and inDone: "Note l' ty' pt' \<in> set done'"
-        and notSkipped: "Note l' ty' pt' \<notin> skipped'"
-        and msg: "Some m = inst s i' pt'"
-        and chain: "decrChain [] t {St (i', Note l' ty' pt')} m m'"
-        by auto
-      then interpret th1: reachable_thread P t r s i' done' todo' skipped'
-        using notMatch by unfold_locales auto
-      obtain done'' todo'' skipped''
-        where "Note l' ty' pt' \<in> set done''"
-        and "Note l' ty' pt' \<notin> skipped'' "
-        and "?r' i' = Some (done'', todo'', skipped'')"
-        using `r i = Some (done, NotMatch l ptl ptr # todo, skipped)` thread' inDone notSkipped
+        using `r i = Some (done, Match l eq mv pt # todo, skipped)` thread' inDone notSkipped
         by (cases "i = i'") (fastforce+)
       hence "?note ?t' ?r' s" using msg chain notSkipped inDone
         by (fast intro!: decrChain_append)

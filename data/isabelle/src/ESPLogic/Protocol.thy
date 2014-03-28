@@ -114,49 +114,57 @@ datatype notetype = RandGen | State | SessKey
 
 datatype rolestep = Send lbl pattern
 | Recv lbl pattern
-| Match lbl pattern pattern
-| NotMatch lbl pattern pattern
+| Match lbl bool varid pattern
 | Note lbl notetype pattern
 
+text {*
+  Free message variables guaranteed to be instantiated after
+  a role step.
+*}
 fun sourced_vars :: "rolestep \<Rightarrow> id set"
 where
-  "sourced_vars (Recv _ pt)     = FMV pt"
-| "sourced_vars (Match _ pl _) = FMV pl"
+  "sourced_vars (Recv  lbl        pt) = FMV pt"
+| "sourced_vars (Match lbl True v pt) = FMV pt"
 | "sourced_vars _ = {}"
 
+text {*
+  Free message variables which must have been instantiated
+  when performing a role step.
+*}
 fun used_vars :: "rolestep \<Rightarrow> id set"
 where
-  "used_vars (Send     _ msg)   = FMV msg"
-| "used_vars (Recv     _ _)     = {}"
-| "used_vars (Match    _ _ pr)  = FMV pr"
-| "used_vars (NotMatch _ _ pr)  = FMV pr"
-| "used_vars (Note     _ _ msg) = FMV msg"
+  "used_vars (Send  lbl         msg) = FMV msg"
+| "used_vars (Recv  lbl         pt)  = {}"
+| "used_vars (Match lbl True  v pt)  = {m. v = MVar m}"
+| "used_vars (Match lbl False v msg) = {m. v = MVar m} \<union> FMV msg"
+| "used_vars (Note  lbl ty      msg) = FMV msg"
 
+text {* Free variables of a role step *}
 fun FV_rolestep :: "rolestep \<Rightarrow> varid set"
 where
-  "FV_rolestep (Send     _   pt)    = FV pt"
-| "FV_rolestep (Recv     _   pt)    = FV pt"
-| "FV_rolestep (Match    _   p1 p2) = FV p1 \<union> FV p2"
-| "FV_rolestep (NotMatch _   _  p2) = FV p2"  (* sic! *)
-| "FV_rolestep (Note     _ _ pt)    = FV pt"
+  "FV_rolestep (Send  lbl      pt) = FV pt"
+| "FV_rolestep (Recv  lbl      pt) = FV pt"
+| "FV_rolestep (Match lbl eq v pt) = {v} \<union> FV pt"
+| "FV_rolestep (Note  lbl ty   pt) = FV pt"
 
+text {* Free agent variables of a role step *}
 fun FAV_rolestep :: "rolestep \<Rightarrow> id set"
 where
-  "FAV_rolestep (Send     _   pt)    = FAV pt"
-| "FAV_rolestep (Recv     _   pt)    = FAV pt"
-| "FAV_rolestep (Match    _   p1 p2) = FAV p1 \<union> FAV p2"
-| "FAV_rolestep (NotMatch _   _  p2) = FAV p2"  (* sic! ??? *)
-| "FAV_rolestep (Note     _ _ pt)    = FAV pt"
+  "FAV_rolestep (Send  lbl      pt) = FAV pt"
+| "FAV_rolestep (Recv  lbl      pt) = FAV pt"
+| "FAV_rolestep (Match lbl eq v pt) = {a. v = AVar a} \<union> FAV pt"
+| "FAV_rolestep (Note  lbl ty   pt) = FAV pt"
 
 fun stepPat :: "rolestep \<Rightarrow> pattern"
 where
-  "stepPat (Send lbl msg) = msg"
-| "stepPat (Recv lbl msg) = msg"
-| "stepPat (Note lbl ty msg) = msg"
+  "stepPat (Send  lbl      pt) = pt"
+| "stepPat (Recv  lbl      pt) = pt"
+| "stepPat (Match lbl eq v pt) = pt"
+| "stepPat (Note  lbl ty   pt) = pt"
 
-fun matchPats :: "rolestep \<Rightarrow> (pattern \<times> pattern)"
+fun matchVar :: "rolestep \<Rightarrow> varid"
 where
-  "matchPats (Match lbl p1 p2) = (p1, p2)"
+  "matchVar (Match l eq v pt) = v"
 
 fun noteType :: "rolestep \<Rightarrow> notetype"
 where
@@ -164,28 +172,28 @@ where
 
 fun sendStep :: "rolestep \<Rightarrow> bool"
 where
-  "sendStep (Send lbl msg) = True"
+  "sendStep (Send lbl pt) = True"
 | "sendStep _             = False"
 
 fun noteStep :: "rolestep \<Rightarrow> bool"
 where
-  "noteStep (Note lbl ty msg) = True"
-| "noteStep _                 = False"
+  "noteStep (Note lbl ty pt) = True"
+| "noteStep _                = False"
 
 fun recvStep :: "rolestep \<Rightarrow> bool"
 where
-  "recvStep (Recv lbl v) = True"
-| "recvStep _            = False"
+  "recvStep (Recv lbl pt) = True"
+| "recvStep _             = False"
 
 fun matchStep :: "rolestep \<Rightarrow> bool"
 where
-  "matchStep (Match lbl p1 p2) = True"
-| "matchStep _                 = False"
+  "matchStep (Match lbl eq v pt) = True"
+| "matchStep _                   = False"
 
-fun notMatchStep :: "rolestep \<Rightarrow> bool"
+fun matchEqStep :: "rolestep \<Rightarrow> bool"
 where
-  "notMatchStep (NotMatch lbl p1 p2) = True"
-| "notMatchStep _                    = False"
+  "matchEqStep (Match lbl True v pt) = True"
+| "matchEqStep _                     = False"
 
 lemma sendStepD [simp]:
   assumes inStep: "sendStep step"
@@ -203,16 +211,18 @@ qed auto
 
 lemma matchStepD [simp]:
   assumes inStep: "matchStep step"
-  shows "\<exists> l p1 p2. step = (Match l p1 p2)"
+  shows "\<exists> l eq v pt. step = (Match l eq v pt)"
 using inStep
 proof (cases step)
 qed auto
 
-lemma notMatchStepD [simp]:
-  assumes inStep: "notMatchStep step"
-  shows "\<exists> l p1 p2. step = (NotMatch l p1 p2)"
+lemma matchEqStepD [simp]:
+  assumes inStep: "matchEqStep step"
+  shows "\<exists> l v pt. step = (Match l True v pt)"
 using inStep
 proof (cases step)
+  case (Match lbl eq v pt)
+  thus ?thesis using inStep by (cases eq, auto)
 qed auto
 
 lemma noteStepD [simp]:
@@ -221,15 +231,6 @@ lemma noteStepD [simp]:
 using inStep
 proof(cases step)
 qed auto
-
-lemma note_source:
-  assumes "v \<in> sourced_vars s"
-  shows "\<not> noteStep s"
-proof
-  assume "noteStep s"
-  hence "sourced_vars s = {}" by (auto dest: noteStepD)
-  thus "False" using assms by simp
-qed
 
 
 type_synonym "role" = "rolestep list"
@@ -269,15 +270,13 @@ proof (induct R arbitrary: V)
   case (Cons step R)
     note IH = this show ?case
     proof (cases step)
-      case (Send lbl pt) thus ?thesis using IH by fastforce
+      case Send thus ?thesis using IH by fastforce
     next
-      case (Recv lbl v') thus ?thesis using IH by fastforce
+      case Recv thus ?thesis using IH by fastforce
     next
-      case (Match lbl ptl ptr) thus ?thesis using IH by fastforce
+      case Match thus ?thesis using IH by fastforce
     next
-      case (NotMatch lbl ptl ptr) thus ?thesis using IH by fastforce
-    next
-      case (Note lbl ty pt) thus ?thesis using IH by fastforce
+      case Note thus ?thesis using IH by fastforce
     qed
 qed auto
 
@@ -314,6 +313,25 @@ proof(induct pt)
     by(cases vid) auto
 qed auto
 
+lemma sourced_imp_FV[elim]:
+  "v \<in> sourced_vars st \<Longrightarrow> MVar v \<in> FV_rolestep st"
+proof (cases st)
+  case (Match lbl eq mv pt)
+  assume "v \<in> sourced_vars st"
+  thus ?thesis using Match by (cases eq, auto)
+qed auto
+
+lemma used_imp_FV[elim]:
+  "v \<in> used_vars st \<Longrightarrow> MVar v \<in> FV_rolestep st"
+proof (cases st)
+  case (Match lbl eq mv pt)
+  assume "v \<in> used_vars st"
+  thus ?thesis using Match by (cases eq, auto)
+qed auto
+
+lemma source_note_dest[dest]:
+  "\<lbrakk> v \<in> sourced_vars st; noteStep st \<rbrakk> \<Longrightarrow> False"
+by (auto dest: noteStepD)
 
 
 definition aVars:: "role \<Rightarrow> varid set"
@@ -378,8 +396,6 @@ lemma firstComStep_Cons [simp]: "firstComStep (x#xs) =
   )"
 proof (cases "[s\<leftarrow>xs . \<not> noteStep s]")
 qed (fastforce simp add: firstComStep_def)+ 
-
-
 
 
 end
