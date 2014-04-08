@@ -75,6 +75,7 @@ where
   (\<forall> st st'. 
       (nextRel (filter (\<lambda> x. \<not> (noteStep x)) (takeWhile (\<lambda> x. x \<noteq> step) R) @ [step]) st st') \<longrightarrow>
       ((recvStep st \<longrightarrow> (\<exists> m. Some m = inst s i (stepPat st) \<and> predOrd t (Ln m) (St (i, st)))) \<and>
+       (matchEqStep st \<longrightarrow> Some (s (matchVar st, i)) = inst s i (stepPat st)) \<and>
        predOrd t (St (i, st)) (St (i, st')))
    )"
 
@@ -232,6 +233,10 @@ lemma prefixClose_rawI:
     \<lbrakk> nextRel (filter (\<lambda> x. \<not> (noteStep x)) (takeWhile (\<lambda> x. x \<noteq> step) R) @ [step]) st st';
       recvStep st
     \<rbrakk> \<Longrightarrow> \<exists> m. Some m = inst s i (stepPat st) \<and> Ln m \<prec> St (i, st)"
+  and "\<And> st st'.
+    \<lbrakk> nextRel (filter (\<lambda> x. \<not> (noteStep x)) (takeWhile (\<lambda> x. x \<noteq> step) R) @ [step]) st st';
+      matchEqStep st
+    \<rbrakk> \<Longrightarrow> Some (s (matchVar st, i)) = inst s i (stepPat st)"
   and "\<And> st st'. 
     \<lbrakk> nextRel (filter (\<lambda> x. \<not> (noteStep x)) (takeWhile (\<lambda> x. x \<noteq> step) R) @ [step]) st st'
     \<rbrakk> \<Longrightarrow> St (i, st) \<prec> St (i, st')"
@@ -291,6 +296,12 @@ proof -
         using steps by (auto dest: Ln_before_inp)
     }
     note input = this
+    {
+      assume "matchEqStep st"
+      hence "Some (s (matchVar st, i)) = inst s i (stepPat st)"
+        using steps by (auto dest!: matchEqStepD Match_eq)
+    }
+    note match_eq = this
 
     have "listOrd R st st'" 
       using nextRel and R_split and done_split
@@ -300,7 +311,7 @@ proof -
       apply -
       apply(drule this_thread.in_steps_conv_done_skipped[THEN iffD1])
       by(fastforce dest!: this_thread.roleOrd_notSkipped_imp_listOrd_trace dest:listOrd_imp_predOrd)+
-    note input and this
+    note input and match_eq and this
   }
   ultimately show ?thesis
     by (auto simp: prefixClose_def)

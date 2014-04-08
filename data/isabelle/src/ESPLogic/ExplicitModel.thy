@@ -1193,6 +1193,10 @@ lemma Ln_before_inpE:
    \<rbrakk> \<Longrightarrow> Q"
   by (auto dest!: Ln_before_inp)
 
+lemma Match_eq:
+  "(i, Match l True v pt) \<in> steps t \<Longrightarrow> Some (s (v, i)) = inst s i pt"
+by (induct arbitrary: i l pt rule: reachable_induct, fastforce+)
+
 (*
 lemmas knows_inp = in_knows_predOrd1[OF Ln_before_inp, rule_format]
 *)
