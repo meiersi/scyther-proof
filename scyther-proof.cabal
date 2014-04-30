@@ -108,8 +108,8 @@ flag threaded
 executable scyther-proof
     build-depends:
         base          == 4.*    ,
-        array         >= 0.3   && < 0.5 ,
-        containers    >= 0.4.2 && < 0.5 ,
+        array         >= 0.3   && < 0.6 ,
+        containers    >= 0.4.2 && < 0.6 ,
         safe          >= 0.2   && < 0.4 ,
 
         mtl           >= 2.1   && < 3.0,
@@ -117,12 +117,12 @@ executable scyther-proof
         cmdargs       >= 0.10.7 ,
         filepath      >= 1.2   && < 1.4 ,
         directory     >= 1.0   && < 1.3 ,
-        process       == 1.1.*  ,
-        time          >= 1.1   && < 1.3 ,
+        process       >= 1.1   && < 1.3 ,
+        time          >= 1.1   && < 1.5 ,
 
         parsec        == 3.1.*  ,
         pretty        >= 1.0   && < 1.2 ,
-        tagsoup       == 0.12.*  ,
+        tagsoup       >= 0.12  && < 0.14 ,
         json          == 0.5.*  ,
         uniplate      == 1.6.*
 
