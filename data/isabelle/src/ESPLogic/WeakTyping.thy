@@ -1007,7 +1007,8 @@ lemma (in typed_state) knows_cases:
          (\<exists> m. Some m = inst s i (stepPat step) \<and> decrChain [] t {St (i, step)} m m') \<and>
          prefixClose s t R step i \<and>
          (\<forall> v \<in> FV (stepPat step). \<forall> n. v = MVar n \<longrightarrow> 
-            s (MVar n, i) \<in> typing (R, n) i (t,r,s)) \<and>
+            s (MVar n, i) \<in> typing (R, n) i (t,r,s) \<and>
+            hint ''case_name_subst'' n) \<and>
          hint ''decrChainFrom'' (i, R, step) \<and>
          hint ''case_name'' ''decrypt''
       )

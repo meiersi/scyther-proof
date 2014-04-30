@@ -512,7 +512,16 @@ fun extract_msg_name prems =
                     #1 o dest_msg_eq;
     val fixed_msg = msg_name o #2 o dest_msg_eq;
 
-    val subst = try hd (ESPL_Utils.gather_props subst_var prems);
+    (* We only use substitutions which are enabled by the corresponding hint.
+       This excludes equalities introduced by the MatchEq rule from the name
+       computation.
+    *)
+    val naming_substs = map HOLogic.dest_string (Hints.gather_by_name "case_name_subst" prems);
+    fun is_naming_subst v1 = exists (fn v2 => v1 = v2) naming_substs;
+
+    val subst = prems |> ESPL_Utils.gather_props subst_var
+                      |> filter is_naming_subst
+                      |> try hd;
     val fixed = try hd (ESPL_Utils.gather_props fixed_msg prems);
   in
     if is_none subst andalso is_none fixed then 
