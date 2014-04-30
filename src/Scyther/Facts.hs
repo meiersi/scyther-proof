@@ -135,6 +135,8 @@ data Facts = Facts {
 
   , covered        :: S.Set Message  -- ^ The messages that have already been used in a
                                      --   case distinction.
+  , failedEqs      :: S.Set AnyEq    -- ^ All equalities which could not be solved.
+                                     --   A non-empty set implies false.
   , protocol       :: Protocol       -- ^ The protocol that the current state
                                      --   is a reachable state of.
   }
@@ -154,7 +156,8 @@ nullFacts facts =
   S.null (compromised facts) &&
   S.null (uncompromised facts) &&
   S.null (typeAnns facts) &&
-  E.null (equalities facts)
+  E.null (equalities facts) &&
+  S.null (failedEqs facts)
 
 ------------------------------------------------------------------------------
 -- Construction
@@ -162,7 +165,7 @@ nullFacts facts =
 
 -- | Empty set of facts; logically equivalent to true.
 empty :: Protocol -> Facts
-empty = Facts S.empty S.empty S.empty S.empty E.empty S.empty S.empty Nothing S.empty S.empty
+empty = Facts S.empty S.empty S.empty S.empty E.empty S.empty S.empty Nothing S.empty S.empty S.empty
 
 -- | Set the protocol.
 --
@@ -546,6 +549,10 @@ conjoinAtoms atoms facts0 =
       ATyping typ  -> Just `liftM` setTyping typ facts
       AHasType tya -> return . Just $ insertTypeAnn (Cert tya) facts
 
+-- | Insert a failed equation.
+insertFailedEq :: E.AnyEq -> Facts -> Facts
+insertFailedEq eq facts = facts { failedEqs = eq `S.insert` failedEqs facts }
+
 
 -- Combined construction and application of inference rules
 -----------------------------------------------------------
@@ -573,16 +580,28 @@ insertEvOrdNonTrivial ord prems = case certified ord of
   insertLearnBefore to p m = insertEvOrdAndEvs (Cert (Learn m, to)) p
 
 -- | Insert an executed role step and all non-trivial facts implied by the
--- Input rule.
+-- Input and MatchEq rules.
+--
+-- TODO: Update name to include MatchEq rule.
+-- TODO: Handle not-match.
 insertStepInputClosed :: Cert (TID, RoleStep) -> Facts -> Facts
 insertStepInputClosed s prems = case certified s of
-  (tid, step@(Recv _ pt)) ->
-    let m = substMsg prems (inst tid pt) in
-    insertEvOrdNonTrivial (Cert (Learn m, Step tid step)) prems
-  (tid, step@(Send _ _))  -> insertEv (Cert (Step tid step)) prems
+  (tid, step@(Recv _ pt))         ->
+    let m = substMsg prems (inst tid pt)
+    in  insertEvOrdNonTrivial (Cert (Learn m, Step tid step)) prems
+  (tid, step@(Match _ True v pt)) ->
+    let m   = substMsg prems (inst tid pt)
+        eq  = case v of
+                  SAVar i -> case m of
+                                 MAVar a -> AVarEq (AVar $ LocalId (i, tid), a)
+                                 _       -> error "not implemented"  -- TODO: Implement this.
+                  SMVar i -> MVarEq (MVar $ LocalId (i, tid), m)
+    in  insertEv (Cert (Step tid step)) . maybe (insertFailedEq eq prems) id $
+        solve [certAnyEq prems eq] prems
+  (tid, step)                     -> insertEv (Cert (Step tid step)) prems
 
 -- | Insert an executed role step and all non-trivial facts implied by the
--- Input and Role rules.
+-- Input, MatchEq, and Role rules.
 insertStepPrefixClosed :: Cert (TID, RoleStep) -> Facts -> Facts
 insertStepPrefixClosed s = case certified s of
   (tid, step) -> execState $ do
@@ -593,8 +612,8 @@ insertStepPrefixClosed s = case certified s of
     mapM_ (modify . insertStepInputClosed . (Cert . ((,) tid))) prefix
     mapM_ insertStepOrd $ zip prefix (tail prefix)
 
--- | Insert an event an all non-trivial facts implied by the Input and Role
--- rules.
+-- | Insert an event an all non-trivial facts implied by the Input, MatchEq,
+-- and Role rules.
 insertEvSaturated :: Cert Event -> Facts -> Facts
 insertEvSaturated ev = case certified ev of
   (Learn _      ) -> insertEvNonTrivial ev
@@ -675,6 +694,7 @@ getTyping = maybe mzero return . optTyping
 -- premises. The checks are separated due to efficiency reasons.
 proveFalse :: Facts -> Bool
 proveFalse prems =
+    not (S.null (failedEqs prems)) ||
     not (S.null (compromised prems `S.intersection` uncompromised prems)) ||
     any noAgent (S.toList (compromised prems)) ||
     cyclic (eventOrd prems)
@@ -1072,7 +1092,8 @@ chainRuleFacts m      facts0
       msum . map stepChains $ roleSteps role
     where
       stepChains :: RoleStep -> ChainRuleM ()
-      stepChains (Recv _ _) = mzero
+      stepChains (Recv _ _)       = mzero
+      stepChains (Match _ _ _ _)  = mzero
       stepChains step@(Send _ pt) = do
           -- trace ("stepChains: " ++ roleName role ++"_"++getLabel l) (return ())
           modifyFacts $ insertStepPrefixClosed (Cert (tid, step))

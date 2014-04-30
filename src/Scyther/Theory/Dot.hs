@@ -406,10 +406,10 @@ dotProtocol proto = do
   dotStep (role, step) = 
     mkNode (render $ sptRoleStep Nothing step) (getRoleColor role) []
 
-  dotSend _            (_, Recv _ _) = return ()
   dotSend stepMap send@(_, Send l _) = sequence_
     [ edge (findShowError send stepMap) (findShowError recv stepMap) []
     | recv@(_, Recv l' _) <- steps, l == l' ]
+  dotSend _       _                  = return ()
 
   dotRole stepMap role = do
     roleId <- mkNode ("role "++roleName role) (getRoleColor $ roleName role) [("peripheries","2")]

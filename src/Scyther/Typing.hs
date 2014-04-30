@@ -109,53 +109,61 @@ mscTyping proto =
 
     typeStep eqs (Send _ _, _) = do
         return eqs
-    typeStep eqs (recv@(Recv lR ptR), tidR) =
+    typeStep eqs step@(Match _ True (SMVar mv) pt, tidM) = do
+        -- TODO: Determine how type inference for matching should work. Merge with Recv?
+        eqs' <- lift $ E.solve [E.MVarEq (MVar $ LocalId (mv, tidM), inst tidM pt)] eqs
+        mapM_ (typeMVar step) (E.getMVarEqs eqs')
+        sequence_ $ do PMVar v <- S.toList $ subpatterns pt
+                       return (knownAtRecv step v)
+        return eqs'
+    typeStep eqs (Match _ _ _ _, _) = error "not implemented"  -- TODO: Implement these cases
+    typeStep eqs step@(Recv lR ptR, tidR) =
         case [ send | send@(Send lS _, _) <- steps, lS == lR ] of
           []                   -> do
               -- no matching send: assume intruder knows all message variables
               -- in the received pattern that are not yet mapped.
               sequence_ $ do PMVar v <- S.toList $ subpatterns ptR
-                             return (knownAtRecv v)
+                             return (knownAtRecv step v)
               return eqs
           ((Send _ ptS, tidS):_) -> do
               eqs' <- lift $ E.solve [E.MsgEq (inst tidR ptR, inst tidS ptS)] eqs
-              mapM_ typeMVar (E.getMVarEqs eqs')
+              mapM_ (typeMVar step) (E.getMVarEqs eqs')
               -- variables not mapped yet are mapped to they known type.
               sequence_ $ do PMVar v <- S.toList $ subpatterns ptR
-                             return (knownAtRecv v)
+                             return (knownAtRecv step v)
               return eqs'
           _ -> error "mscTyping: the impossible happened"
-      where
-        typeMVar (MVar (LocalId (v, vTid)), m) 
-          | vTid == tidR && PMVar v `S.member` splitpatterns ptR =
-              noteType (KnownT recv)
-          | otherwise = 
-              noteType $ maybe (KnownT recv) (SumT (KnownT recv)) (typeMsg m)
-          where
-            noteType = modify . M.insertWith keepSimpler (v, roleeqs M.! vTid)
-            -- prefer non-sum-types and then the existing one
-            keepSimpler _  x@(KnownT _) = x
-            keepSimpler x@(KnownT _) _  = x
-            keepSimpler _            x  = x
 
-        knownAtRecv v = 
-            modify (M.insertWith keepExisting (v, roleeqs M.! tidR) (KnownT recv))
-          where
-            keepExisting _new old = old
- 
-        typeMsg (MFresh (Fresh fr)) = pure $ NonceT (roleeqs M.! lidTID fr) (lidId fr)
-        typeMsg (MConst c)    = pure $ ConstT c
-        typeMsg (MAVar _)     = pure $ AgentT
-        typeMsg (MMVar _)     = Nothing
-        typeMsg (MHash m)     = HashT   <$> typeMsg m
-        typeMsg (MTup m1 m2)  = TupT    <$> typeMsg m1 <*> typeMsg m2
-        typeMsg (MEnc m1 m2)  = EncT    <$> typeMsg m1 <*> typeMsg m2
-        typeMsg (MSymK m1 m2) = SymKT   <$> typeMsg m1 <*> typeMsg m2
-        typeMsg (MAsymPK m)   = AsymPKT <$> typeMsg m
-        typeMsg (MAsymSK m)   = AsymSKT <$> typeMsg m
-        typeMsg (MArbMsg _)    = error $ "mscTyping: agent variable encountered"
-        typeMsg (MInvKey _)   = error $ "mscTyping: key inversion encountered"
-        typeMsg (MShrK _ _)   = error $ "mscTyping: bi-directional shared key encountered"
+    typeMVar (step, tid) (MVar (LocalId (v, vTid)), m)
+      | vTid == tid && PMVar v `S.member` splitpatterns (stepPat step) =
+          noteType (KnownT step)
+      | otherwise =
+          noteType $ maybe (KnownT step) (SumT (KnownT step)) (typeMsg m)
+      where
+        noteType = modify . M.insertWith keepSimpler (v, roleeqs M.! vTid)
+        -- prefer non-sum-types and then the existing one
+        keepSimpler _  x@(KnownT _) = x
+        keepSimpler x@(KnownT _) _  = x
+        keepSimpler _            x  = x
+
+    knownAtRecv (step, tid) v =
+        modify (M.insertWith keepExisting (v, roleeqs M.! tid) (KnownT step))
+      where
+        keepExisting _new old = old
+
+    typeMsg (MFresh (Fresh fr)) = pure $ NonceT (roleeqs M.! lidTID fr) (lidId fr)
+    typeMsg (MConst c)    = pure $ ConstT c
+    typeMsg (MAVar _)     = pure $ AgentT
+    typeMsg (MMVar _)     = Nothing
+    typeMsg (MHash m)     = HashT   <$> typeMsg m
+    typeMsg (MTup m1 m2)  = TupT    <$> typeMsg m1 <*> typeMsg m2
+    typeMsg (MEnc m1 m2)  = EncT    <$> typeMsg m1 <*> typeMsg m2
+    typeMsg (MSymK m1 m2) = SymKT   <$> typeMsg m1 <*> typeMsg m2
+    typeMsg (MAsymPK m)   = AsymPKT <$> typeMsg m
+    typeMsg (MAsymSK m)   = AsymSKT <$> typeMsg m
+    typeMsg (MArbMsg _)    = error $ "mscTyping: agent variable encountered"
+    typeMsg (MInvKey _)   = error $ "mscTyping: key inversion encountered"
+    typeMsg (MShrK _ _)   = error $ "mscTyping: bi-directional shared key encountered"
 
 
 ------------------------------------------------------------------------------

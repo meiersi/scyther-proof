@@ -65,6 +65,13 @@ translations
   "<|x, y|>"      == "CONST PTup x y"
 
 
+subsubsection{* Protocol Role Steps *}
+
+(* TODO better names *)
+abbreviation "MatchEq" where "MatchEq lbl \<equiv> Match lbl True"
+abbreviation "NotMatch" where "NotMatch lbl \<equiv> Match lbl False"
+
+
 subsubsection{* Execution Messages *}
 
 abbreviation "C"  where "C    \<equiv> EConst"

@@ -299,12 +299,15 @@ pattern = asum
     , PSign    <$> genFunApp (kw LBRACE) (kw RBRACE) (string "sign") tuplepattern <*> pattern
     , PMVar    <$> tempIdentifier
     ]
-  where
-    tempIdentifier = do i <- identifier
-                        if isLetter (head i)
-                          then return (Id (' ':i))
-                          else fail $ "invalid variable name '" ++ i ++
-                                      "': variable names must start with a letter"
+
+-- | Parse a specification variable. Untyped identifiers are handled as in
+-- 'pattern'.
+specVariable :: Parser s VarId
+specVariable = asum
+    [ SMVar <$> (kw QUESTIONMARK *> ident)
+    , SAVar <$> (kw DOLLAR *> ident)
+    , SMVar <$> tempIdentifier
+    ]
 
 -- | Parse multiple ^ applications as a left-associative list of exponentations
 -- hackily marked using hashes and constant identifiers.
@@ -320,6 +323,14 @@ multpattern = chainl1 exppattern (mkMultPat <$ kw STAR)
 -- right-associative tuples.
 tuplepattern :: Parser s Pattern
 tuplepattern = chainr1 multpattern (PTup <$ kw COMMA)
+
+-- | Parse a local identifier which is yet unresolved. The identifier is
+-- prefixed by a space to mark it for later resolution.
+tempIdentifier = do i <- identifier
+                    if isLetter (head i)
+                      then return (Id (' ':i))
+                      else fail $ "invalid variable name '" ++ i ++
+                                  "': variable names must start with a letter"
 
 -- | Drops the space prefix used for identifying identifiers that need to be
 -- resolved later.
@@ -338,29 +349,27 @@ resolveId avars mvars i
 
 -- | Resolve all identifiers in the pattern.
 resolveIds :: S.Set Id -> S.Set Id -> Pattern -> Pattern
-resolveIds avars mvars = go
+resolveIds avars mvars = patMapFMV resolve
   where
-  resolve = resolveId avars mvars
-  go pt@(PConst _)   = pt
-  go pt@(PFresh _)   = pt
-  go pt@(PAVar _)    = pt
-  go pt@(PMVar i)    = case getId i of
-                         ' ':i' -> resolve (Id i') -- marked for resolution
-                         _      -> pt
-  go (PHash pt)      = PHash   (go pt)
-  go (PTup pt1 pt2)  = PTup    (go pt1) (go pt2)
-  go (PEnc pt1 pt2)  = PEnc    (go pt1) (go pt2)
-  go (PSign pt1 pt2) = PSign   (go pt1) (go pt2)
-  go (PSymK pt1 pt2) = PSymK   (go pt1) (go pt2)
-  go (PShrK pt1 pt2) = PShrK   (go pt1) (go pt2)
-  go (PAsymPK pt)    = PAsymPK (go pt)
-  go (PAsymSK pt)    = PAsymSK (go pt)
+    resolve i = case getId i of
+        ' ':i' -> resolveId avars mvars (Id i')
+        _      -> PMVar i
 
 -- | Resolve identifiers as identifiers of the given role.
 -- PRE: The role must use disjoint identifiers for fresh messages, agent
 -- variables, and message variables.
 resolveIdsLocalToRole :: Role -> Pattern -> Pattern
 resolveIdsLocalToRole role = resolveIds (roleFAV role) (roleFMV role)
+
+-- | Resolve the type of a specification variable according to the set of
+-- agent variables. Other identifiers are consideres message variables.
+resolveVarId :: S.Set Id -> VarId -> VarId
+resolveVarId avars (SMVar i) = case getId i of
+  ' ':i' -> if Id i' `S.member` avars
+              then SAVar (Id i')
+              else SMVar (Id i')
+  _      -> SMVar i
+resolveVarId _ v             = v
 
 
 -- Messages
@@ -463,59 +472,75 @@ Identifier := [A..Za..z-_]
 
 -}
 
--- | Parse a single transfer.
-transfer :: Parser s [(Id, RoleStep)]
-transfer = do
+-- | Parse a single transfer with the given label.
+transfer :: Label -> Parser s [(Id, RoleStep)]
+transfer lbl =
+  do right <- kw RIGHTARROW *> ident <* kw COLON
+     pt <- tuplepattern
+     return [(right, Recv lbl pt)]
+  <|>
+  do right <- kw LEFTARROW *> ident <* kw COLON
+     ptr <- tuplepattern
+     (do left <- try $ ident <* kw LEFTARROW <* kw COLON
+         ptl <- tuplepattern
+         return [(left, Recv lbl ptl),(right, Send lbl ptr)]
+      <|>
+      return [(right, Send lbl ptr)]
+      )
+  <|>
+  do left <- ident
+     (do kw RIGHTARROW
+         (do right <- ident <* kw COLON
+             pt <- tuplepattern
+             return [(left,Send lbl pt), (right, Recv lbl pt)]
+          <|>
+          do ptl <- kw COLON *> tuplepattern
+             (do right <- kw RIGHTARROW *> ident <* kw COLON
+                 ptr <- tuplepattern
+                 return [(left,Send lbl ptl), (right, Recv lbl ptr)]
+              <|>
+              do return [(left, Send lbl ptl)]
+              )
+          )
+      <|>
+      do kw LEFTARROW
+         (do pt <- kw COLON *> tuplepattern
+             return [(left, Recv lbl pt)]
+          <|>
+          do right <- ident <* kw COLON
+             pt <- tuplepattern
+             return [(left, Recv lbl pt), (right, Send lbl pt)]
+          )
+      )
+
+-- | Try to parse a sequence of local computations with the given label.
+--
+-- TODO: Currently only supports positive matching, extend to include not-match.
+compute :: Label -> Parser s [(Id, RoleStep)]
+compute lbl = do
+  actor <- try $ ident <* kw COLON
+  many1 (do v <- try $ specVariable <* kw RIGHTARROW
+            ptr <- tuplepattern
+            return (actor, Match lbl True v ptr)
+        )
+
+-- | Parse a labeled part of a protocol specification, i.e., either a transfer
+-- or computation sequence.
+labeledSteps :: Parser s [(Id, RoleStep)]
+labeledSteps = do
   lbl <- Label <$> identifier <* kw DOT
-  (do right <- kw RIGHTARROW *> ident <* kw COLON
-      pt <- tuplepattern
-      return [(right, Recv lbl pt)]
-   <|>
-   do right <- kw LEFTARROW *> ident <* kw COLON
-      ptr <- tuplepattern
-      (do left <- try $ ident <* kw LEFTARROW <* kw COLON
-          ptl <- tuplepattern
-          return [(left, Recv lbl ptl),(right, Send lbl ptr)]
-       <|>
-       return [(right, Send lbl ptr)]
-       )
-   <|>
-   do left <- ident
-      (do kw RIGHTARROW
-          (do right <- ident <* kw COLON
-              pt <- tuplepattern
-              return [(left,Send lbl pt), (right, Recv lbl pt)]
-           <|>
-           do ptl <- kw COLON *> tuplepattern
-              (do right <- kw RIGHTARROW *> ident <* kw COLON
-                  ptr <- tuplepattern
-                  return [(left,Send lbl ptl), (right, Recv lbl ptr)]
-               <|>
-               do return [(left, Send lbl ptl)]
-               )
-           )
-       <|>
-       do kw LEFTARROW
-          (do pt <- kw COLON *> tuplepattern
-              return [(left, Recv lbl pt)]
-           <|>
-           do right <- ident <* kw COLON
-              pt <- tuplepattern
-              return [(left, Recv lbl pt), (right, Send lbl pt)]
-           )
-       )
-   )
+  compute lbl <|> transfer lbl
 
 -- | Parse a protocol.
 protocol :: Parser s Protocol
 protocol = do
   name <- string "protocol" *> identifier
-  transfers <- concat <$> braced (many1 transfer)
-  -- convert parsed transfers into role scripts
-  let roleIds = S.fromList $ map fst transfers
+  allSteps <- concat <$> braced (many1 labeledSteps)
+  -- convert parsed steps into role scripts
+  let roleIds = S.fromList $ map fst allSteps
       roles = do
         actor <- S.toList roleIds
-        let steps = [ step | (i, step) <- transfers, i == actor ]
+        let steps = [ step | (i, step) <- allSteps, i == actor ]
         return $ Role (getId actor)
                       (ensureFreshSteps actor (S.map addSpacePrefix roleIds) steps)
   return $ Protocol name roles
@@ -526,17 +551,23 @@ protocol = do
   ensureFreshSteps actor possibleAvars =
       go (S.singleton (addSpacePrefix actor)) S.empty S.empty
     where
+      -- TODO: Make sure that this does what one expects.
       go _ _ _ [] = []
-      go avars mvars fresh (Send l pt : rs) =
-        let avars' = avars `S.union` (((patFMV pt `S.intersection` possibleAvars)
-                                       `S.difference` mvars) `S.difference` fresh)
-            fresh' = fresh `S.union` ((patFMV pt `S.difference` avars') `S.difference` mvars)
-            pt' = resolveIds (dropSpacePrefixes avars') (dropSpacePrefixes mvars) pt
-        in Send l pt' : go avars' mvars fresh' rs
-      go avars mvars fresh (Recv l pt : rs) =
-        let mvars' = mvars `S.union` ((patFMV pt `S.difference` avars) `S.difference` fresh)
-            pt' = resolveIds (dropSpacePrefixes avars) (dropSpacePrefixes mvars') pt
-        in  Recv l pt' : go avars mvars' fresh rs
+      go avars mvars fresh (step : rs) = step' : go avars' mvars' fresh' rs
+        where
+          avars' = avars `S.union` (((stepUsedMV step `S.intersection` possibleAvars)
+                                     `S.difference` mvars) `S.difference` fresh)
+          mvars' = mvars `S.union` ((stepBoundMV step `S.difference` avars')
+                                    `S.difference` fresh)
+          fresh' = fresh `S.union` ((stepUsedMV step `S.difference` avars')
+                                    `S.difference` mvars')
+          pt' = resolveIds (dropSpacePrefixes avars') (dropSpacePrefixes mvars')
+                (stepPat step)
+          step' = case step of
+              Send l _       -> Send l pt'
+              Recv l _       -> Recv l pt'
+              Match l eq v _ -> Match l eq (resolveVarId (dropSpacePrefixes avars') v) pt'
+
 
 ------------------------------------------------------------------------------
 -- Parse Claims
@@ -592,6 +623,7 @@ nonceSecrecySequents proto =
           v@(PMVar i) <- S.toList $ subpatterns pt
           guard (not (plainUse pt v) && firstUse v)
           return $ secrecySe (MMVar . MVar) i
+        Match _ _ _ _ -> mzero  -- TODO: Figure out what we want here.
       where
         (tid, prem0) = freshTID (empty proto)
         (prefix, _) = break (step ==) $ roleSteps role
@@ -628,7 +660,8 @@ firstSendSequents proto =
       where
         steps = roleSteps role
         (tid, prem0) = freshTID (empty proto)
-        mkStepSequents (_,            Recv _ _  ) = []
+        mkStepSequents (_, Recv _ _)              = []
+        mkStepSequents (_, Match _ _ _ _)         = []  -- TODO: Validate
         mkStepSequents (prefix, step@(Send _ pt)) = do
           n@(PFresh i) <- S.toList $ splitpatterns pt
           guard (n `S.notMember` S.unions (map (subpatterns.stepPat) prefix))

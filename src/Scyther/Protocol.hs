@@ -5,6 +5,7 @@ module Scyther.Protocol (
 
 -- * Types
     Id(..)
+  , VarId(..)
   , Pattern(..)
   , Label(..)
   , RoleStep(..)
@@ -13,6 +14,9 @@ module Scyther.Protocol (
   , RoleStepOrder
 
 -- * Queries
+
+  -- ** Generic variables
+  , variable
 
   -- ** Patterns
   , patFMV
@@ -26,6 +30,8 @@ module Scyther.Protocol (
   , stepLabel
   , stepFMV
   , stepFAV
+  , stepUsedMV
+  , stepBoundMV
 
   -- ** Roles
   , roleFMV
@@ -45,6 +51,9 @@ module Scyther.Protocol (
   , ProtoIllformedness
   , wfProto
   , sptProtoIllformedness
+
+-- * Construction
+  , patMapFMV
 
 -- * Output
   , isaRoleStep
@@ -76,6 +85,12 @@ newtype Id = Id { getId :: String }
 instance Show Id where
   show (Id i) = i
 
+-- | Either an agent or message variable. Currently only used for 'Match' steps.
+data VarId =
+    SAVar Id  -- ^ An agent variable.
+  | SMVar Id  -- ^ A message variable.
+  deriving( Eq, Ord, Show, Data, Typeable {-! NFData !-} )
+
 -- | A message pattern.
 data Pattern = 
     PConst  Id                -- ^ A global constant.
@@ -98,8 +113,9 @@ newtype Label = Label { getLabel :: String }
 
 -- | A role step.
 data RoleStep = 
-    Send Label Pattern  -- ^ A send step.
-  | Recv Label Pattern  -- ^ A receive step.
+    Send Label Pattern              -- ^ A send step.
+  | Recv Label Pattern              -- ^ A receive step.
+  | Match Label Bool VarId Pattern  -- ^ A match or not-match step.
   deriving( Eq, Ord, Show, Data, Typeable {-! NFData !-} )
 
 -- | A role of a protocol. Its name has no operational meaning, but is carried
@@ -131,15 +147,25 @@ lookupRole name = find ((== name) . roleName) . protoRoles
 lookupRoleStep :: String -> Role -> Maybe RoleStep
 lookupRoleStep lbl = find ((== lbl) . stepLabel) . roleSteps
 
--- | Pattern of of a role step
+-- | Case distinction for specification variables.
+variable :: (Id -> a)  -- ^ Function to apply for an agent variable.
+         -> (Id -> a)  -- ^ Function to apply for a message variable.
+         -> VarId
+         -> a
+variable agent _ (SAVar a) = agent a
+variable _ msg   (SMVar m) = msg m
+
+-- | Pattern of a role step.
 stepPat :: RoleStep -> Pattern
-stepPat (Send _ pt) = pt
-stepPat (Recv _ pt) = pt
+stepPat (Send _ pt)      = pt
+stepPat (Recv _ pt)      = pt
+stepPat (Match _ _ _ pt) = pt
 
 -- | The string label of a role step.
 stepLabel :: RoleStep -> String
-stepLabel (Send l _) = getLabel l
-stepLabel (Recv l _) = getLabel l
+stepLabel (Send l _)      = getLabel l
+stepLabel (Recv l _)      = getLabel l
+stepLabel (Match l _ _ _) = getLabel l
 
 -- | Pattern subterms.
 subpatterns :: Pattern -> S.Set Pattern
@@ -181,11 +207,12 @@ patFMV _                = S.empty
 
 -- | Frees message variables of a role step.
 stepFMV :: RoleStep -> S.Set Id
-stepFMV = patFMV . stepPat
+stepFMV (Match _ _ (SMVar v) pt) = v `S.insert` patFMV pt
+stepFMV step                     = patFMV $ stepPat step
 
 -- | Free message variables of a role.
 roleFMV :: Role -> S.Set Id
-roleFMV = S.unions . map (patFMV . stepPat) . roleSteps
+roleFMV = S.unions . map stepFMV . roleSteps
 
 -- | Free agent variables of a pattern.
 patFAV :: Pattern -> S.Set Id
@@ -200,21 +227,40 @@ patFAV (PAsymPK pt)     = patFAV pt
 patFAV (PAsymSK pt)     = patFAV pt
 patFAV _                = S.empty
 
-
 -- | Frees agent variables of a role step.
 stepFAV :: RoleStep -> S.Set Id
-stepFAV = patFAV . stepPat
+stepFAV (Match _ _ (SAVar a) pt) = a `S.insert` patFAV pt
+stepFAV step                     = patFAV $ stepPat step
 
 -- | Free agent variables of a role.
 roleFAV :: Role -> S.Set Id
-roleFAV = S.unions . map (patFAV . stepPat) . roleSteps
+roleFAV = S.unions . map stepFAV . roleSteps
+
+-- | Semantically used message variables of a role step.
+stepUsedMV :: RoleStep -> S.Set Id
+stepUsedMV (Send _ pt)       = patFMV pt
+stepUsedMV (Recv _ _)        = S.empty
+stepUsedMV (Match _ eq v pt)
+    | eq        = matched
+    | otherwise = matched `S.union` patFMV pt
+  where
+    matched = case v of
+        SAVar _ -> S.empty
+        SMVar m -> S.singleton m
+
+-- | Message variables of a role step which are bound there at the latest.
+stepBoundMV :: RoleStep -> S.Set Id
+stepBoundMV (Recv _ pt)         = patFMV pt
+stepBoundMV (Match _ True _ pt) = patFMV pt
+stepBoundMV _                   = S.empty
+
 
 -- Well-formedness of protocols and roles
 -----------------------------------------
 
 data ProtoIllformedness =
     NonUnique Role
-  | SendBeforeReceive Role RoleStep Id
+  | UseBeforeBind Role RoleStep Id
   | AccessibleLongTermKey Role RoleStep Pattern
   deriving( Eq, Ord, Show )
 
@@ -223,21 +269,19 @@ data ProtoIllformedness =
 -- contain long-term-keys in accessible positions.
 wfRole :: Role -> [ProtoIllformedness]
 wfRole role = msum
-    [ do guard (unique $ roleSteps role)
+    [ do guard (not . unique $ roleSteps role)
          return $ NonUnique role
-    , recv_before_send S.empty (roleSteps role)
+    , use_before_bind S.empty (roleSteps role)
     , msum . map accessibleLongTermKeys $ roleSteps role
     ]
   where
-    recv_before_send _                            []  = mzero
-    recv_before_send received (step@(Send _ pt) : rs) = 
-      do v <- S.toList $ patFMV pt
-         guard (v `S.member` received)
-         return $ SendBeforeReceive role step v
+    use_before_bind _             []  = mzero
+    use_before_bind bound (step : rs) =
+      do v <- S.toList $ stepUsedMV step
+         guard (not (v `S.member` bound))
+         return $ UseBeforeBind role step v
       `mplus`
-      recv_before_send received rs
-    recv_before_send received (Recv _ pt : rs) = 
-      recv_before_send (patFMV pt `S.union` received) rs
+      use_before_bind (stepBoundMV step `S.union` bound) rs
 
     accessibleLongTermKeys step = do
       m <- S.toList . patternparts $ stepPat step
@@ -256,10 +300,10 @@ sptProtoIllformedness :: ProtoIllformedness -> Doc
 sptProtoIllformedness pif = case pif of
   NonUnique role -> 
     text $ "role '" ++ roleName role ++ "' contains duplicate steps."
-  SendBeforeReceive role step v ->
+  UseBeforeBind role step v ->
     text (roleName role) <> colon <-> 
     sptRoleStep Nothing step <> colon <->
-    text "message variable" <-> quotes (sptId v) <-> text "sent before received."
+    text "message variable" <-> quotes (sptId v) <-> text "used before bound."
   AccessibleLongTermKey role step _ ->
     text (roleName role) <> colon <-> 
     sptRoleStep Nothing step <> colon <->
@@ -278,7 +322,7 @@ roleOrd role = zip steps (tailDef [] steps)
   where
   steps = zip (roleSteps role) (repeat role) 
 
--- | The order of role steps in the protocol such that every send step is
+-- | The order of role steps in the protocol such that every send step
 -- occurs before every receive step having the same label.
 labelOrd :: Protocol -> RoleStepOrder
 labelOrd proto = 
@@ -290,6 +334,28 @@ labelOrd proto =
 -- | The combination of all role orders and the label order of the protocol.
 protoOrd :: Protocol -> RoleStepOrder
 protoOrd proto = labelOrd proto ++ concatMap roleOrd (protoRoles proto)
+
+
+-- Construction
+---------------
+
+-- | Apply a function to the free message variables of a pattern, replacing
+-- them by a subpattern.
+patMapFMV :: (Id -> Pattern) -> Pattern -> Pattern
+patMapFMV f = go
+  where
+    go pt@(PConst _)   = pt
+    go pt@(PFresh _)   = pt
+    go pt@(PAVar _)    = pt
+    go (PMVar i)       = f i
+    go (PHash pt)      = PHash   (go pt)
+    go (PTup pt1 pt2)  = PTup    (go pt1) (go pt2)
+    go (PEnc pt1 pt2)  = PEnc    (go pt1) (go pt2)
+    go (PSign pt1 pt2) = PSign   (go pt1) (go pt2)
+    go (PSymK pt1 pt2) = PSymK   (go pt1) (go pt2)
+    go (PShrK pt1 pt2) = PShrK   (go pt1) (go pt2)
+    go (PAsymPK pt)    = PAsymPK (go pt)
+    go (PAsymSK pt)    = PAsymSK (go pt)
 
 
 ------------------------------------------------------------------------------
@@ -312,15 +378,16 @@ isaRoleStep conf optRole step =
   case optRole of
     Just role | step `elem` roleSteps role -> -- abbreviate
       text $ roleName role ++ "_" ++ stepLabel step
-    _ ->
-      text name <-> isar conf (Label $ stepLabel step) <-> ppPat (stepPat step) 
-  where
-  name = case step of Send _ _ -> "Send"; Recv _ _ -> "Recv"
-  ppPat pt@(PTup _ _) = isar conf pt
-  ppPat pt            = nestShort' "(" ")" (isar conf pt)
+    _ -> isar conf step
 
 instance Isar Id where
   isar _ (Id i) = text $ "''"++i++"''"
+
+instance Isar VarId where
+  isar conf = nestShort' "(" ")" . variable ppAgent ppMsg
+    where
+      ppAgent a = text "AVar" <-> isar conf a
+      ppMsg   m = text "MVar" <-> isar conf m
 
 instance Isar Label where
   isar _ (Label l) = text $ "''"++l++"''"
@@ -360,7 +427,16 @@ instance Isar Pattern where
 
 
 instance Isar RoleStep where
-  isar conf = isaRoleStep conf Nothing
+  isar conf step = case step of
+      Send _ _          -> text "Send" <-> label <-> pattern
+      Recv _ _          -> text "Recv" <-> label <-> pattern
+      Match _ True  v _ -> text "MatchEq" <-> label <-> isar conf v <-> pattern
+      Match _ False v _ -> text "NotMatch" <-> label <-> isar conf v <-> pattern
+    where
+      label   = isar conf (Label $ stepLabel step)
+      pattern = ppPat (stepPat step)
+      ppPat pt@(PTup _ _) = isar conf pt
+      ppPat pt            = nestShort' "(" ")" (isar conf pt)
 
 instance Isar Role where
   isar conf (Role name steps) = 
@@ -423,12 +499,20 @@ sptRoleStep optRole step =
   case optRole of
     Just role | step `elem` roleSteps role -> -- abbreviate
       text $ roleName role ++ "_" ++ stepLabel step
-    _ ->
-      (text $ name ++ "_" ++ stepLabel step) <> ppPat (stepPat step) 
+    _ -> case step of
+             Send _ _          -> labeled "Send" <> pattern
+             Recv _ _          -> labeled "Recv" <> pattern
+             Match _ True v _  -> labeled "MatchEq" <> matching v
+             Match _ False v _ -> labeled "NotMatch" <> matching v
   where
-  name = case step of Send _ _ -> "Send"; Recv _ _ -> "Recv"
-  ppPat pt@(PTup _ _) = sptPattern pt
-  ppPat pt            = nestShort' "(" ")" (sptPattern pt)
+    labeled name = text $ name ++ "_" ++ stepLabel step
+    matching v   = nestShort' "(" ")" $ ppVar v <> text ", " <> pattern
+    pattern = ppPat (stepPat step)
+
+    ppVar (SAVar a)     = sptId a
+    ppVar (SMVar v)     = char '?' <> sptId v
+    ppPat pt@(PTup _ _) = sptPattern pt
+    ppPat pt            = nestShort' "(" ")" (sptPattern pt)
 
 -- | Pretty print a role in SP theory format.
 sptRole :: Role -> Doc
