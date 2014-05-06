@@ -6,6 +6,8 @@ hsenv.log
 dist/
 testbed/
 cabal-dev/
+.cabal-sandbox/
+cabal.sandbox.config
 
 examples/case_study_out/Amended_Needham_Schroeder_Symmetric_Key/
 examples/case_study_out/BAN_modified_CCITT_X509_3/
