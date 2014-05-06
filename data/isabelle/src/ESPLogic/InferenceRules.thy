@@ -322,14 +322,15 @@ text{* Support for the "prefix\_close" command. *}
 lemma ext_prefixClose: 
   "\<lbrakk> (i, step) \<in> steps t; roleMap r i = Some R \<rbrakk> \<Longrightarrow>
    prefixClose s t R step i \<and> 
-   (recvStep step \<longrightarrow> (\<exists> m. Some m = inst s i (stepPat step) \<and> Ln m \<prec> St (i, step)))"
-  by (cases step) (fastforce dest: prefixCloseI Ln_before_inp)+
+   (recvStep step \<longrightarrow> (\<exists> m. Some m = inst s i (stepPat step) \<and> Ln m \<prec> St (i, step))) \<and>
+   (matchEqStep step \<longrightarrow> Some (s (matchVar step, i)) = inst s i (stepPat step))"
+by (cases step) (auto dest: prefixCloseI Ln_before_inp matchEqStepD Match_eq)
 
 text{* 
   Used for prefix closing assumptions corresponding to a case of
   an annotation completeness induction proof.
 *}
-lemma thread_prefixClose: 
+lemma thread_prefixClose:
   assumes thread_exists: "r i = Some (step#done, todo, skipped)"
       and not_skipped:   "step \<notin> skipped"
     shows 
@@ -337,10 +338,11 @@ lemma thread_prefixClose:
       ((recvStep st \<longrightarrow> 
           (\<exists> m. Some m = inst s i (stepPat st) \<and> predOrd t (Ln m) (St (i, st)))
         ) \<and>
+       (matchEqStep st \<longrightarrow> Some (s (matchVar st, i)) = inst s i (stepPat st)) \<and>
         predOrd t (St (i, st)) (St (i, st')))
     ) \<and>
     (recvStep (last (step#done)) \<longrightarrow>
-       (\<exists> m. Some m = inst s i (stepPat (last (step#done))) \<and> 
+       (\<exists> m. Some m = inst s i (stepPat (last (step#done))) \<and>
              predOrd t (Ln m) (St (i, (last (step#done))))
        )
     )"
@@ -414,8 +416,12 @@ proof -
     hence recv: "recvStep st \<Longrightarrow> 
                  \<exists> m. Some m = inst s i (stepPat st) \<and> predOrd t (Ln m) (St (i, st))"
       using this_thread.roleMap
-      by (cases st) (auto dest!: Ln_before_inp in_steps_predOrd1)
-    note step_ord recv
+      by (cases st) (auto dest: Ln_before_inp in_steps_predOrd1)
+    from step_ord have matchEq:
+        "matchEqStep st \<Longrightarrow> Some (s (matchVar st, i)) = inst s i (stepPat st)"
+      using this_thread.roleMap
+      by (cases st) (auto dest: Ln_before_inp in_steps_predOrd1 matchEqStepD Match_eq)
+    note step_ord recv matchEq
   }
   ultimately
   show ?thesis by fast
