@@ -126,6 +126,8 @@ executable scyther-proof
         json          == 0.5.*  ,
         uniplate      == 1.6.*
 
+    build-tools:
+        alex          >= 3.0   && < 3.2
 
     if flag(threaded)
         ghc-options:    -threaded
