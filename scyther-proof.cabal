@@ -108,7 +108,7 @@ flag threaded
 executable scyther-proof
     build-depends:
         base          == 4.*    ,
-        array         >= 0.3   && < 0.5 ,
+        array         >= 0.3   && < 0.6 ,
         containers    >= 0.4.2 && < 0.6 ,
         safe          >= 0.2   && < 0.4 ,
 
@@ -126,6 +126,8 @@ executable scyther-proof
         json          == 0.5.*  ,
         uniplate      == 1.6.*
 
+    build-tools:
+        alex          >= 3.0   && < 3.2
 
     if flag(threaded)
         ghc-options:    -threaded
