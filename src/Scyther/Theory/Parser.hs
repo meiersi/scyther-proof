@@ -925,9 +925,10 @@ implicationSequent proto = do
   prems0 <- foldM (flip quantifyTID) (F.empty proto) quantifiers
   optPrems <- conjoinAtoms atoms prems0
   prems <- maybe (fail "contradictory premises") return optPrems
+  qualifier <- option Standard (string "injectively" *> pure Injective)
   string "imply"
   concl <- conclusion proto mapping
-  return $ Sequent prems concl Standard
+  return $ Sequent prems concl qualifier
 
 {-
 -- | Construct the premise modifier. The given set of role equalities is used
