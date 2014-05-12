@@ -107,16 +107,21 @@ mscTyping proto =
     rolemap = M.fromList $ zip (protoRoles proto) [1..]
     steps = map (second (rolemap M.!)) . toposort $ protoOrd proto
 
-    typeStep eqs (Send _ _, _) = do
-        return eqs
+    -- TODO: Merge cases?
+    typeStep eqs (Send _ _, _) = return eqs
     typeStep eqs step@(Match _ True (SMVar mv) pt, tidM) = do
-        -- TODO: Determine how type inference for matching should work. Merge with Recv?
+        -- TODO: Determine how type inference for matching should work.
         eqs' <- lift $ E.solve [E.MVarEq (MVar $ LocalId (mv, tidM), inst tidM pt)] eqs
         mapM_ (typeMVar step) (E.getMVarEqs eqs')
         sequence_ $ do PMVar v <- S.toList $ subpatterns pt
                        return (knownAtRecv step v)
         return eqs'
-    typeStep eqs (Match _ _ _ _, _) = error "not implemented"  -- TODO: Implement these cases
+    typeStep eqs step@(Match _ True (SAVar av) (PMVar id), tidM) = do
+        eqs' <- lift $ E.solve [E.MVarEq (MVar $ LocalId (id, tidM),
+                                MAVar $ AVar $ LocalId (av, tidM))] eqs
+        mapM_ (typeMVar step) (E.getMVarEqs eqs')
+        return eqs'
+    typeStep eqs (Match _ _ _ _, _) = return eqs
     typeStep eqs step@(Recv lR ptR, tidR) =
         case [ send | send@(Send lS _, _) <- steps, lS == lR ] of
           []                   -> do

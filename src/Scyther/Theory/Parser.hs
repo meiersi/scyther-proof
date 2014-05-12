@@ -514,14 +514,13 @@ transfer lbl =
       )
 
 -- | Try to parse a sequence of local computations with the given label.
---
--- TODO: Currently only supports positive matching, extend to include not-match.
 compute :: Label -> Parser s [(Id, RoleStep)]
 compute lbl = do
   actor <- try $ ident <* kw COLON
-  many1 (do v <- try $ specVariable <* kw RIGHTARROW
+  many1 (do v <- try specVariable
+            eq <- (kw RIGHTARROW *> pure True) <|> (kw SHARP *> pure False)
             ptr <- tuplepattern
-            return (actor, Match lbl True v ptr)
+            return (actor, Match lbl eq v ptr)
         )
 
 -- | Parse a labeled part of a protocol specification, i.e., either a transfer
@@ -619,11 +618,9 @@ nonceSecrecySequents proto =
           n@(PFresh i) <- S.toList $ subpatterns pt
           guard (not (plainUse pt n) && firstUse n)
           return $ secrecySe (MFresh . Fresh) i
-        Recv _ pt -> do
-          v@(PMVar i) <- S.toList $ subpatterns pt
-          guard (not (plainUse pt v) && firstUse v)
-          return $ secrecySe (MMVar . MVar) i
-        Match _ _ _ _ -> mzero  -- TODO: Figure out what we want here.
+        Recv _ pt         -> varSequents pt
+        Match _ True _ pt -> varSequents pt
+        Match _ False _ _ -> mzero
       where
         (tid, prem0) = freshTID (empty proto)
         (prefix, _) = break (step ==) $ roleSteps role
@@ -631,6 +628,10 @@ nonceSecrecySequents proto =
         plainUse pt = (`S.member` splitpatterns pt)
         avars = [ MAVar (AVar (LocalId (v,tid)))
                 | (PAVar v) <- S.toList . S.unions . map (subpatterns.stepPat) $ roleSteps role ]
+        varSequents pt = do
+          v@(PMVar i) <- S.toList $ subpatterns pt
+          guard (not (plainUse pt v) && firstUse v)
+          return $ secrecySe (MMVar . MVar) i
         secrecySe constr i =
           ( (++("_"++roleName role++"_sec_"++getId i))
           , Sequent prem (FAtom (ABool False)) Standard
@@ -661,7 +662,7 @@ firstSendSequents proto =
         steps = roleSteps role
         (tid, prem0) = freshTID (empty proto)
         mkStepSequents (_, Recv _ _)              = []
-        mkStepSequents (_, Match _ _ _ _)         = []  -- TODO: Validate
+        mkStepSequents (_, Match _ _ _ _)         = []
         mkStepSequents (prefix, step@(Send _ pt)) = do
           n@(PFresh i) <- S.toList $ splitpatterns pt
           guard (n `S.notMember` S.unions (map (subpatterns.stepPat) prefix))

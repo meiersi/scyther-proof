@@ -129,10 +129,10 @@ inFlows proto ptRecv = do
 -}
 
 firstRecvs :: Role -> RoleStep -> S.Set Id
-firstRecvs _         (Send _ _)  = S.empty
 firstRecvs role recv@(Recv _ pt) = 
   patFMV pt `S.difference`
   (S.unions . map (patFMV . stepPat) $ takeWhile (/= recv) (roleSteps role))
+firstRecvs _         _           = S.empty
 
 -- | The role steps of a protocol.
 protoSteps :: Protocol -> [(Role, RoleStep)]

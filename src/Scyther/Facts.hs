@@ -592,10 +592,11 @@ insertStepInputClosed s prems = case certified s of
   (tid, step@(Match _ True v pt)) ->
     let m   = substMsg prems (inst tid pt)
         eq  = case v of
-                  SAVar i -> case m of
-                                 MAVar a -> AVarEq (AVar $ LocalId (i, tid), a)
-                                 _       -> error "not implemented"  -- TODO: Implement this.
-                  SMVar i -> MVarEq (MVar $ LocalId (i, tid), m)
+            SAVar i -> case m of
+                MAVar av -> AVarEq (AVar $ LocalId (i, tid), av)
+                MMVar mv -> MVarEq (mv, MAVar $ AVar $ LocalId (i, tid))
+                _        -> MsgEq (m, MAVar $ AVar $ LocalId (i, tid))
+            SMVar i -> MVarEq (MVar $ LocalId (i, tid), m)
     in  insertEv (Cert (Step tid step)) . maybe (insertFailedEq eq prems) id $
         solve [certAnyEq prems eq] prems
   (tid, step)                     -> insertEv (Cert (Step tid step)) prems

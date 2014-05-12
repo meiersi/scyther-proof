@@ -111,7 +111,7 @@ wellTypedCases se@(Sequent _ (FAtom (ATyping typ)) Standard) =
           let mvars = patFMV pt
           in (S.toList mvars >>= proveVar recv step) `mplus`
              (proveRecvs (recv `S.union` mvars) steps)
-        -- TODO: Merge?
+        -- TODO: Merge? Special cases?
         proveRecvs recv (step@(Match _ True _ pt) : steps) =
           let mvars = patFMV pt
           in (S.toList mvars >>= proveVar recv step) `mplus`
