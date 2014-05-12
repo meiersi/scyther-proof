@@ -1,0 +1,39 @@
+theory SimpleCommit
+begin
+
+protocol SimpleCommit
+{
+	1. V -> C : '1', V, C, n
+	2. C ->   : {{'2', V, C, h(n, k), c}sk(C)}k
+	     -> V : t
+	(* C decides to open the commitment *)
+	3. C -> V : '3', V, C, k
+	4. V:
+	   t -> {{'2', V, C, h(n, k), c}sk(C)}k
+}
+
+property (of SimpleCommit) c_hiding:
+	premises
+		"role(1) = C"
+		"knows(c#1)"
+	imply
+		"step(1, C_3)"
+
+property (of SimpleCommit) c_binding:
+	premises
+		"role(0) = V"
+		"step(0, V_4)"
+		"uncompromised(C#0)"
+	injectively imply threads 1 such that
+		"role(1) = C &
+		C#0 = C#1 &
+		V#0 = V#1 &
+
+		n#0 = n#1 &
+		k#0 = k#1 &
+		c#0 = c#1 &
+
+		St(0, V_1) < St(1, C_2) < St(1, C_3) < St(0, V_4)
+		"
+
+end
