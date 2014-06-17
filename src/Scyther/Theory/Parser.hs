@@ -513,18 +513,17 @@ transfer lbl =
           )
       )
 
--- | Try to parse a sequence of local computations with the given label.
+-- | Try to parse a local computation with the given label.
 compute :: Label -> Parser s [(Id, RoleStep)]
 compute lbl = do
   actor <- try $ ident <* kw COLON
-  many1 (do v <- try specVariable
-            eq <- (kw RIGHTARROW *> pure True) <|> (kw SHARP *> pure False)
-            ptr <- tuplepattern
-            return (actor, Match lbl eq v ptr)
-        )
+  v <- specVariable
+  eq <- (kw RIGHTARROW *> pure True) <|> (kw SHARP *> pure False)
+  ptr <- tuplepattern
+  return [(actor, Match lbl eq v ptr)]
 
 -- | Parse a labeled part of a protocol specification, i.e., either a transfer
--- or computation sequence.
+-- or a computation.
 labeledSteps :: Parser s [(Id, RoleStep)]
 labeledSteps = do
   lbl <- Label <$> identifier <* kw DOT
