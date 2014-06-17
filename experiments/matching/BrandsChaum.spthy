@@ -1,0 +1,31 @@
+theory BrandsChaum
+begin
+
+protocol BrandsChaum
+{
+	1. P ->   : P, {m}k
+	     -> V : P, c
+	2. P <- V : a
+	3. P ->   : h(a, m)
+	     -> V : b
+	4. P ->   : m, k, {a, h(a, m)}sk(P)
+	     -> V : m, k, {a, b}sk(P)
+	5. V      : c -> {m}k
+	6. V      : b -> h(a, m)
+}
+
+property (of BrandsChaum) prover_recent:
+	premises
+		"role(0) = V"
+		"step(0, V_6)"
+		"uncompromised(P#0)"
+	injectively imply threads 1 such that
+		"role(1) = P &
+		P#0 = P#1 &
+		m#0 = m#1 &
+		k#0 = k#1 &
+		a#0 = a#1 &
+		St(0, V_2) < St(1, P_3) < St(0, V_3) < St(0, V_6)
+		"
+
+end
