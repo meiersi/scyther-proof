@@ -656,11 +656,12 @@ lemma (in reachable_state) reachable_in_approxI_ext:
        (t,r,s) \<in> reachable P;
        (t,r,s) \<in> approx typing;
        r i = Some (done, step # todo, skipped);
+       \<forall> st'. st' \<in> set done \<longrightarrow> \<not> noteStep st' \<longrightarrow> (i, st') \<in> steps t;
 
        recvStep step \<Longrightarrow> Some m = inst s i (stepPat step) \<and> m \<in> knows t;
        matchEqStep step \<Longrightarrow>
          the (inst s i (stepPat step)) \<in> typing_A_ext typing (R, matchVar step) i (t,r,s)
-     \<rbrakk> \<Longrightarrow> 
+     \<rbrakk> \<Longrightarrow>
         s (MV n i) \<in> typing (R, n) i ( t @ [Step (i, step)], r(i \<mapsto> (done @ [step], todo, skipped)), s)"
   shows "(t,r,s) \<in> approx typing"
 proof(induct rule: reachable_in_approxI[OF monoTyp])
@@ -676,8 +677,15 @@ proof(induct rule: reachable_in_approxI[OF monoTyp])
       qed simp
   }
   hence "n \<in> foldl (\<lambda> fv step'. fv - sourced_vars step') (sourced_vars step) done"
-  using 1 by auto
-  thus ?case using 1
+    using 1 by auto
+  moreover {
+    interpret thread: reachable_thread P t r s i "done" "(step # todo)" skipped
+      using 1 by unfold_locales auto
+    fix st'
+    assume "st' \<in> set done" and "\<not> noteStep st'"
+    hence "(i, st') \<in> steps t" by (auto intro: thread.not_note_done_in_steps)
+  }
+  ultimately show ?case using 1
     apply(subgoal_tac "True")
     apply(clarsimp)
     apply(rule source_case)

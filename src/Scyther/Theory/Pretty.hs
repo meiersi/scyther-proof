@@ -519,10 +519,11 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
       monoTyp         = typName ++ ".monoTyp"
 
   prettyTypingCase typName name =
-      kwCase <-> text ("("++ name ++" t r s") <-> prettyTID 0 <> text") note facts = this" $-$
+      kwCase <-> text ("("++ name ++" t r s") <-> prettyTID 0 <> text")" $-$
           text ("then interpret state: "++ typingLocale typName ++" t r s") $-$
           nest 2 (text "by unfold_locales auto") $-$
-          text "show ?case using facts"
+          text ("note_prefix_closed (state) facts = " ++ name) $-$
+          text "thus ?case"
 
   -- equality splitting
   prettySplitEqCase name =
