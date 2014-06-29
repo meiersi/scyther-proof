@@ -17,7 +17,6 @@ text{*
 *}
 
 protocol Andrew {
-
   1.  I ->  : I, { 'TT1', ni }k(I,R)
         -> R: x1
   1m.      R: x1 -> I, { 'TT1', ni }k(I,R)

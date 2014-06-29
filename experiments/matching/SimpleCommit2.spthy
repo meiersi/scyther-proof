@@ -1,7 +1,7 @@
-theory SimpleCommit
+theory SimpleCommit2
 begin
 
-section{* Simple commitment protocol *}
+section{* Simple commitment protocol, variant 2 *}
 
 text{*
   In this protocol, agent C commits itself to a data value c, which we model as
@@ -14,11 +14,11 @@ text{*
 protocol SimpleCommit
 {
   1. V -> C : n
-  2. C ->   : {{C, n, h(k), c}sk(C)}k
-       -> V : t
+  2. C ->   : {C, n, h(c)}sk(C)
+       -> V : {C, n, t}sk(C)
   (* C decides to open the commitment *)
-  3. C -> V : k
-  4.      V : t -> {{C, n, h(k), c}sk(C)}k
+  3. C -> V : c
+  4.      V : t -> h(c)
 }
 
 property (of SimpleCommit) hiding:
@@ -38,7 +38,6 @@ property (of SimpleCommit) binding:
     C#0 = C#1 &
 
     n#0 = n#1 &
-    k#0 = k#1 &
     c#0 = c#1 &
 
     St(0, V_1) < St(1, C_2) < St(1, C_3) < St(0, V_4)
