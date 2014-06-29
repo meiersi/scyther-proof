@@ -1197,6 +1197,10 @@ lemma Match_eq:
   "(i, Match l True v pt) \<in> steps t \<Longrightarrow> Some (s (v, i)) = inst s i pt"
 by (induct arbitrary: i l pt rule: reachable_induct, fastforce+)
 
+lemma Not_Match:
+  "(i, Match l False v pt) \<in> steps t \<Longrightarrow> Some (s (v, i)) \<noteq> inst s i pt"
+by (induct arbitrary: i l pt rule: reachable_induct, fastforce+)
+
 (*
 lemmas knows_inp = in_knows_predOrd1[OF Ln_before_inp, rule_format]
 *)

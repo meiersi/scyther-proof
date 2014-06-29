@@ -187,6 +187,7 @@ fun setup_rolestep mk_binding ann_defs lthy =
     val recvStep_t = @{const recvStep} $ step_const;
     val matchStep_t = @{const matchStep} $ step_const;
     val matchEqStep_t = @{const matchEqStep} $ step_const;
+    val notMatchStep_t = @{const notMatchStep} $ step_const;
     val noteStep_t = @{const noteStep} $ step_const;
     val stepPat_t = @{const stepPat} $ step_const;
     val matchVar_t = @{const matchVar} $ step_const;
@@ -211,6 +212,7 @@ fun setup_rolestep mk_binding ann_defs lthy =
        , (mk_binding "recvStep_conv", [([recvStep_t],[att_iff_add])]) 
        , (mk_binding "matchStep_conv", [([matchStep_t],[att_iff_add])]) 
        , (mk_binding "matchEqStep_conv", [([matchEqStep_t],[att_iff_add])])
+       , (mk_binding "notMatchStep_conv", [([notMatchStep_t],[att_iff_add])])
        , (mk_binding "noteStep_conv", [([noteStep_t],[att_iff_add])]) 
        , (mk_binding "stepPat_conv",  [([stepPat_t],[att_simp_add])]) 
        , (mk_binding "matchVar_conv",  [([matchVar_t],[att_simp_add])])

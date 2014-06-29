@@ -195,6 +195,11 @@ where
   "matchEqStep (Match lbl True v pt) = True"
 | "matchEqStep _                     = False"
 
+fun notMatchStep :: "rolestep \<Rightarrow> bool"
+where
+  "notMatchStep (Match lbl False v pt) = True"
+| "notMatchStep _                      = False"
+
 lemma sendStepD [simp]:
   assumes inStep: "sendStep step"
   shows "\<exists> l pt. step = (Send l pt)"
@@ -219,6 +224,15 @@ qed auto
 lemma matchEqStepD [simp]:
   assumes inStep: "matchEqStep step"
   shows "\<exists> l v pt. step = (Match l True v pt)"
+using inStep
+proof (cases step)
+  case (Match lbl eq v pt)
+  thus ?thesis using inStep by (cases eq, auto)
+qed auto
+
+lemma notMatchStepD [simp]:
+  assumes inStep: "notMatchStep step"
+  shows "\<exists> l v pt. step = (Match l False v pt)"
 using inStep
 proof (cases step)
   case (Match lbl eq v pt)
