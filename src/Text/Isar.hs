@@ -31,6 +31,7 @@ module Text.Isar (
   , isaSubsetEq
   , isaAlpha
   , isaSublocale
+  , isaNotEq
 
     -- * Extensions of 'Text.PrettyPrint'
   , module Text.PrettyPrint.Class
@@ -283,6 +284,12 @@ isaSublocale :: Document d => IsarConf -> d
 isaSublocale conf
   | isPlainStyle conf = text "<"
   | otherwise         = symbol "\\<subseteq>"
+
+-- | The not equal symbol: @~=@
+isaNotEq :: Document d => IsarConf -> d
+isaNotEq conf
+  | isPlainStyle conf = text "~="
+  | otherwise         = symbol "\\<noteq>"
 
 ------------------------------------------------------------------------------
 -- Isabelle theory components

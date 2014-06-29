@@ -59,7 +59,9 @@ module Scyther.Equalities (
   , deleteArbMsgIdMapping
 
 -- * Pretty Printing
+  , isaNotEquals
   , sptAnyEq
+  , sptNotEquals
 ) where
 
 import Prelude hiding (null)
@@ -641,42 +643,54 @@ deleteArbMsgIdMapping aid = mapMapping $ \eqs ->
 -- Helper functions for pretty printing
 ---------------------------------------
 
-ppEq :: (a -> Doc) -> (b -> Doc) -> (a, b) -> Doc
-ppEq pp1 pp2 (x1, x2) = pp1 x1 <-> char '=' <-> pp2 x2
+ppEq :: Doc -> (a -> Doc) -> (b -> Doc) -> (a, b) -> Doc
+ppEq sym pp1 pp2 (x1, x2) = pp1 x1 <-> sym <-> pp2 x2
 
-ppEq' :: (a -> Doc) -> (a, a) -> Doc
-ppEq' pp = ppEq pp pp
+ppEq' :: Doc -> (a -> Doc) -> (a, a) -> Doc
+ppEq' sym pp = ppEq sym pp pp
 
 -- Isar
 -------
 
+ppIsarEq :: Doc -> IsarConf -> AnyEq -> Doc
+ppIsarEq sym conf eq0 = case eq0 of
+    TIDEq eq  -> ppEq' sym ppIsar eq
+    RoleEq eq -> ppEq' sym (text . roleName) eq
+    TIDRoleEq (tid, role) ->
+      text "roleMap r" <-> ppIsar tid <-> sym <-> text ("Some " ++ roleName role)
+    ArbMsgEq eq -> ppEq  sym ppIsar ppIsar eq
+    AVarEq  eq  -> ppEq' sym ppIsar eq
+    MVarEq  eq  -> ppEq  sym ppIsar ppIsar eq
+    MsgEq   eq  -> ppEq' sym ppIsar eq
+  where
+    ppIsar :: Isar a => a -> Doc
+    ppIsar = isar conf
+
 instance Isar AnyEq where
-  isar conf eq0 = case eq0 of
-      TIDEq eq  -> ppEq' ppIsar eq
-      RoleEq eq -> ppEq' (text . roleName) eq
-      TIDRoleEq (tid, role) -> 
-        text "roleMap r" <-> ppIsar tid <-> text ("= Some " ++ roleName role)
-      ArbMsgEq eq -> ppEq  ppIsar ppIsar eq
-      AVarEq  eq  -> ppEq' ppIsar eq
-      MVarEq  eq  -> ppEq  ppIsar ppIsar eq
-      MsgEq   eq  -> ppEq' ppIsar eq
-    where
-      ppIsar :: Isar a => a -> Doc
-      ppIsar = isar conf
+  isar = ppIsarEq (char '=')
+
+isaNotEquals :: IsarConf -> AnyEq -> Doc
+isaNotEquals conf = ppIsarEq (isaNotEq conf) conf
 
 -- SP Theory
 ------------
 
+ppSPTEq :: Doc -> AnyEq -> Doc
+ppSPTEq sym eq0 = case eq0 of
+    TIDEq eq  -> ppEq' sym sptTID eq
+    RoleEq eq -> ppEq' sym (text . roleName) eq
+    TIDRoleEq (tid, role) ->
+      text "role(" <-> sptTID tid <-> char ')' <-> sym <-> text (roleName role)
+    ArbMsgEq eq -> ppEq  sym sptArbMsgId sptMessage eq
+    AVarEq  eq  -> ppEq' sym sptAVar eq
+    MVarEq  eq  -> ppEq  sym sptMVar sptMessage eq
+    MsgEq   eq  -> ppEq' sym sptMessage eq
+
 sptAnyEq :: AnyEq -> Doc
-sptAnyEq eq0 = case eq0 of
-  TIDEq eq  -> ppEq' sptTID eq
-  RoleEq eq -> ppEq' (text . roleName) eq
-  TIDRoleEq (tid, role) -> 
-    text "role(" <-> sptTID tid <-> text (") = " ++ roleName role)
-  ArbMsgEq eq -> ppEq  sptArbMsgId sptMessage eq
-  AVarEq  eq  -> ppEq' sptAVar eq
-  MVarEq  eq  -> ppEq  sptMVar sptMessage eq
-  MsgEq   eq  -> ppEq' sptMessage eq
+sptAnyEq = ppSPTEq (char '=')
+
+sptNotEquals :: AnyEq -> Doc
+sptNotEquals = ppSPTEq (text "!=")
 
 
 {-

@@ -102,7 +102,8 @@ wellTypedCases se@(Sequent _ (FAtom (ATyping typ)) Standard) =
         proveRecvs S.empty (roleSteps role)
       where
         proveRecvs _    []                             = []
-        proveRecvs recv (      Send _ _       : steps) = proveRecvs recv steps
+        proveRecvs recv (Send _ _             : steps) = proveRecvs recv steps
+        proveRecvs recv (Match _ False _ _    : steps) = proveRecvs recv steps
         proveRecvs recv ((Recv _ (PMVar lid)) : steps) =
           -- don't prove single reiceves as they are handled directly by the tactic
           -- on the Isabelle side.
