@@ -1,0 +1,205 @@
+theory HiddenAgree
+begin
+
+protocol Agree
+{
+  1ap.  Ap <-    : a
+  1an.  An <-    : a
+  1bp.  Bp <-    : b
+  1bn.  Bn <-    : b
+
+  2ap.  Ap ->    : {'2a', $A, $B, nA}k($A,$T)
+  2an.  An ->    : {'2a', $A, $B, nA}k($A,$T)
+  2atp.    -> Tp : {'2a', A, B, nA}k(A,$T)
+  2atn.    -> Tn : {'2a', A, B, nA}k(A,$T)
+  2bp.  Bp ->    : {'2b', $A, $B, nB}k($B,$T)
+  2bn.  Bn ->    : {'2b', $A, $B, nB}k($B,$T)
+  2btp.    -> Tp : {'2b', A, B, nB}k(B,$T)
+  2btn.    -> Tn : {'2b', A, B, nB}k(B,$T)
+
+  3atp.     <- Tp : {'3', nA, nT}k($T,A)
+  3atn.     <- Tn : {'3', nA, nT}k($T,A)
+  3ap.  Ap  <-    : {'3', nA, nT}k($T,$A)
+  3an.  An  <-    : {'3', nA, nT}k($T,$A)
+  3btp.     <- Tp : {'3', nB, nT}k($T,B)
+  3btn.     <- Tn : {'3', nB, nT}k($T,B)
+  3bp.  Bp  <-    : {'3', nB, nT}k($T,$B)
+  3bn.  Bn  <-    : {'3', nB, nT}k($T,$B)
+  
+  4ap.  Ap  ->    : {'4a', nT, a}k($A,$T)
+  4an.  An  ->    : {'4a', nT, a}k($A,$T)
+  4atp.     -> Tp : {'4a', nT, a}k(A,$T)
+  4atn.     -> Tn : {'4a', nT, a}k(A,$T)
+  4bp.  Bp  ->    : {'4b', nT, b}k($B,$T)
+  4bn.  Bn  ->    : {'4b', nT, b}k($B,$T)
+  4btp.     -> Tp : {'4b', nT, b}k(B,$T)
+  4btn.     -> Tn : {'4b', nT, b}k(B,$T)
+
+  5p.          Tp : a -> b
+  5n.          Tn : a #  b
+
+  6atp.     <- Tp : {'eq', nT}k($T,A)
+  6atn.     <- Tn : {'ne', nT}k($T,A)
+  6ap.  Ap  <-    : {'eq', nT}k($T,$A)
+  6an.  An  <-    : {'ne', nT}k($T,$A)
+  6btp.     <- Tp : {'eq', nT}k($T,B)
+  6btn.     <- Tn : {'ne', nT}k($T,B)
+  6bp.  Bp  <-    : {'eq', nT}k($T,$B)
+  6bn.  Bn  <-    : {'ne', nT}k($T,$B)
+}
+
+property (of Agree) Agree_typing:
+  "a@Ap  :: Known(Ap_1ap)
+   nT@Ap :: Known(Ap_3ap) | nT@Tp | nT@Tn
+   b@Bp  :: Known(Bp_1bp)
+   nT@Bp :: Known(Bp_3bp) | nT@Tp | nT@Tn
+   A@Tp  :: Known(Tp_2atp) | Agent
+   B@Tp  :: Known(Tp_2atp) | Agent
+   nA@Tp :: Known(Tp_2atp) | nA@Ap | nA@An
+   nB@Tp :: Known(Tp_2btp) | nB@Bp | nB@Bn
+   a@Tp  :: Known(Tp_4atp)
+   b@Tp  :: Known(Tp_4btp)
+
+   a@An  :: Known(An_1an)
+   nT@An :: Known(An_3an) | nT@Tp | nT@Tn
+   b@Bn  :: Known(Bn_1bn)
+   nT@Bn :: Known(Bn_3bn) | nT@Tp | nT@Tn
+   A@Tn  :: Known(Tn_2atn) | Agent
+   B@Tn  :: Known(Tn_2atn) | Agent
+   nA@Tn :: Known(Tn_2atn) | nA@Ap | nA@An
+   nB@Tn :: Known(Tn_2btn) | nB@Bp | nB@Bn
+   a@Tn  :: Known(Tn_4atn)
+   b@Tn  :: Known(Tn_4btn)
+  "
+
+properties (of Agree)
+  nA_secret_Ap: secret(Ap, -, nA, {A,T})
+  nA_secret_An: secret(An, -, nA, {A,T})
+  nA_secret_Tp: secret(Tp, 2atp, nA, {A,T})
+  nA_secret_Tn: secret(Tn, 2atn, nA, {A,T})
+
+  nB_secret_Bp: secret(Bp, -, nB, {B,T})
+  nB_secret_Bn: secret(Bn, -, nB, {B,T})
+  nB_secret_Tp: secret(Tp, 2btp, nB, {B,T})
+  nB_secret_Tn: secret(Tn, 2btn, nB, {B,T})
+
+  nT_secret_Tp: secret(Tp, -, nT, {A,B,T})
+  nT_secret_Tn: secret(Tn, -, nT, {A,B,T})
+  nT_secret_Ap: secret(Ap, 3ap, nT, {A,B,T})
+  nT_secret_An: secret(An, 3an, nT, {A,B,T})
+  nT_secret_Bp: secret(Bp, 3bp, nT, {A,B,T})
+  nT_secret_Bn: secret(Bn, 3bn, nT, {A,B,T})
+
+/*
+axiom (of Agree) positive_coerce_A:
+  premises
+    "role(0) = Ap"
+    "step(0, Ap_6ap)"
+    "role(1) = Bn"
+    "A#0 = A#1"
+    "B#0 = B#1"
+    "nT#0 = nT#1"
+  imply
+    "False"
+
+axiom (of Agree) positive_coerce_B:
+  premises
+    "role(0) = Bp"
+    "step(0, Bp_6bp)"
+    "role(1) = An"
+    "A#0 = A#1"
+    "B#0 = B#1"
+    "nT#0 = nT#1"
+  imply
+    "False"
+
+property (of Agree) positive_agree_A:
+  premises
+    "role(0) = Ap"
+    "step(0, Ap_6ap)"
+    "uncompromised(A#0)"
+    "uncompromised(B#0)"
+    "uncompromised(T#0)"
+  imply a thread 1 such that
+    "role(1) = Bp &
+     step(1, Bp_4bp) &
+     
+     A#0 = A#1 & B#0 = B#1 & T#0 = T#1 &
+     nT#0 = nT#1 &
+     a#0 = b#1
+    "
+
+property (of Agree) positive_agree_B:
+  premises
+    "role(0) = Bp"
+    "step(0, Bp_6bp)"
+    "uncompromised(A#0)"
+    "uncompromised(B#0)"
+    "uncompromised(T#0)"
+  imply a thread 1 such that
+    "role(1) = Ap &
+     step(1, Ap_4ap) &
+     
+     A#0 = A#1 & B#0 = B#1 & T#0 = T#1 &
+     nT#0 = nT#1 &
+     b#0 = a#1
+    "
+*/
+
+property (of Agree) negative_agree_A_1:
+  premises
+    "role(0) = An"
+    "step(0, An_6an)"
+    "uncompromised(A#0)"
+    "uncompromised(B#0)"
+    "uncompromised(T#0)"
+    "role(1) = Bp"
+    "step(1, Bp_3bp)"
+    "nT#0 = nT#1"
+    "a#0 = b#1"
+  imply
+    "False"
+
+property (of Agree) negative_agree_A_2:
+  premises
+    "role(0) = An"
+    "step(0, An_6an)"
+    "uncompromised(A#0)"
+    "uncompromised(B#0)"
+    "uncompromised(T#0)"
+    "role(1) = Bn"
+    "step(1, Bn_3bn)"
+    "nT#0 = nT#1"
+    "a#0 = b#1"
+  imply
+    "False"
+
+property (of Agree) negative_agree_B_1:
+  premises
+    "role(0) = Bn"
+    "step(0, Bn_6bn)"
+    "uncompromised(A#0)"
+    "uncompromised(B#0)"
+    "uncompromised(T#0)"
+    "role(1) = Ap"
+    "step(1, Ap_3ap)"
+    "nT#0 = nT#1"
+    "b#0 = a#1"
+  imply
+    "False"
+
+property (of Agree) negative_agree_B_2:
+  premises
+    "role(0) = Bn"
+    "step(0, Bn_6bn)"
+    "uncompromised(A#0)"
+    "uncompromised(B#0)"
+    "uncompromised(T#0)"
+    "role(1) = An"
+    "step(1, An_3an)"
+    "nT#0 = nT#1"
+    "b#0 = a#1"
+  imply
+    "False"
+
+end
