@@ -491,9 +491,9 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
       | any (`isPrefixOf` name) ["ik0", "fake"] || null newVars = text name
       | otherwise = parens $ text name <-> hsep (map ppNewVar newVars)
   prettyChainRuleQED _ trivCases
-    | null tactics = kwQED <-> text "(insert facts, fastforce+)?" -- be conservative
+    | null tactics = kwQED <-> text "(safe?, simp_all?, insert facts, (fastforce+)?)" -- be conservative
     | otherwise    =
-        kwQED <-> text "(insert facts, (" <> hsep (intersperse (text "|") tactics) <> text ")+)?"
+        kwQED <-> text "(safe?, simp_all?, insert facts, ((" <> hsep (intersperse (text "|") tactics) <> text ")+)?)"
     where
       tactics = map text . nub . map isaTactic . snd $ genericChainRuleSplitCases snd trivCases
 
