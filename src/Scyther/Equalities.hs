@@ -9,6 +9,7 @@ module Scyther.Equalities (
   , MVarEq
   , MsgEq
   , AnyEq(..)
+  , Inequality(..)
 
   , arbmEqToMsgEq
   , mvarEqToMsgEq
@@ -31,6 +32,7 @@ module Scyther.Equalities (
   , getPostEqs
   , toAnyEqs
   , anyEqTIDs
+  , inequalityTIDs
 
   -- ** Substitution
   , substTID
@@ -40,12 +42,14 @@ module Scyther.Equalities (
   , substAMID
   , substMsg
   , substAnyEq
+  , substInequality
 
   -- ** Additional Queries
   , threadRole
   , maxMappedTID
   , maxMappedArbMsgId
   , reflexive
+  , reflexiveIneq
   , null
 
 -- * Mapping Logical Variables
@@ -59,9 +63,8 @@ module Scyther.Equalities (
   , deleteArbMsgIdMapping
 
 -- * Pretty Printing
-  , isaNotEquals
   , sptAnyEq
-  , sptNotEquals
+  , sptInequality
 ) where
 
 import Prelude hiding (null)
@@ -130,6 +133,10 @@ data AnyEq =
   | AVarEq    !AVarEq
   | MVarEq    !MVarEq
   | MsgEq     !MsgEq
+  deriving( Eq, Ord, Show, Data, Typeable )
+
+-- | An inequality.
+newtype Inequality = Inequality { getInequality :: AnyEq }
   deriving( Eq, Ord, Show, Data, Typeable )
 
 -- | A conjunction of equality facts.
@@ -277,6 +284,10 @@ substAnyEq eqs eq0 = case eq0 of
   MVarEq    eq  -> MsgEq  $ substMVarEq    eqs eq
   MsgEq     eq  -> MsgEq  $ substMsgEq     eqs eq
 
+-- | Substitute both sides of an inequality.
+substInequality :: Equalities -> Inequality -> Inequality
+substInequality eqs = Inequality . substAnyEq eqs . getInequality
+
 
 -- Checking for reflexivity
 ---------------------------
@@ -299,6 +310,10 @@ reflexive eq0 = case eq0 of
   AVarEq    eq -> uncurry (==) eq
   MVarEq    eq -> reflexive . MsgEq $ mvarEqToMsgEq eq
   MsgEq     eq -> uncurry (==) eq
+
+-- | Check if an inequality is reflexive.
+reflexiveIneq :: Inequality -> Bool
+reflexiveIneq = reflexive . getInequality
 
 -- Deconstruction
 -----------------
@@ -353,6 +368,10 @@ anyEqTIDs eq = case eq of
   AVarEq (a1, a2)    -> return (avarTID a1) `mplus` return (avarTID a2)
   MVarEq (v, m)      -> return (mvarTID v)  `mplus` msgTIDs m
   MsgEq (m1, m2)     -> msgTIDs m1          `mplus` msgTIDs m2
+
+-- | The threads occurring in an inequality.
+inequalityTIDs :: Inequality -> [TID]
+inequalityTIDs = anyEqTIDs . getInequality
 
 
 -- Unification
@@ -669,8 +688,8 @@ ppIsarEq sym conf eq0 = case eq0 of
 instance Isar AnyEq where
   isar = ppIsarEq (char '=')
 
-isaNotEquals :: IsarConf -> AnyEq -> Doc
-isaNotEquals conf = ppIsarEq (isaNotEq conf) conf
+instance Isar Inequality where
+  isar conf = ppIsarEq (isaNotEq conf) conf . getInequality
 
 -- SP Theory
 ------------
@@ -689,8 +708,8 @@ ppSPTEq sym eq0 = case eq0 of
 sptAnyEq :: AnyEq -> Doc
 sptAnyEq = ppSPTEq (char '=')
 
-sptNotEquals :: AnyEq -> Doc
-sptNotEquals = ppSPTEq (text "!=")
+sptInequality :: Inequality -> Doc
+sptInequality = ppSPTEq (text "!=") . getInequality
 
 
 {-

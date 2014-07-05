@@ -87,7 +87,7 @@ import Scyther.Message
 import qualified Scyther.Typing     as T
 import           Scyther.Typing          hiding (substTypeAnn)
 import qualified Scyther.Equalities as E
-import           Scyther.Equalities      hiding (solve, substTID, threadRole, substMVar, substAVar, substMsg, substAnyEq, substAMID, empty, null)
+import           Scyther.Equalities      hiding (solve, substTID, threadRole, substMVar, substAVar, substMsg, substAnyEq, substInequality, substAMID, empty, null)
 import           Scyther.Event           hiding (substEv, substEvOrd)
 import qualified Scyther.Event      as E
 import           Scyther.Formula         hiding (substAtom)
@@ -126,7 +126,7 @@ data Facts = Facts {
   , compromised    :: S.Set Message  -- ^ Statements about agents being compromised.
   , uncompromised  :: S.Set Message  -- ^ Statements about agents being uncompromised.
   , equalities     :: E.Equalities   -- ^ All equalities that must hold.
-  , inequalities   :: S.Set AnyEq    -- ^ All inequalities that must hold.
+  , inequalities   :: S.Set Inequality -- ^ All inequalities that must hold.
   , tidQuantifiers :: S.Set TID      -- ^ All thread IDs occurring in the facts.
   , amQuantifiers  :: S.Set ArbMsgId  -- ^ All arbitrary-message IDs ocurring in the facts.
   , optTyping      :: Maybe Typing   -- ^ The typing if there is any that the
@@ -320,11 +320,16 @@ anyEqQuantified facts eq = case eq of
     E.MVarEq (mv, m)      -> mvarQuantified facts mv >< msgQuantified facts m
     E.MsgEq (m1, m2)      -> msgQuantified facts m1 >< msgQuantified facts m2
 
+-- | Check if an inequality contains only quantified logical variables.
+ineqQuantified :: Facts -> E.Inequality -> CertResult
+ineqQuantified facts = anyEqQuantified facts . getInequality
+
 -- | Check if an atom contains only quantified logical variables.
 atomQuantified :: Facts -> Atom -> CertResult
 atomQuantified facts atom = case atom of
   ABool _      -> certSuccess
   AEq eq       -> anyEqQuantified facts eq
+  AIneq eq     -> ineqQuantified  facts eq
   AEv ev       -> evQuantified    facts ev
   AEvOrd ord   -> evOrdQuantified facts ord
   ACompr m     -> msgQuantified   facts m
@@ -370,6 +375,10 @@ certEvOrd = certify evOrdQuantified substEvOrd
 -- | Certify an equality.
 certAnyEq :: Facts -> E.AnyEq -> Cert E.AnyEq
 certAnyEq = certify anyEqQuantified substAnyEq
+
+-- | Certify an inequality.
+certInequality :: Facts -> Inequality -> Cert Inequality
+certInequality = certify ineqQuantified substInequality
 
 -- | Certify an atom: All logical variables are quantified under the given
 -- facts and all values are invariant under the equalities associated with the
@@ -419,6 +428,10 @@ substMsg = liftSubst E.substMsg
 substAnyEq :: Facts -> E.AnyEq -> E.AnyEq
 substAnyEq = liftSubst E.substAnyEq
 
+-- | Substitute an inequality.
+substInequality :: Facts -> Inequality -> Inequality
+substInequality = liftSubst E.substInequality
+
 -- | Substitute an atom.
 substAtom :: Facts -> Atom -> Atom
 substAtom = liftSubst F.substAtom
@@ -464,7 +477,7 @@ solve ueqs facts = do
     , compromised    = S.map (E.substMsg eqs)   (compromised   facts)
     , uncompromised  = S.map (E.substMsg eqs)   (uncompromised facts)
     , equalities     = eqs
-    , inequalities   = S.map (E.substAnyEq eqs) (inequalities  facts)
+    , inequalities   = S.map (E.substInequality eqs) (inequalities facts)
     , tidQuantifiers = tidQuantifiers facts
     , amQuantifiers  = amQuantifiers facts
     , typeAnns       = S.map (T.substTypeAnn eqs) (typeAnns facts)
@@ -530,7 +543,7 @@ insertTypeAnn tya prems =
   prems { typeAnns = S.insert (certified tya) (typeAnns prems) }
 
 -- | Insert an inequality.
-insertInequality :: Cert E.AnyEq -> Facts -> Facts
+insertInequality :: Cert Inequality -> Facts -> Facts
 insertInequality ineq facts =
   facts { inequalities = S.insert (certified ineq) (inequalities facts) }
 
@@ -556,6 +569,7 @@ conjoinAtoms atoms facts0 =
       -- FIXME: repeated calls to solve may be a bit expensive due to duplicated
       -- work of 'removeTrivialFacts'.
       AEq eq       -> return        $ solve [Cert eq] facts
+      AIneq eq     -> return . Just $ insertInequality (Cert eq) facts
       AEv ev       -> return . Just $ insertEvNonTrivial (Cert ev) facts
       AEvOrd ord   -> return . Just $ insertEvOrdNonTrivial (Cert ord) facts
       ACompr m     -> return . Just $ compromise m facts
@@ -603,7 +617,7 @@ insertStepInputClosed s prems = case certified s of
     let eq  = certAnyEq prems . mkEquality tid v $ substMsg prems (inst tid pt)
     in  insertEv (Cert (Step tid step)) . maybe (insertFailedEq eq prems) id $ solve [eq] prems
   (tid, step@(Match _ False v pt)) ->
-    let ineq = certAnyEq prems . mkEquality tid v $ substMsg prems (inst tid pt)
+    let ineq = certInequality prems . Inequality . mkEquality tid v $ substMsg prems (inst tid pt)
     in  insertEv (Cert (Step tid step)) $ insertInequality ineq prems
   (tid, step)                     -> insertEv (Cert (Step tid step)) prems
   where
@@ -712,7 +726,7 @@ proveFalse prems =
     not (S.null (compromised prems `S.intersection` uncompromised prems)) ||
     any noAgent (S.toList (compromised prems)) ||
     cyclic (eventOrd prems) ||
-    any E.reflexive (S.toList (inequalities prems))
+    any reflexiveIneq (S.toList (inequalities prems))
   where
     noAgent (MMVar _)  = False
     noAgent (MAVar _)  = False
@@ -732,6 +746,7 @@ proveAtom facts = checkAtom . certified . certAtom facts
   checkAtom atom = case atom of
     ABool b              -> b
     AEq eq               -> E.reflexive eq
+    AIneq eq             -> False
     AEv (Learn m)        -> all checkLearn (splitNonTrivial m)
     AEv ev               -> ev `S.member` events facts
     AEvOrd (Learn m, e2) -> all (checkLearnBefore e2) (splitNonTrivial m)
@@ -818,9 +833,12 @@ exploitLongTermKeySecrecy facts = msum . map check . S.toList $ events facts
 -----------------
 
 -- | Represent the facts as a set of atoms.
+--
+-- TODO: non-empty failedEqs imply False?
 toAtoms :: Facts -> [Atom]
 toAtoms facts = mconcat [
     AEq      <$> E.toAnyEqs (equalities    facts)
+  , AIneq    <$> S.toList   (inequalities  facts)
   , AUncompr <$> S.toList   (uncompromised facts)
   , ACompr   <$> S.toList   (compromised   facts)
   , AEv      <$> S.toList   (events        facts)
@@ -1310,7 +1328,7 @@ isaFacts conf facts =
     ( ppSet (isar conf) (tidQuantifiers facts) ++
       ppSet (isar conf) (amQuantifiers facts)
     , map (isar conf) reprEqs ++
-      ppSet (isaNotEquals conf) (inequalities facts) ++
+      ppSet (isar conf)       (inequalities facts) ++
       ppSet (isaUncompr conf) (uncompromised facts) ++
       ppSet (isaCompr   conf) (compromised facts) ++
       ppSet (isaEventOrd conf (Mapping eqs)) (eventOrd facts) ++
@@ -1333,7 +1351,7 @@ sptFacts facts =
     ( ppSet sptTID     (tidQuantifiers facts) ++
       ppSet sptArbMsgId (amQuantifiers facts)
     , map sptAnyEq reprEqs ++
-      ppSet sptNotEquals (inequalities facts) ++
+      ppSet sptInequality (inequalities facts) ++
       ppComprInfo "uncompromised" (uncompromised facts) ++
       ppComprInfo "compromised"   (compromised facts) ++
       (map (sptEventOrd (Mapping eqs)) $ transitiveChains $ S.toList $ eventOrd facts) ++

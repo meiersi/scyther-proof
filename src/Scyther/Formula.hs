@@ -51,6 +51,7 @@ import Scyther.Typing
 data Atom =
     ABool Bool              -- ^ 'False' and 'True' in Isabelle.
   | AEq AnyEq               -- ^ An equality
+  | AIneq Inequality        -- ^ An inequality
   | AEv Event               -- ^ An event must have happened.
   | AEvOrd (Event, Event)   -- ^ An event order.
   | ACompr Message          -- ^ A compromised agent variable.
@@ -108,6 +109,7 @@ atomTIDs (ACompr m)     = msgTIDs m
 atomTIDs (AUncompr m)   = msgTIDs m
 atomTIDs (AHasType tya) = typeAnnTIDs tya
 atomTIDs (AEq eq)       = anyEqTIDs eq
+atomTIDs (AIneq eq)     = inequalityTIDs eq
 
 -- | Compute the free thread variables of the given formula.
 formulaTIDs :: Formula -> [TID]
@@ -127,12 +129,13 @@ formulaTIDs (FExists (Right _)  f) =                   formulaTIDs f
 substAtom :: Equalities -> Atom -> Atom
 substAtom eqs atom = case atom of
   ABool _      -> atom
-  AEq eq       -> AEq      $ substAnyEq   eqs eq
-  AEv ev       -> AEv      $ substEv      eqs ev
-  AEvOrd ord   -> AEvOrd   $ substEvOrd   eqs ord
-  ACompr m     -> ACompr   $ substMsg     eqs m
-  AUncompr m   -> AUncompr $ substMsg     eqs m
-  AHasType tya -> AHasType $ substTypeAnn eqs tya
+  AEq eq       -> AEq      $ substAnyEq      eqs eq
+  AIneq eq     -> AIneq    $ substInequality eqs eq
+  AEv ev       -> AEv      $ substEv         eqs ev
+  AEvOrd ord   -> AEvOrd   $ substEvOrd      eqs ord
+  ACompr m     -> ACompr   $ substMsg        eqs m
+  AUncompr m   -> AUncompr $ substMsg        eqs m
+  AHasType tya -> AHasType $ substTypeAnn    eqs tya
   ATyping _    -> atom
   AReachable _ -> atom
 
@@ -199,6 +202,7 @@ isaAtom conf mapping atom = case atom of
     ABool False       -> text "False"
     ABool True        -> text "True"
     AEq eq            -> ppIsar eq
+    AIneq eq          -> ppIsar eq
     AEv ev            -> isaEvent    conf mapping ev
     AEvOrd ord        -> isaEventOrd conf mapping ord
     ACompr av         -> isaCompr   conf av
@@ -220,6 +224,7 @@ sptAtom mapping atom = case atom of
     ABool False    -> text "False"
     ABool True     -> text "True"
     AEq eq         -> sptAnyEq eq
+    AIneq eq       -> sptInequality eq
     AEv ev         -> sptEvent    mapping ev
     AEvOrd (e1,e2) -> sptEventOrd mapping [e1,e2]
     ACompr av      -> sptCompr   av
