@@ -343,7 +343,7 @@ instance MarkupMonad m => MarkupMonad (TaggedIdentityT t m) where
 -- Isabelle tactic.
 isaTactic :: TrivReason -> String
 isaTactic TrivContradictoryPremises   = "((clarsimp, order?) | order)"
-isaTactic (TrivLongTermKeySecrecy _)  = "(fastforce dest!: ltk_secrecy)"
+isaTactic (TrivLongTermKeySecrecy _)  = "(auto dest!: ltk_secrecy)"
 isaTactic TrivPremisesImplyConclusion = "(fastforce intro: event_predOrdI split: if_splits)"
 
 -- | Isabelle proof of long-term key secrecy.
