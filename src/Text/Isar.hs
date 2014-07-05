@@ -25,6 +25,7 @@ module Text.Isar (
   , isaForall
   , isaLambda
   , isaAnd
+  , isaOr
   , isaImplies
   , isaNotIn
   , isaIn
@@ -266,6 +267,12 @@ isaAnd :: Document d => IsarConf -> d
 isaAnd conf
   | isPlainStyle conf = text "&"
   | otherwise         = symbol "\\<and>"
+
+-- | The logical or symbol: @|@
+isaOr :: Document d => IsarConf -> d
+isaOr conf
+  | isPlainStyle conf = text "|"
+  | otherwise         = symbol "\\<or>"
 
 -- | The logical and symbol: @-->@
 isaImplies :: Document d => IsarConf -> d

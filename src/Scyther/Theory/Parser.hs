@@ -55,12 +55,13 @@ module Scyther.Theory.Parser (
 
 import Data.Char
 import Data.List
+import Data.Either
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.DAG.Simple
 import Data.Foldable (asum)
 
-import Control.Arrow ( (***) )
+import Control.Arrow ( (***), first )
 import Control.Monad hiding (sequence)
 
 import Control.Applicative hiding (empty, many, optional)
@@ -891,17 +892,30 @@ rawFacts = foldl1 (<|>)
 falseConcl :: Parser s Formula
 falseConcl = doubleQuoted (string "False" *> pure (FAtom (ABool False)))
 
+-- | Parse a conclusion formula consisting of raw facts.
+--
+-- TODO: Handling of role equalities is incomplete.
+factsFormula :: Protocol -> E.Mapping -> Parser s Formula
+factsFormula proto mapping = doubleQuoted formula
+  where
+    formula = foldr1 FDisj `liftM` sepBy1 term (kw MID)
+    term = do
+      conjuncts <- sepBy1 factOrFormula (kw AND)
+      let (facts, subformulas) = first concat $ partitionEithers conjuncts
+      roleeqs <- extractRoleEqs proto facts
+      let mapping' = foldr (uncurry E.addTIDRoleMapping) mapping roleeqs
+      atoms <- (map (AEq . E.TIDRoleEq) roleeqs ++) `liftM`
+               sequence [ mkAtom mapping' | RawAtom mkAtom <- facts ]
+      return $ foldr1 FConj (map FAtom atoms ++ subformulas)
+    factOrFormula = (Left <$> try rawFacts) <|> (Right <$> parens formula)
+
 -- | Parse a conclusion stating existence of some threads of a specific
 -- structure.
 existenceConcl :: Protocol -> E.Mapping -> Parser s Formula
 existenceConcl proto mapping = do
   tids <- map (Left . TID) <$> (threads <|> pure [])
-  facts <- concat <$> doubleQuoted (sepBy1 rawFacts (kw AND))
-  roleeqs <- extractRoleEqs proto facts
-  let mapping' = foldr (uncurry E.addTIDRoleMapping) mapping roleeqs
-  atoms <- (map (AEq . E.TIDRoleEq) roleeqs ++) `liftM`
-           sequence [ mkAtom mapping' | RawAtom mkAtom <- facts ]
-  return $ foldr FExists (foldr1 FConj . map FAtom $ atoms) tids
+  inner <- factsFormula proto mapping
+  return $ foldr FExists inner tids
   where
   singleThread = pure <$> (strings ["a", "thread"] *> integer)
   multiThreads = strings ["threads"] *> sepBy1 integer (kw COMMA)

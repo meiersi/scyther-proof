@@ -806,6 +806,7 @@ proveFormula facts = prove (Mapping E.empty)
   where
   prove mapping (FAtom atom)  = proveAtom facts (F.substAtom (getMappingEqs mapping) atom)
   prove mapping (FConj f1 f2) = prove mapping f1 && prove mapping f2
+  prove mapping (FDisj f1 f2) = prove mapping f1 || prove mapping f2
   prove mapping (FExists v f) = any (\mk -> prove (mk mapping) f) (mkMappings v)
   -- the mappings assign witnesses to the existentially quantified variables.
   mkMappings (Left  tid) = map (E.addTIDMapping tid)     (S.toList $ tidQuantifiers facts)
