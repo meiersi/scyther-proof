@@ -63,8 +63,8 @@ property (of Contract) Contract_typing:
   "
 
 properties (of Contract)
-  regular_agree_A: niagree(A_6regular[A,B,T,n,sA,sB] -> B_5regular[A,B,T,n,sA,sB], {A,B})
-  regular_agree_B: niagree(B_4regular[A,B,T,n,sA] -> B_3regular[A,B,T,n,sA], {A,B})
+  regular_agree_A: iagree(A_6regular[A,B,T,n,sA,sB] -> B_5regular[A,B,T,n,sA,sB], {A,B})
+  regular_agree_B: niagree(B_4regular[A,B,T,n,sA] -> A_3regular[A,B,T,n,sA], {A,B})
 
 property (of Contract) regular_verified:
   premises
@@ -88,30 +88,39 @@ property (of Contract) regular_verified:
      sB#0 = sB#2
     "
 
-/* TODO -- conclusion requires disjunction
-
 property (of Contract) resolve_verified:
   premises
     "role(0) = Vr"
     "step(0, Vr_verifyr)"
     "uncompromised(A#0)"
     "uncompromised(B#0)"
+    "uncompromised(T#0)"
   imply threads 1, 2 such that
-    "( (role(1) = A  & step(1, A_1regular)) |
-       (role(1) = Aa & step(1, Aa_1abort))  ) &
+    "( role(1) = A &
+       step(1, A_1regular) &
+       A#0 = A#1 &
+       B#0 = B#1 &
+       T#0 = T#1 &
+       n#0 = n#1 &
+       cA#0 = h(sA#1)
+       |
+       role(1) = Aa &
+       step(1, Aa_1abort) &
+       A#0 = A#1 &
+       B#0 = B#1 &
+       T#0 = T#1 &
+       n#0 = n#1 &
+       cA#0 = h(sA#1)
+     ) &
 
      role(2) = B &
      step(2, B_2regular) &
-
-     A#0 = A#1 & A#0 = A#2 &
-     B#0 = B#1 & B#0 = B#2 &
-     T#0 = T#1 & T#0 = T#2 &
-
-     n#0 = n#1 & n#0 = n#2 &
-     cA#0 = h(sA#0) &
-     cB#0 = h(sB#1)
+     A#0 = A#2 &
+     B#0 = B#2 &
+     T#0 = T#2 &
+     n#0 = n#2 &
+     cB#0 = h(sB#2)
     "
-*/
 
 property (of Contract) regular_verified_not_aborted:
   premises
