@@ -363,14 +363,18 @@ resolveIdsLocalToRole :: Role -> Pattern -> Pattern
 resolveIdsLocalToRole role = resolveIds (roleFAV role) (roleFMV role)
 
 -- | Resolve the type of a specification variable according to the set of
--- agent variables. Other identifiers are consideres message variables.
-resolveVarId :: S.Set Id -> VarId -> VarId
-resolveVarId avars (SMVar i) = case getId i of
-  ' ':i' -> if Id i' `S.member` avars
-              then SAVar (Id i')
-              else SMVar (Id i')
-  _      -> SMVar i
-resolveVarId _ v             = v
+-- agent and message variables.
+--
+-- TODO: Better error handling.
+resolveVarId :: S.Set Id -> S.Set Id -> VarId -> VarId
+resolveVarId avars mvars (SMVar i) = case getId i of
+  ' ':i'
+    | Id i' `S.member` avars -> SAVar (Id i')
+    | Id i' `S.member` mvars -> SMVar (Id i')
+    | otherwise              -> error $ "resolveVarId: '" ++ i' ++
+                                  "' resolves to neither agent nor message variable"
+  _                          -> SMVar i
+resolveVarId _     _     v    = v
 
 
 -- Messages
@@ -565,7 +569,8 @@ protocol = do
           step' = case step of
               Send l _       -> Send l pt'
               Recv l _       -> Recv l pt'
-              Match l eq v _ -> Match l eq (resolveVarId (dropSpacePrefixes avars') v) pt'
+              Match l eq v _ -> Match l eq (resolveVarId (dropSpacePrefixes avars')
+                                                         (dropSpacePrefixes mvars') v) pt'
 
 
 ------------------------------------------------------------------------------
