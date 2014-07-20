@@ -44,6 +44,7 @@ module Scyther.Message (
 ) where
 
 import Control.Monad
+import Control.Monad.State
 import Control.Applicative
 
 import Data.Data
@@ -65,8 +66,7 @@ import Scyther.Protocol
 -- Messages
 ------------------------------------------------------------------------------
 
--- | A logical variable for a thread identifier. Note that these are the only
--- free logical variables being used during proofs. Depending on their context
+-- | A logical variable for a thread identifier. Depending on their context
 -- they are either universally or existentially quantified.
 newtype TID = TID { getTID :: Int }
   deriving( Eq, Ord, Enum, Num, Data, Typeable {-! NFData !-})
@@ -74,13 +74,15 @@ newtype TID = TID { getTID :: Int }
 instance Show TID where
   show (TID tid) = '#':show tid
 
--- | An agent name identifier
-newtype ArbMsgId = ArbMsgId { arbMsgId :: Int }
-  deriving( Eq, Ord, Enum, Num, Data, Typeable )
+-- | A logical message variable. Currently, bound variables are used only for
+-- inequalities with implicit local quantification.
+data ArbMsgId = FreeVarId !Int
+              | BoundVarId !Int
+  deriving( Eq, Ord, Data, Typeable )
 
 instance Show ArbMsgId where
-  show (ArbMsgId aid) = 'a':show aid
-
+  show (FreeVarId aid)  = 'a':show aid
+  show (BoundVarId bid) = 'b':show bid
 
 -- | A local identifier.
 newtype LocalId = LocalId { getLocalId :: (Id, TID) }
@@ -152,7 +154,7 @@ msgTIDs (MConst _)    = empty
 msgTIDs (MFresh f)    = pure . lidTID . getFresh $ f
 msgTIDs (MAVar v)     = pure . avarTID $ v
 msgTIDs (MMVar v)     = pure . mvarTID $ v
-msgTIDs (MArbMsg _)    = empty
+msgTIDs (MArbMsg _)   = empty
 msgTIDs (MHash m)     = msgTIDs m
 msgTIDs (MTup m1 m2)  = msgTIDs m1 `mappend` msgTIDs m2
 msgTIDs (MEnc m1 m2)  = msgTIDs m1 `mappend` msgTIDs m2
@@ -168,7 +170,7 @@ msgAMIDs (MConst _)    = empty
 msgAMIDs (MFresh _)    = empty
 msgAMIDs (MAVar _)     = empty
 msgAMIDs (MMVar _)     = empty
-msgAMIDs (MArbMsg a)    = pure a
+msgAMIDs (MArbMsg a)   = pure a
 msgAMIDs (MHash m)     = msgAMIDs m
 msgAMIDs (MTup m1 m2)  = msgAMIDs m1 `mappend` msgAMIDs m2
 msgAMIDs (MEnc m1 m2)  = msgAMIDs m1 `mappend` msgAMIDs m2
@@ -258,19 +260,30 @@ mapMVar f = MVar . f . getMVar
 -- symbolically. The resulting message is guaranteed to be normalized w.r.t
 -- `normMsg`.
 inst :: TID -> Pattern -> Message
-inst _   (PConst i)       = MConst i
-inst tid (PFresh i)       = MFresh (Fresh (LocalId (i, tid)))
-inst tid (PAVar i)        = MAVar  (AVar (LocalId (i, tid)))
-inst tid (PMVar i)        = MMVar  (MVar (LocalId (i, tid)))
-inst tid (PHash pt)       = MHash (inst tid pt)
-inst tid (PTup pt1 pt2)   = MTup (inst tid pt1) (inst tid pt2)
-inst tid (PEnc pt1 pt2)   = MEnc (inst tid pt1) (inst tid pt2)
-inst tid (PSign pt1 pt2)  = MTup m1 (MEnc m1 (normMsg $ MInvKey (inst tid pt2)))
-  where m1 = inst tid pt1
-inst tid (PSymK pt1 pt2)  = MSymK (inst tid pt1) (inst tid pt2)
-inst tid (PShrK pt1 pt2)  = MShrK (inst tid pt1) (inst tid pt2)
-inst tid (PAsymPK pt)     = MAsymPK (inst tid pt)
-inst tid (PAsymSK pt)     = MAsymSK (inst tid pt)
+inst tid pattern = evalState (go pattern) 0
+  where
+    go :: Pattern -> State Int Message
+    go (PConst i)       = return $ MConst i
+    go (PFresh i)       = return $ MFresh (Fresh (LocalId (i, tid)))
+    go (PAVar i)        = return $ MAVar  (AVar (LocalId (i, tid)))
+    go (PMVar i)        =
+        if wildcard i
+        then do
+            id <- get
+            put (id + 1)
+            return $ MArbMsg $ BoundVarId id
+        else return $ MMVar  (MVar (LocalId (i, tid)))
+    go (PHash pt)       = MHash <$> go pt
+    go (PTup pt1 pt2)   = MTup <$> go pt1 <*> go pt2
+    go (PEnc pt1 pt2)   = MEnc <$> go pt1 <*> go pt2
+    go (PSign pt1 pt2)  = do
+        m1 <- go pt1
+        m2 <- go pt2
+        return $ MTup m1 (MEnc m1 (normMsg $ MInvKey m2))
+    go (PSymK pt1 pt2)  = MSymK <$> go pt1 <*> go pt2
+    go (PShrK pt1 pt2)  = MShrK <$> go pt1 <*> go pt2
+    go (PAsymPK pt)     = MAsymPK <$> go pt
+    go (PAsymSK pt)     = MAsymSK <$> go pt
 
 -- | Normalize a message; i.e., apply key-inversion if possible and swap shared
 -- key arguments, if required.
@@ -326,7 +339,8 @@ instance Isar TID where
   isar _ tid = text "tid" <> int (getTID tid)
 
 instance Isar ArbMsgId where
-  isar _ aid = text "a" <> int (arbMsgId aid)
+  isar _ (FreeVarId aid)  = text "a" <> int aid
+  isar _ (BoundVarId bid) = text "b" <> int bid
 
 instance Isar LocalId where
   isar conf (LocalId (i, tid)) = isar conf i <-> isar conf tid
@@ -376,7 +390,8 @@ sptTID :: TID -> Doc
 sptTID = text . show
 
 sptArbMsgId :: ArbMsgId -> Doc
-sptArbMsgId = (char 'a'  <>) . int . arbMsgId
+sptArbMsgId (FreeVarId aid)  = char 'a' <> int aid
+sptArbMsgId (BoundVarId bid) = char 'b' <> int bid
 
 sptLocalId :: LocalId -> Doc
 sptLocalId (LocalId (i, tid)) = sptId i <> sptTID tid

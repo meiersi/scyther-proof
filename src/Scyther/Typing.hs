@@ -166,7 +166,7 @@ mscTyping proto =
     typeMsg (MSymK m1 m2) = SymKT   <$> typeMsg m1 <*> typeMsg m2
     typeMsg (MAsymPK m)   = AsymPKT <$> typeMsg m
     typeMsg (MAsymSK m)   = AsymSKT <$> typeMsg m
-    typeMsg (MArbMsg _)    = error $ "mscTyping: agent variable encountered"
+    typeMsg (MArbMsg _)    = error $ "mscTyping: logical variable encountered"
     typeMsg (MInvKey _)   = error $ "mscTyping: key inversion encountered"
     typeMsg (MShrK _ _)   = error $ "mscTyping: bi-directional shared key encountered"
 

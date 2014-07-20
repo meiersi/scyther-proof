@@ -32,7 +32,9 @@ module Scyther.Equalities (
   , getPostEqs
   , toAnyEqs
   , anyEqTIDs
+  , anyEqAMIDs
   , inequalityTIDs
+  , inequalityAMIDs
 
   -- ** Substitution
   , substTID
@@ -49,7 +51,7 @@ module Scyther.Equalities (
   , maxMappedTID
   , maxMappedArbMsgId
   , reflexive
-  , reflexiveIneq
+  , falseIneq
   , null
 
 -- * Mapping Logical Variables
@@ -69,6 +71,7 @@ module Scyther.Equalities (
 
 import Prelude hiding (null)
 
+import qualified Data.List      as L
 import qualified Data.Map       as M
 import qualified Data.UnionFind as U
 import Data.Data
@@ -129,13 +132,13 @@ data AnyEq =
     TIDEq     !TIDEq
   | TIDRoleEq !TIDRoleEq
   | RoleEq    !RoleEq
-  | ArbMsgEq   !ArbMsgEq
+  | ArbMsgEq  !ArbMsgEq
   | AVarEq    !AVarEq
   | MVarEq    !MVarEq
   | MsgEq     !MsgEq
   deriving( Eq, Ord, Show, Data, Typeable )
 
--- | An inequality.
+-- | An inequality. Bound logical variables are universally quantified.
 newtype Inequality = Inequality { getInequality :: AnyEq }
   deriving( Eq, Ord, Show, Data, Typeable )
 
@@ -311,9 +314,6 @@ reflexive eq0 = case eq0 of
   MVarEq    eq -> reflexive . MsgEq $ mvarEqToMsgEq eq
   MsgEq     eq -> uncurry (==) eq
 
--- | Check if an inequality is reflexive.
-reflexiveIneq :: Inequality -> Bool
-reflexiveIneq = reflexive . getInequality
 
 -- Deconstruction
 -----------------
@@ -369,9 +369,24 @@ anyEqTIDs eq = case eq of
   MVarEq (v, m)      -> return (mvarTID v)  `mplus` msgTIDs m
   MsgEq (m1, m2)     -> msgTIDs m1          `mplus` msgTIDs m2
 
+-- | The logical message variables occuring in an equality.
+anyEqAMIDs :: AnyEq -> [ArbMsgId]
+anyEqAMIDs eq = case eq of
+  TIDEq _         -> mzero
+  TIDRoleEq _     -> mzero
+  RoleEq _        -> mzero
+  ArbMsgEq (a, m) -> a : msgAMIDs m
+  AVarEq _        -> mzero
+  MVarEq (_, m)   -> msgAMIDs m
+  MsgEq (m1, m2)  -> msgAMIDs m1 `mplus` msgAMIDs m2
+
 -- | The threads occurring in an inequality.
 inequalityTIDs :: Inequality -> [TID]
 inequalityTIDs = anyEqTIDs . getInequality
+
+-- | The logical message variables occuring in an inequality.
+inequalityAMIDs  :: Inequality -> [ArbMsgId]
+inequalityAMIDs = anyEqAMIDs . getInequality
 
 
 -- Unification
@@ -595,10 +610,32 @@ maxMappedTID = fmap (fst . fst) . M.maxViewWithKey . tidEqs
 maxMappedArbMsgId :: Equalities -> Maybe ArbMsgId
 maxMappedArbMsgId = fmap (fst . fst) . M.maxViewWithKey . arbmEqs
 
-
 -- | Retrieve the role of a thread.
 threadRole :: TID -> Equalities -> Maybe Role
 threadRole tid eqs = M.lookup (substTID eqs tid) $ roleEqs eqs
+
+-- | Test whether the equalities impose constraints on bound variables only.
+onlyLocalConstraints :: Equalities -> Bool
+onlyLocalConstraints eqs =
+    M.null (tidEqs eqs) &&
+    M.null (roleEqs eqs) &&
+    M.null (avarEqs eqs) &&
+    all isBoundVarMsg (map snd $ M.toList $ mvarEqs eqs) &&
+    all isBoundVarEq (M.toList $ arbmEqs eqs) &&
+    L.null (U.toList (postEqs eqs))
+  where
+    isBoundVar (BoundVarId _) = True
+    isBoundVar _              = False
+
+    isBoundVarMsg (MArbMsg v) = isBoundVar v
+    isBoundVarMsg _           = False
+
+    isBoundVarEq (lhs, rhs) = isBoundVar lhs || isBoundVarMsg rhs
+
+-- | Check if an inequality is trivially false, i.e., there exists an
+-- substitution of bound logical variables which makes it reflexive.
+falseIneq :: Inequality -> Bool
+falseIneq ineq = maybe False onlyLocalConstraints $ solve [getInequality ineq] empty
 
 
 -------------------------------------------------------------------------------
@@ -668,6 +705,12 @@ ppEq sym pp1 pp2 (x1, x2) = pp1 x1 <-> sym <-> pp2 x2
 ppEq' :: Doc -> (a -> Doc) -> (a, a) -> Doc
 ppEq' sym pp = ppEq sym pp pp
 
+filterBoundIds :: [ArbMsgId] -> [Int]
+filterBoundIds = foldr select []
+  where
+    select (FreeVarId _) = id
+    select (BoundVarId bid) = (bid:)
+
 -- Isar
 -------
 
@@ -689,7 +732,14 @@ instance Isar AnyEq where
   isar = ppIsarEq (char '=')
 
 instance Isar Inequality where
-  isar conf = ppIsarEq (isaNotEq conf) conf . getInequality
+  isar conf eq = if L.null boundVars
+                 then ineq
+                 else parens $ quantifiers <-> ineq
+    where
+      boundVars = map int $ filterBoundIds $ inequalityAMIDs eq
+      ineq = ppIsarEq (isaNotEq conf) conf (getInequality eq)
+      quantifiers = foldl (<->) (isaForall conf) boundVars <> char '.'
+
 
 -- SP Theory
 ------------
@@ -709,7 +759,13 @@ sptAnyEq :: AnyEq -> Doc
 sptAnyEq = ppSPTEq (char '=')
 
 sptInequality :: Inequality -> Doc
-sptInequality = ppSPTEq (text "!=") . getInequality
+sptInequality eq = if L.null boundVars
+                   then ineq
+                   else parens $ quantifiers <-> ineq
+  where
+    boundVars = map int $ filterBoundIds $ inequalityAMIDs eq
+    ineq = ppSPTEq (text "!=") (getInequality eq)
+    quantifiers = foldl (<->) (char '!') boundVars <> char '.'
 
 
 {-

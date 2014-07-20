@@ -19,6 +19,7 @@ module Scyther.Protocol (
   , variable
 
   -- ** Patterns
+  , wildcard
   , patFMV
   , patFAV
   , subpatterns
@@ -155,6 +156,12 @@ variable :: (Id -> a)  -- ^ Function to apply for an agent variable.
 variable agent _ (SAVar a) = agent a
 variable _ msg   (SMVar m) = msg m
 
+-- | Test whether a message variable is a wildcard.
+--
+-- TODO: Less magic (strings).
+wildcard :: Id -> Bool
+wildcard = ("_" ==) . getId
+
 -- | Pattern of a role step.
 stepPat :: RoleStep -> Pattern
 stepPat (Send _ pt)      = pt
@@ -238,11 +245,11 @@ roleFAV = S.unions . map stepFAV . roleSteps
 
 -- | Semantically used message variables of a role step.
 stepUsedMV :: RoleStep -> S.Set Id
-stepUsedMV (Send _ pt)       = patFMV pt
-stepUsedMV (Recv _ _)        = S.empty
+stepUsedMV (Send _ pt)     = patFMV pt
+stepUsedMV (Recv _ _)      = S.empty
 stepUsedMV (Match _ eq v pt)
     | eq        = matched
-    | otherwise = matched `S.union` patFMV pt
+    | otherwise = matched `S.union` S.filter (not.wildcard) (patFMV pt)
   where
     matched = case v of
         SAVar _ -> S.empty
@@ -500,13 +507,13 @@ sptRoleStep optRole step =
     Just role | step `elem` roleSteps role -> -- abbreviate
       text $ roleName role ++ "_" ++ stepLabel step
     _ -> case step of
-             Send _ _          -> labeled "Send" <> pattern
-             Recv _ _          -> labeled "Recv" <> pattern
-             Match _ True v _  -> labeled "MatchEq" <> matching v
-             Match _ False v _ -> labeled "NotMatch" <> matching v
+             Send _ _           -> labeled "Send" <> pattern
+             Recv _ _           -> labeled "Recv" <> pattern
+             Match _ True  v pt -> labeled "Match" <> matching "->" v pt
+             Match _ False v pt -> labeled "Match" <> matching "#"  v pt
   where
     labeled name = text $ name ++ "_" ++ stepLabel step
-    matching v   = nestShort' "(" ")" $ ppVar v <> text ", " <> pattern
+    matching sym v pt = nestShort' "(" ")" $ ppVar v <-> text sym <-> sptPattern pt
     pattern = ppPat (stepPat step)
 
     ppVar (SAVar a)     = sptId a

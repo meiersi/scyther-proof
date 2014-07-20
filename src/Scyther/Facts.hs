@@ -273,7 +273,8 @@ tidQuantified facts tid =
 
 -- | Check if a agent id is quantified in these facts
 arbMsgIdQuantified :: Facts -> ArbMsgId -> CertResult
-arbMsgIdQuantified facts aid =
+arbMsgIdQuantified facts     (BoundVarId _) = certSuccess
+arbMsgIdQuantified facts aid@(FreeVarId _)  =
     certErrorIf (aid `S.notMember` amQuantifiers facts) $
         "unquantified aid: " ++ show aid
 
@@ -710,7 +711,8 @@ nextTID = maybe 0 (succ . fst) . S.maxView . tidQuantifiers
 
 -- | The next free agent identifier
 nextArbMsgId :: Facts -> ArbMsgId
-nextArbMsgId = maybe 0 (succ . fst) . S.maxView . amQuantifiers
+nextArbMsgId = FreeVarId . maybe 0 (next . fst) . S.maxView . amQuantifiers
+  where next (FreeVarId aid) = succ aid
 
 -- | Try to retrieve the typing; equal to 'mzero' if there is none.
 getTyping :: MonadPlus m => Facts -> m Typing
@@ -726,7 +728,7 @@ proveFalse prems =
     not (S.null (compromised prems `S.intersection` uncompromised prems)) ||
     any noAgent (S.toList (compromised prems)) ||
     cyclic (eventOrd prems) ||
-    any reflexiveIneq (S.toList (inequalities prems))
+    any falseIneq (S.toList (inequalities prems))
   where
     noAgent (MMVar _)  = False
     noAgent (MAVar _)  = False

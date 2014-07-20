@@ -286,6 +286,7 @@ pattern = asum
     [              string "1" *> pure mkMultIdentityPat
     , PConst   <$> singleQuoted ident
     , PMVar    <$> (kw QUESTIONMARK *> ident)
+    , PMVar    <$> Id <$> (kw UNDERSCORE *> pure "_")
     , PAVar    <$> (kw DOLLAR *> ident)
     , PFresh   <$> (kw TILDE *> ident)
     , parens tuplepattern
