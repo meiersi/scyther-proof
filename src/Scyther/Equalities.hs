@@ -705,11 +705,11 @@ ppEq sym pp1 pp2 (x1, x2) = pp1 x1 <-> sym <-> pp2 x2
 ppEq' :: Doc -> (a -> Doc) -> (a, a) -> Doc
 ppEq' sym pp = ppEq sym pp pp
 
-filterBoundIds :: [ArbMsgId] -> [Int]
-filterBoundIds = foldr select []
+filterBoundVars :: [ArbMsgId] -> [ArbMsgId]
+filterBoundVars = filter p
   where
-    select (FreeVarId _) = id
-    select (BoundVarId bid) = (bid:)
+    p (BoundVarId _) = True
+    p (FreeVarId _)  = False
 
 -- Isar
 -------
@@ -736,7 +736,7 @@ instance Isar Inequality where
                  then ineq
                  else parens $ quantifiers <-> ineq
     where
-      boundVars = map int $ filterBoundIds $ inequalityAMIDs eq
+      boundVars = map (isar conf) $ filterBoundVars $ inequalityAMIDs eq
       ineq = ppIsarEq (isaNotEq conf) conf (getInequality eq)
       quantifiers = foldl (<->) (isaForall conf) boundVars <> char '.'
 
@@ -763,7 +763,7 @@ sptInequality eq = if L.null boundVars
                    then ineq
                    else parens $ quantifiers <-> ineq
   where
-    boundVars = map int $ filterBoundIds $ inequalityAMIDs eq
+    boundVars = map sptArbMsgId $ filterBoundVars $ inequalityAMIDs eq
     ineq = ppSPTEq (text "!=") (getInequality eq)
     quantifiers = foldl (<->) (char '!') boundVars <> char '.'
 
