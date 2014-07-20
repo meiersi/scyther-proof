@@ -11,7 +11,8 @@
  * All rights reserved. See file LICENCE for more information.
  ******************************************************************************)
 theory ExecMessage
-imports 
+imports
+  HOL_ext
   Protocol
 begin
 
@@ -184,6 +185,25 @@ where
      (if   (\<forall> v \<in> V. s (v, i) \<in> Agent)
       then Some (KShr (agents {s (v, i) | v. v \<in> V})) 
       else None)"
+
+fun inst_free :: "id set \<Rightarrow> store \<Rightarrow> tid \<Rightarrow> pattern \<Rightarrow> (execmsg, execmsg option) varfun"
+where
+  "inst_free F s i (PConst c)  = Val (Some (Lit (EConst c)))"
+| "inst_free F s i (PFresh n)  = Val (Some (Lit (ENonce n i)))"
+| "inst_free F s i (PVar (MVar v)) =
+     (if v \<in> F then Fun (\<lambda>m. Val (Some m))
+               else Val (Some (s (MVar v, i))))"
+| "inst_free F s i (PVar (AVar v)) = Val (Some (s (AVar v, i)))"
+| "inst_free F s i (PTup x y)  = var_zip_with (opt_map2 Tup) (inst_free F s i x) (inst_free F s i y)"
+| "inst_free F s i (PEnc m k)  = var_zip_with (opt_map2 Enc) (inst_free F s i m) (inst_free F s i k)"
+| "inst_free F s i (PSign m k) = var_zip_with
+    (\<lambda>m' k'. opt_map2 Tup m' (opt_map2 Enc m' (Option.map inv k'))) (inst_free F s i m) (inst_free F s i k)"
+| "inst_free F s i (PHash m)   = var_map (Option.map Hash) (inst_free F s i m)"
+| "inst_free F s i (PSymK a b) = var_zip_with (opt_map2 K) (inst_free F s i a) (inst_free F s i b)"
+| "inst_free F s i (PAsymPK a) = var_map (Option.map PK) (inst_free F s i a)"
+| "inst_free F s i (PAsymSK a) = var_map (Option.map SK) (inst_free F s i a)"
+| "inst_free F s i (PShrK V)   = Val (inst s i (PShrK V))"
+
 
 text{* We assume that recipients making use of shared keys look them up
        in a table. This lookup only succeeds if agent identities are 

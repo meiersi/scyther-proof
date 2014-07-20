@@ -29,6 +29,31 @@ lemma map_leI:
   "\<lbrakk> \<And> x y. m x = Some y \<Longrightarrow> m' x = Some y \<rbrakk> \<Longrightarrow>  m \<subseteq>\<^sub>m m'"
   by(force simp: map_le_def)
 
+
+section{* Variadic Functions *}
+
+datatype ('a, 'b) varfun = Val 'b | Fun "'a \<Rightarrow> ('a, 'b) varfun"
+
+primrec var_map :: "('b \<Rightarrow> 'c) \<Rightarrow> ('a, 'b) varfun \<Rightarrow> ('a, 'c) varfun"
+where
+  "var_map f (Val x) = Val (f x)"
+| "var_map f (Fun g) = Fun (\<lambda>x. var_map f (g x))"
+
+primrec var_zip :: "('a, 'b) varfun \<Rightarrow> ('a, 'c) varfun \<Rightarrow> ('a, 'b \<times> 'c) varfun"
+where
+  "var_zip (Val x) v = var_map (Pair x) v"
+| "var_zip (Fun f) v = Fun (\<lambda>x. var_zip (f x) v)"
+
+abbreviation var_zip_with :: "('b \<Rightarrow> 'c \<Rightarrow> 'd) \<Rightarrow> ('a, 'b) varfun \<Rightarrow> ('a, 'c) varfun \<Rightarrow> ('a, 'd) varfun"
+where "var_zip_with f v1 v2 \<equiv> var_map (split f) (var_zip v1 v2)"
+
+primrec all_args :: "('a, bool) varfun \<Rightarrow> bool"
+where
+  "all_args (Val x) = x"
+| "all_args (Fun f) = (\<forall>x. all_args (f x))"
+
+
+
 section{* Finite Sets *}
 
 text{* 

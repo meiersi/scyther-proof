@@ -199,9 +199,10 @@ fun setup_rolestep mk_binding ann_defs lthy =
     val FAV_rolestep_t = @{const FAV_rolestep} $ step_const;
 
     val inst_t = @{term "inst s i"} $ msg_const;
-    val FV_t = @{term "FV"} $ msg_const;
-    val FMV_t = @{term "FMV"} $ msg_const;
-    val FAV_t = @{term "FAV"} $ msg_const;
+    val inst_free_t = @{term "inst_free R s i"} $ msg_const;
+    val FV_t = @{const FV} $ msg_const;
+    val FMV_t = @{const FMV} $ msg_const;
+    val FAV_t = @{const FAV} $ msg_const;
   in
    lthy
    (* unfold theorems *)
@@ -225,6 +226,7 @@ fun setup_rolestep mk_binding ann_defs lthy =
    (* full expansions *)
      |> notes_expansion ss_full
        [ (mk_binding "inst_conv", [([inst_t], [att_simp_add])])
+       , (mk_binding "inst_free_conv", [([inst_free_t], [att_simp_add])])
        , (mk_binding "FV_conv",   [([FV_t],   [att_simp_add])])
        , (mk_binding "FMV_conv",  [([FMV_t],  [att_simp_add])])
        , (mk_binding "FAV_conv",  [([FAV_t],  [att_simp_add])])
@@ -283,6 +285,8 @@ fun setup_role mk_binding (defs as ((role_const, role_def), steps)) ctxt =
     val step_defs = map (snd o snd) steps;
     val step_consts = map (fst o snd) steps;
 
+    val wildcard_trms = map (fn step => @{const wildcards} $ role_const $ step) step_consts;
+
     val ss_role = ctxt addsimps [role_def, @{thm prefixClose_def}] |> simpset_of;
     val ss_full = ctxt addsimps ([role_def, @{thm prefixClose_def}] @ pat_defs @ step_defs @
       @{thms wf_role_def distinct_list_def wf_role_axioms_def}) |> simpset_of
@@ -329,7 +333,7 @@ fun setup_role mk_binding (defs as ((role_const, role_def), steps)) ctxt =
             [(map (mk_prefixClose_thm ctxt) step_defs, [att_iff_add])])
         ] ctxt)
     (* expansions *)  
-      |> notes_expansion ss_role
+      |> #2 o notes_expansion ss_role
         [ (mk_binding "in_set_conv", [([in_set_t],[att_iff_add])])
         , (mk_binding "zip_conv",    [([zip_t],[att_simp_add])])
         , (mk_binding "splits_conv", [([splits_t],[att_simp_add])])
@@ -337,6 +341,9 @@ fun setup_role mk_binding (defs as ((role_const, role_def), steps)) ctxt =
         , (mk_binding "lastComStep_conv", [([lastComStep_t],[att_simp_add])])
         , (mk_binding "firstComStep_conv", [([firstComStep_t],[att_simp_add])])
         ]
+    (* wildcard expansions *)
+      |> notes_expansion ss_full
+        [ (mk_binding "wildcard_convs", map (fn t => ([t], [att_simp_add])) wildcard_trms) ]
     (* restore definitions *)
       |>> K defs
   end

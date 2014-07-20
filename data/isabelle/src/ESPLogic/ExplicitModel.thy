@@ -111,6 +111,13 @@ lemma longTermKeys_conv:
 
 type_synonym state = "explicit_trace \<times> threadpool \<times> store"
 
+definition not_match_concl :: "role \<Rightarrow> store => tid \<Rightarrow> rolestep \<Rightarrow> bool"
+where
+  "not_match_concl R s i step = all_args (var_map (\<lambda>rhs. Some (s (matchVar step, i)) \<noteq> rhs)
+                                          (inst_free (wildcards R step) s i (stepPat step)))"
+
+declare not_match_concl_def[simp]
+
 inductive_set 
   reachable :: "proto \<Rightarrow> state set" 
   for P     :: "proto"
@@ -151,7 +158,9 @@ where
 
 | match: "\<lbrakk> (t, r, s) \<in> reachable P;
             r i = Some (done, Match l eq mv pt # todo, skipped);
-            (Some (s (mv, i)) = inst s i pt) = eq
+            if eq
+              then Some (s (mv, i)) = inst s i pt
+              else not_match_concl (done @ Match l eq mv pt # todo) s i (Match l eq mv pt)
           \<rbrakk>
           \<Longrightarrow> (t @ [Step (i, Match l eq mv pt)], r(i \<mapsto> (done @ [Match l eq mv pt], todo, skipped)), s) \<in> reachable P"
 
@@ -389,7 +398,7 @@ next
     then interpret thread:
         reachable_thread P t r s i "done" "Match l eq mv pt # todo" skipped'
         using match by unfold_locales auto
-      show ?thesis using match `i = i'` by fastforce 
+      show ?thesis using match `i = i'` by fastforce
   qed auto
 next
   case (compr t r s i "done" l ty pt todo skipped m i' done' todo' skipped')  
@@ -1195,11 +1204,66 @@ lemma Ln_before_inpE:
 
 lemma Match_eq:
   "(i, Match l True v pt) \<in> steps t \<Longrightarrow> Some (s (v, i)) = inst s i pt"
-by (induct arbitrary: i l pt rule: reachable_induct, fastforce+)
+by (induct rule: reachable_induct) (fastforce+)
 
 lemma Not_Match:
-  "(i, Match l False v pt) \<in> steps t \<Longrightarrow> Some (s (v, i)) \<noteq> inst s i pt"
-by (induct arbitrary: i l pt rule: reachable_induct, fastforce+)
+  "\<lbrakk> r i = Some (done, todo, skipped);
+     (i, Match l False v pt) \<in> steps t
+   \<rbrakk> \<Longrightarrow> not_match_concl (done @ todo) s i (Match l False v pt)"
+proof (induct arbitrary: "done" todo skipped rule: reachable_induct)
+  let ?step = "Match l False v pt"
+  case (match t r s i' done' l' eq' v' pt' todo' skipped')
+    let ?step' = "Match l' eq' v' pt'"
+    show ?case proof (cases "i = i'")
+      case True
+      note same_thread = this
+      hence steps: "done = done' @ [?step']" "todo = todo'" using match by auto
+      show ?thesis proof (cases "(i, ?step) \<in> steps t")
+        case True
+        hence "not_match_concl (done' @ ?step' # todo') s i ?step"
+          using same_thread match by blast
+        thus ?thesis using steps by simp
+      next
+        case False
+        hence "?step = ?step'" using match by auto
+        moreover hence "not_match_concl (done' @ ?step' # todo') s i ?step'"
+          using same_thread match by auto
+        ultimately show ?thesis using steps by simp
+      qed
+    qed (insert match, auto)
+next
+  case (compr t r s i' done' l ty pt todo' skipped')
+  let ?step = "Note l ty pt"
+  show ?case proof (cases "i = i'")
+    case True
+    moreover hence "done = done' @ [?step]" "todo = todo'" using compr by auto
+    ultimately show ?thesis using compr by fastforce
+  qed (insert compr, auto)
+next
+  case (skip t r s i' done' l ty pt todo' skipped')
+  let ?step = "Note l ty pt"
+  show ?case proof (cases "i = i'")
+    case True
+    moreover hence "done = done' @ [?step]" "todo = todo'" using skip by auto
+    ultimately show ?thesis using skip by fastforce
+  qed (insert skip, auto)
+next
+  case (send t r s i' done' l pt todo' skipped')
+  let ?step = "Send l pt"
+  show ?case proof (cases "i = i'")
+    case True
+    moreover hence "done = done' @ [?step]" "todo = todo'" using send by auto
+    ultimately show ?thesis using send by fastforce
+  qed (insert send, auto)
+next
+  case (recv t r s i' done' l pt todo' skipped')
+  let ?step = "Recv l pt"
+  show ?case proof (cases "i = i'")
+    case True
+    moreover hence "done = done' @ [?step]" "todo = todo'" using recv by auto
+    ultimately show ?thesis using recv by fastforce
+  qed (insert recv, auto)
+qed auto
 
 (*
 lemmas knows_inp = in_knows_predOrd1[OF Ln_before_inp, rule_format]

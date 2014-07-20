@@ -133,11 +133,10 @@ text {*
 *}
 fun used_vars :: "rolestep \<Rightarrow> id set"
 where
-  "used_vars (Send  lbl         msg) = FMV msg"
-| "used_vars (Recv  lbl         pt)  = {}"
-| "used_vars (Match lbl True  v pt)  = {m. v = MVar m}"
-| "used_vars (Match lbl False v msg) = {m. v = MVar m} \<union> FMV msg"
-| "used_vars (Note  lbl ty      msg) = FMV msg"
+  "used_vars (Send  lbl      msg) = FMV msg"
+| "used_vars (Recv  lbl      pt)  = {}"
+| "used_vars (Match lbl eq v pt)  = {m. v = MVar m}"
+| "used_vars (Note  lbl ty   msg) = FMV msg"
 
 text {* Free variables of a role step *}
 fun FV_rolestep :: "rolestep \<Rightarrow> varid set"
@@ -256,11 +255,18 @@ where
     ((used_vars step \<subseteq> bound)
     \<and> source_before_use (bound \<union> sourced_vars step) xs)"
 
+fun wildcards :: "role \<Rightarrow> rolestep \<Rightarrow> id set"
+where
+  "wildcards role (Match l False v pt) =
+    FMV pt - \<Union> (sourced_vars ` {pred. listOrd role pred (Match l False v pt)})"
+| "wildcards role _ = {}"
+
+
 locale wf_role =
   distinct_list R for R :: "role" +
   assumes source_msgVar_first [iff]: "source_before_use {} R"
 
-  
+
 subsubsection{* Protocols *}
 
 type_synonym proto = "role set"
@@ -327,7 +333,7 @@ proof(induct pt)
     by(cases vid) auto
 qed auto
 
-lemma sourced_imp_FV[elim]:
+lemma sourced_imp_FV[dest]:
   "v \<in> sourced_vars st \<Longrightarrow> MVar v \<in> FV_rolestep st"
 proof (cases st)
   case (Match lbl eq mv pt)
@@ -335,7 +341,7 @@ proof (cases st)
   thus ?thesis using Match by (cases eq, auto)
 qed auto
 
-lemma used_imp_FV[elim]:
+lemma used_imp_FV[dest]:
   "v \<in> used_vars st \<Longrightarrow> MVar v \<in> FV_rolestep st"
 proof (cases st)
   case (Match lbl eq mv pt)
@@ -346,6 +352,14 @@ qed auto
 lemma source_note_dest[dest]:
   "\<lbrakk> v \<in> sourced_vars st; noteStep st \<rbrakk> \<Longrightarrow> False"
 by (auto dest: noteStepD)
+
+lemma source_not_wildcard[dest]:
+  "v \<in> sourced_vars st \<Longrightarrow> v \<notin> wildcards R st"
+proof (cases st)
+  case (Match lbl eq mv pt)
+  assume "v \<in> sourced_vars st"
+  thus ?thesis using Match by (cases eq, auto)
+qed auto
 
 
 definition aVars:: "role \<Rightarrow> varid set"
