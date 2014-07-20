@@ -426,4 +426,9 @@ proof (cases "[s\<leftarrow>xs . \<not> noteStep s]")
 qed (fastforce simp add: firstComStep_def)+ 
 
 
+text{* Required to unfold applications of the \verb|wildcards| function *}
+lemma finite_union_apply:
+  "(\<Union> x\<in>{y. y = z \<or> P y}. F x) = F z \<union> (\<Union> x\<in>{y. P y}. F x)"
+by blast
+
 end

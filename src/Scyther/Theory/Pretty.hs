@@ -342,7 +342,7 @@ instance MarkupMonad m => MarkupMonad (TaggedIdentityT t m) where
 -- | Convert a triviality reason to a string representing the corresponding
 -- Isabelle tactic.
 isaTactic :: TrivReason -> String
-isaTactic TrivContradictoryPremises   = "((clarsimp, order?) | order)"
+isaTactic TrivContradictoryPremises   = "((clarsimp, order?) | order | fast)"
 isaTactic (TrivLongTermKeySecrecy _)  = "(auto dest!: ltk_secrecy)"
 isaTactic TrivPremisesImplyConclusion = "(fastforce intro: event_predOrdI split: if_splits)"
 
