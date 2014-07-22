@@ -298,39 +298,6 @@ next
 qed
 
 
-definition typing_A_ext :: "typing \<Rightarrow> (role \<times> varid) \<Rightarrow> msgtype"
-where "typing_A_ext typing rv \<equiv> case rv of
-    (r, MVar n) \<Rightarrow> typing (r, n)
-  | (_, AVar _) \<Rightarrow> AgentT"
-
-declare typing_A_ext_def[simp]
-
-lemma (in reachable_thread) matchEq_typed:
-  assumes approx: "(t,r,s) \<in> approx typing"
-  and todo_step: "todo = step # todo'"
-  and "matchEqStep step"
-  shows "s (matchVar step, i) \<in> typing_A_ext typing (done@todo, matchVar step) i (t,r,s)"
-proof -
-  obtain lbl v pt where match: "step = Match lbl True v pt"
-    using `matchEqStep step` by (auto dest!: matchEqStepD)
-  thus ?thesis proof (cases v, simp)
-    case (MVar n) note mcase = this
-    hence "n \<in> used_vars step" using match by auto
-    then obtain sstep where "n \<in> sourced_vars sstep" and sstep: "(i, sstep) \<in> steps t"
-      using todo_step thread_exists by (auto dest: source_step)
-    hence sources: "MVar n \<in> FV_rolestep sstep"
-                   "n \<notin> wildcards (done@todo) sstep" by auto
-    have "s (MVar n, i) \<in> typing (done@todo, n) i (t,r,s)"
-      using sstep thread_exists sources approx
-      apply -
-      apply (drule in_approxD, simp)
-      apply (rule roleMap_SomeI)
-      apply (auto)
-      done
-    thus ?thesis using match mcase by simp
-  qed
-qed
-
 lemma (in reachable_state) reachable_in_approxI:
   assumes monoTyp: "monoTyp typing"
   and source_case:
@@ -348,8 +315,7 @@ lemma (in reachable_state) reachable_in_approxI:
        r i = Some (done, step # todo, skipped);
        
        recvStep step \<Longrightarrow> Some m = inst s i (stepPat step) \<and> m \<in> knows t;
-       matchEqStep step \<Longrightarrow>
-         the (inst s i (stepPat step)) \<in> typing_A_ext typing (R, matchVar step) i (t,r,s)
+       matchEqStep step \<Longrightarrow> Some (s (matchVar step, i)) = inst s i (stepPat step)
      \<rbrakk> \<Longrightarrow> 
         s (MV n i) \<in> typing (R, n) i (t @ [Step (i, step)], r(i \<mapsto> (done @ [step], todo, skipped)), s)"
   shows "(t,r,s) \<in> approx typing"
@@ -582,9 +548,6 @@ proof -
                   apply(rule source_case)
                   apply(simp_all add: th1.role_in_P th1.roleMap th1.thread_exists
                                       in_set_splits_conv remove_hints)
-                  apply(drule th1.matchEq_typed)
-                  apply(auto)
-                  apply(metis the.simps)
                   done
             qed
           qed
@@ -659,8 +622,7 @@ lemma (in reachable_state) reachable_in_approxI_ext:
        \<forall> st'. st' \<in> set done \<longrightarrow> \<not> noteStep st' \<longrightarrow> (i, st') \<in> steps t;
 
        recvStep step \<Longrightarrow> Some m = inst s i (stepPat step) \<and> m \<in> knows t;
-       matchEqStep step \<Longrightarrow>
-         the (inst s i (stepPat step)) \<in> typing_A_ext typing (R, matchVar step) i (t,r,s)
+       matchEqStep step \<Longrightarrow> Some (s (matchVar step, i)) = inst s i (stepPat step)
      \<rbrakk> \<Longrightarrow>
         s (MV n i) \<in> typing (R, n) i ( t @ [Step (i, step)], r(i \<mapsto> (done @ [step], todo, skipped)), s)"
   shows "(t,r,s) \<in> approx typing"
