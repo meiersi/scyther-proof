@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, DeriveDataTypeable, FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances, DeriveDataTypeable, FlexibleInstances, TupleSections #-}
 -- | Building typing invariants for security protocol in order to enable
 -- verification in an untyped model.
 module Scyther.Typing (
@@ -66,6 +66,11 @@ normType (AsymPKT ty)              = AsymPKT ty
 normType (AsymSKT ty)              = AsymSKT ty
 normType ty                        = ty
 
+-- | Split all sums in a type term and return the basic types.
+splitSums :: Type -> [Type]
+splitSums (SumT ty1 ty2) = splitSums ty1 `mplus` splitSums ty2
+splitSums ty             = pure ty
+
 
 ------------------------------------------------------------------------------
 -- Type annotations on messages
@@ -107,19 +112,13 @@ mscTyping proto =
     rolemap = M.fromList $ zip (protoRoles proto) [1..]
     steps = map (second (rolemap M.!)) . toposort $ protoOrd proto
 
-    -- TODO: Merge cases?
     typeStep eqs (Send _ _, _) = return eqs
-    typeStep eqs step@(Match _ True (SMVar mv) pt, tidM) = do
-        -- TODO: Determine how type inference for matching should work.
-        eqs' <- lift $ E.solve [E.MVarEq (MVar $ LocalId (mv, tidM), inst tidM pt)] eqs
-        mapM_ (typeMVar step) (E.getMVarEqs eqs')
-        sequence_ $ do PMVar v <- S.toList $ subpatterns pt
-                       return (knownAtRecv step v)
-        return eqs'
-    typeStep eqs step@(Match _ True (SAVar av) (PMVar id), tidM) = do
-        eqs' <- lift $ E.solve [E.MVarEq (MVar $ LocalId (id, tidM),
-                                MAVar $ AVar $ LocalId (av, tidM))] eqs
-        mapM_ (typeMVar step) (E.getMVarEqs eqs')
+    typeStep eqs step@(Match _ True v pt, tidM) = do
+        let vinst = variable (MAVar . AVar . LocalId . (, tidM))
+                             (MMVar . MVar . LocalId . (, tidM)) v
+        eqs' <- lift $ E.solve [E.MsgEq (vinst, inst tidM pt)] eqs
+        lty <- variable (const . return $ AgentT) (lookupType step) v
+        typeMatchVars step lty (E.getMVarEqs eqs')
         return eqs'
     typeStep eqs (Match _ _ _ _, _) = return eqs
     typeStep eqs step@(Recv lR ptR, tidR) =
@@ -139,6 +138,10 @@ mscTyping proto =
               return eqs'
           _ -> error "mscTyping: the impossible happened"
 
+    lookupType (step, tid) v = gets (M.! (v, roleeqs M.! tid))
+
+    keepExisting _new old = old
+
     typeMVar (step, tid) (MVar (LocalId (v, vTid)), m)
       | vTid == tid && PMVar v `S.member` splitpatterns (stepPat step) =
           noteType (KnownT step)
@@ -153,8 +156,40 @@ mscTyping proto =
 
     knownAtRecv (step, tid) v =
         modify (M.insertWith keepExisting (v, roleeqs M.! tid) (KnownT step))
+
+    -- Infer types of variables on RHS of a matching step. We use both the type
+    -- of the LHS variable and the types implied by the message equalities.
+    typeMatchVars (step, tid) lty meqs = mapM_ noteType vars
       where
-        keepExisting _new old = old
+        vars = [v | PMVar v <- S.toList $ subpatterns $ stepPat step]
+        noteType v = modify $ M.insertWith keepExisting (v, roleeqs M.! tid) (inferType v)
+        inferType v = case known ++ structuralTypesOf v of
+                          []  -> error $ "mscTyping: Cannot infer type. Impossible match?"
+                          tys -> foldr1 SumT tys
+        structuralTypesOf v = S.toList $ M.findWithDefault S.empty v structuralTypes
+        -- Due to deficiencies of the well-typedness proof strategy, use the
+        -- current match step in KnownT types.
+        known = case [ty | ty@(KnownT _) <- splitSums lty] of
+                    [] -> []
+                    _  -> [KnownT step]
+
+        structuralTypes = transfer lty (stepPat step) eqTypes
+        eqTypes = foldr eqType1 M.empty meqs
+        eqType1 (MVar (LocalId (v, vTid)), msg)
+          | vTid == tid = maybe id (M.insert v . S.singleton) (typeMsg msg)
+          | otherwise   = id
+
+        transfer (SumT ty1 ty2)  pt            = transfer ty1 pt . transfer ty2 pt
+        transfer (KnownT _)      _             = id
+        transfer ty              (PMVar v)     = M.insertWith S.union v (S.singleton ty)
+        transfer (HashT ty)      (PHash pt)    = transfer ty pt
+        transfer (EncT ty1 ty2)  (PEnc p1 p2)  = transfer ty1 p1 . transfer ty2 p2
+        transfer (TupT ty1 ty2)  (PTup p1 p2)  = transfer ty1 p1 . transfer ty2 p2
+        transfer (SymKT ty1 ty2) (PSymK p1 p2) = transfer ty1 p1 . transfer ty2 p2
+        transfer (AsymPKT ty)    (PAsymPK pt)  = transfer ty pt
+        transfer (AsymSKT ty)    (PAsymSK pt)  = transfer ty pt
+        transfer _               _             = id
+
 
     typeMsg (MFresh (Fresh fr)) = pure $ NonceT (roleeqs M.! lidTID fr) (lidId fr)
     typeMsg (MConst c)    = pure $ ConstT c

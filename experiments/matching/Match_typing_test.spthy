@@ -1,0 +1,19 @@
+theory Match_typing_test
+begin
+
+protocol Test
+{
+  1. A ->   : {n1, n2}pk(B)
+       -> B : {m}pk(B)
+  2.      B : m -> (n1, n2)
+}
+
+/*
+property (of Test) Test_typing:
+  "m@B  :: Known(B_1) | (n1@A, n2@A)
+   n1@B :: Known(B_2) | n1@A
+   n2@B :: Known(B_2) | n2@A
+  "
+*/
+
+end
