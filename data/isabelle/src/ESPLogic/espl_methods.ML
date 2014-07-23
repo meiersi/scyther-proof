@@ -182,7 +182,7 @@ fun prefix_close_thms qualifier ctxt facts =
   let
     val prefixClose_th = Proof_Context.get_thm ctxt (Long_Name.qualify qualifier "ext_prefixClose");
     fun close step roleMap = [step, roleMap] MRS prefixClose_th;
-    val expand = Simplifier.simplify ctxt;
+    val expand = Simplifier.simplify (ctxt addsimps @{thms exec_match_def});
     val distinct_prop = distinct (Thm.eq_thm);
     (* fun new_fact th = 
         forall (not_equal (Thm.prop_of th) o Thm.prop_of) facts; *)
@@ -265,7 +265,7 @@ fun completeness_case_names th =
 *)
 fun completeness_cases_attrib ctxt th =
   let
-    val ss = Context.proof_of ctxt addsimps @{thms finite_setdiff_compute};
+    val ss = Context.proof_of ctxt addsimps @{thms finite_setdiff_compute exec_match_def};
     fun add_case_info th = th
       |> Rule_Cases.add_consumes 0
       |> Rule_Cases.name (completeness_case_names th)

@@ -199,7 +199,7 @@ fun setup_rolestep mk_binding ann_defs lthy =
     val FAV_rolestep_t = @{const FAV_rolestep} $ step_const;
 
     val inst_t = @{term "inst s i"} $ msg_const;
-    val inst_free_t = @{term "inst_free R s i"} $ msg_const;
+    val any_inst_t = @{term "any_inst s i"} $ msg_const;
     val FV_t = @{const FV} $ msg_const;
     val FMV_t = @{const FMV} $ msg_const;
     val FAV_t = @{const FAV} $ msg_const;
@@ -226,7 +226,7 @@ fun setup_rolestep mk_binding ann_defs lthy =
    (* full expansions *)
      |> notes_expansion ss_full
        [ (mk_binding "inst_conv", [([inst_t], [att_simp_add])])
-       , (mk_binding "inst_free_conv", [([inst_free_t], [att_simp_add])])
+       , (mk_binding "any_inst_conv", [([any_inst_t], [att_simp_add])])
        , (mk_binding "FV_conv",   [([FV_t],   [att_simp_add])])
        , (mk_binding "FMV_conv",  [([FMV_t],  [att_simp_add])])
        , (mk_binding "FAV_conv",  [([FAV_t],  [att_simp_add])])
@@ -289,22 +289,12 @@ fun setup_role mk_binding (defs as ((role_const, role_def), steps)) ctxt =
     val ss_full = ctxt addsimps ([role_def, @{thm prefixClose_def}] @ pat_defs @ step_defs @
       @{thms wf_role_def distinct_list_def wf_role_axioms_def}) |> simpset_of;
 
-    val ss_wildcard = ctxt addsimps ([role_def, @{thm finite_union_apply}] @ pat_defs @ step_defs)
-      |> simpset_of;
-    fun mk_wildcard_thm role step =
-      let
-        val t = @{const wildcards} $ role $ step;
-      in expand_term ss_wildcard ctxt t end;
-    val role_def_rhs = role_def |> Thm.prop_of |> dest_HOL_def |> #2;
-    val wildcard_list_thms = map (mk_wildcard_thm role_def_rhs) step_consts;
-    val wildcard_thms = map (mk_wildcard_thm role_const) step_consts;
-
-    fun simp_tactic {prems, context} = FIRSTGOAL (Simplifier.full_simp_tac (put_simpset ss_full context));
+    fun simp_tactic {prems=_, context} = FIRSTGOAL (Simplifier.full_simp_tac (put_simpset ss_full context));
 
     val distinct_steps_thms = prove_distinctness ctxt simp_tactic step_consts;
 
     val ss_prefixClose = ctxt addsimps ([role_def, @{thm prefixClose_def}] @ distinct_steps_thms @
-      wildcard_list_thms) |> simpset_of;
+      @{thms exec_match_def}) |> simpset_of;
 
     val wf_goal = HOLogic.mk_Trueprop (@{const wf_role} $ role_const);
 
@@ -332,9 +322,6 @@ fun setup_role mk_binding (defs as ((role_const, role_def), steps)) ctxt =
     ctxt
     (* unfold theorems *)
       |> #2 o Local_Theory.note (mk_binding "unfold", role_def :: step_defs @ pat_defs)
-    (* wildcard expansions *)
-      |> #2 o Local_Theory.notes
-        [ (mk_binding "wildcard_convs", [(wildcard_thms, [att_simp_add])]) ]
     (* wellformed role *)  
       |> #2 o notes_proven simp_tactic
         [ (mk_binding "wf_role",    [([wf_goal],[att_iff_add])]) ]

@@ -39,19 +39,28 @@ where
   "var_map f (Val x) = Val (f x)"
 | "var_map f (Fun g) = Fun (\<lambda>x. var_map f (g x))"
 
-primrec var_zip :: "('a, 'b) varfun \<Rightarrow> ('a, 'c) varfun \<Rightarrow> ('a, 'b \<times> 'c) varfun"
+primrec var_apply :: "('a, 'b \<Rightarrow> 'c) varfun \<Rightarrow> ('a, 'b) varfun \<Rightarrow> ('a, 'c) varfun"
 where
-  "var_zip (Val x) v = var_map (Pair x) v"
-| "var_zip (Fun f) v = Fun (\<lambda>x. var_zip (f x) v)"
+  "var_apply (Val f) v = var_map f v"
+| "var_apply (Fun g) v = Fun (\<lambda>x. var_apply (g x) v)"
 
-abbreviation var_zip_with :: "('b \<Rightarrow> 'c \<Rightarrow> 'd) \<Rightarrow> ('a, 'b) varfun \<Rightarrow> ('a, 'c) varfun \<Rightarrow> ('a, 'd) varfun"
-where "var_zip_with f v1 v2 \<equiv> var_map (split f) (var_zip v1 v2)"
+abbreviation var_lift2 :: "('b \<Rightarrow> 'c \<Rightarrow> 'd) \<Rightarrow> ('a, 'b) varfun \<Rightarrow> ('a, 'c) varfun \<Rightarrow> ('a, 'd) varfun"
+where "var_lift2 f v1 v2 \<equiv> var_apply (var_map f v1) v2"
 
-primrec all_args :: "('a, bool) varfun \<Rightarrow> bool"
+primrec var_fold :: "(('a \<Rightarrow> 'b) \<Rightarrow> 'b) \<Rightarrow> ('a, 'b) varfun \<Rightarrow> 'b"
 where
-  "all_args (Val x) = x"
-| "all_args (Fun f) = (\<forall>x. all_args (f x))"
+  "var_fold f (Val x) = x"
+| "var_fold f (Fun g) = f (\<lambda>x. var_fold f (g x))"
 
+
+lemma var_map_map [simp]: "var_map f (var_map g v) = var_map (f o g) v"
+by (induct v) (auto)
+
+lemma var_fold_not_all: "(\<not> var_fold All v) = var_fold Ex (var_map Not v)"
+by (induct v) (auto)
+
+lemma var_fold_not_ex: "(\<not> var_fold Ex v) = var_fold All (var_map Not v)"
+by (induct v) (auto)
 
 
 section{* Finite Sets *}

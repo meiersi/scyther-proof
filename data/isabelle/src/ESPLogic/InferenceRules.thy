@@ -75,8 +75,8 @@ where
   (\<forall> st st'. 
       (nextRel (filter (\<lambda> x. \<not> (noteStep x)) (takeWhile (\<lambda> x. x \<noteq> step) R) @ [step]) st st') \<longrightarrow>
       ((recvStep st \<longrightarrow> (\<exists> m. Some m = inst s i (stepPat st) \<and> predOrd t (Ln m) (St (i, st)))) \<and>
-       (matchEqStep st \<longrightarrow> Some (s (matchVar st, i)) = inst s i (stepPat st)) \<and>
-       (notMatchStep st \<longrightarrow> not_match_concl R s i st) \<and>
+       (matchEqStep st \<longrightarrow> exec_match s i (matchVar st) (stepPat st)) \<and>
+       (notMatchStep st \<longrightarrow> \<not> exec_match s i (matchVar st) (stepPat st)) \<and>
        predOrd t (St (i, st)) (St (i, st')))
    )"
 
@@ -237,11 +237,11 @@ lemma prefixClose_rawI:
   and "\<And> st st'.
     \<lbrakk> nextRel (filter (\<lambda> x. \<not> (noteStep x)) (takeWhile (\<lambda> x. x \<noteq> step) R) @ [step]) st st';
       matchEqStep st
-    \<rbrakk> \<Longrightarrow> Some (s (matchVar st, i)) = inst s i (stepPat st)"
+    \<rbrakk> \<Longrightarrow> exec_match s i (matchVar st) (stepPat st)"
   and "\<And> st st'.
     \<lbrakk> nextRel (filter (\<lambda> x. \<not> (noteStep x)) (takeWhile (\<lambda> x. x \<noteq> step) R) @ [step]) st st';
       notMatchStep st
-    \<rbrakk> \<Longrightarrow> not_match_concl R s i st"
+    \<rbrakk> \<Longrightarrow> \<not> exec_match s i (matchVar st) (stepPat st)"
   and "\<And> st st'. 
     \<lbrakk> nextRel (filter (\<lambda> x. \<not> (noteStep x)) (takeWhile (\<lambda> x. x \<noteq> step) R) @ [step]) st st'
     \<rbrakk> \<Longrightarrow> St (i, st) \<prec> St (i, st')"
@@ -303,14 +303,14 @@ proof -
     note input = this
     {
       assume "matchEqStep st"
-      hence "Some (s (matchVar st, i)) = inst s i (stepPat st)"
-        using steps by (auto dest!: matchEqStepD Match_eq)
+      hence "exec_match s i (matchVar st) (stepPat st)"
+        using steps by (auto dest!: matchEqStepD match_eq_rule)
     }
     note match_eq = this
     {
       assume "notMatchStep st"
-      hence "not_match_concl R s i st"
-        using steps R_split thread_state by (auto dest!: notMatchStepD Not_Match)
+      hence "\<not> exec_match s i (matchVar st) (stepPat st)"
+        using steps by (auto dest!: notMatchStepD not_match_rule)
     }
     note not_match = this
 
@@ -331,32 +331,18 @@ qed
 text{* Support for the "prefix\_close" command. *}
 
 lemma ext_prefixClose: 
-  assumes "(i, step) \<in> steps t"
-      and "roleMap r i = Some R"
-  shows
-    "prefixClose s t R step i \<and>
-     (recvStep step \<longrightarrow> (\<exists> m. Some m = inst s i (stepPat step) \<and> Ln m \<prec> St (i, step))) \<and>
-     (matchEqStep step \<longrightarrow> Some (s (matchVar step, i)) = inst s i (stepPat step)) \<and>
-     (notMatchStep step \<longrightarrow> not_match_concl R s i step)"
-proof -
-  {
-    from assms obtain "done" todo skipped
-      where "R = done @ todo"
-      and "r i = Some (done, todo, skipped)"
-    by (auto elim!: roleMap_SomeE)
-    moreover assume "notMatchStep step"
-    ultimately have "not_match_concl R s i step" using assms
-      by (auto dest!: notMatchStepD Not_Match)
-  }
-  thus ?thesis using assms
-    by (cases step) (auto dest: prefixCloseI Ln_before_inp matchEqStepD Match_eq)
-qed
+  "\<lbrakk> (i, step) \<in> steps t; roleMap r i = Some R \<rbrakk> \<Longrightarrow>
+   prefixClose s t R step i \<and>
+   (recvStep step \<longrightarrow> (\<exists> m. Some m = inst s i (stepPat step) \<and> Ln m \<prec> St (i, step))) \<and>
+   (matchEqStep step \<longrightarrow> exec_match s i (matchVar step) (stepPat step)) \<and>
+   (notMatchStep step \<longrightarrow> \<not> exec_match s i (matchVar step) (stepPat step))"
+by (cases step)
+   (auto dest: prefixCloseI Ln_before_inp matchEqStepD match_eq_rule notMatchStepD not_match_rule)
 
 text{* 
   Used for prefix closing assumptions corresponding to a case of
   an annotation completeness induction proof.
 *}
-(* TODO clean up and merge *)
 lemma thread_prefixClose:
   assumes thread_exists: "r i = Some (step#done, todo, skipped)"
       and not_skipped:   "step \<notin> skipped"
@@ -365,8 +351,8 @@ lemma thread_prefixClose:
       ((recvStep st \<longrightarrow> 
           (\<exists> m. Some m = inst s i (stepPat st) \<and> predOrd t (Ln m) (St (i, st)))
         ) \<and>
-       (matchEqStep st \<longrightarrow> Some (s (matchVar st, i)) = inst s i (stepPat st)) \<and>
-       (notMatchStep st \<longrightarrow> not_match_concl (step # done @ todo) s i st) \<and>
+       (matchEqStep st \<longrightarrow> exec_match s i (matchVar st) (stepPat st)) \<and>
+       (notMatchStep st \<longrightarrow> \<not> exec_match s i (matchVar st) (stepPat st)) \<and>
        predOrd t (St (i, st)) (St (i, st')))
     ) \<and>
     (recvStep (last (step#done)) \<longrightarrow>
@@ -375,10 +361,10 @@ lemma thread_prefixClose:
        )
     ) \<and>
     (matchEqStep (last (step#done)) \<longrightarrow>
-        Some (s (matchVar (last (step#done)), i)) = inst s i (stepPat (last (step#done)))
+        exec_match s i (matchVar (last (step#done))) (stepPat (last (step#done)))
     ) \<and>
     (notMatchStep (last (step#done)) \<longrightarrow>
-        not_match_concl (step # done @ todo) s i (last (step#done))
+        \<not> exec_match s i (matchVar (last (step#done))) (stepPat (last (step#done)))
     )"
   (is "?prefix \<and> ?inp_last \<and> ?match_eq_last \<and> ?not_match_last")
 proof -
@@ -411,7 +397,7 @@ proof -
           using thread_exists match_eq
           by(fastforce dest!: this_thread.in_steps_recv[THEN iffD1])
         qed
-     hence "?match_eq_last" by (fastforce dest: matchEqStepD Match_eq)
+     hence "?match_eq_last" by (fastforce dest: matchEqStepD match_eq_rule)
   }
   moreover
   {
@@ -426,7 +412,7 @@ proof -
           using thread_exists match_eq
           by(fastforce dest!: this_thread.in_steps_recv[THEN iffD1])
         qed
-     hence "?not_match_last" using thread_exists by (fastforce dest: notMatchStepD Not_Match)
+     hence "?not_match_last" by (fastforce dest: notMatchStepD not_match_rule)
   }
   moreover
   { 
@@ -481,13 +467,11 @@ proof -
       using this_thread.roleMap
       by (cases st) (auto dest: Ln_before_inp in_steps_predOrd1)
     from step_ord have matchEq:
-        "matchEqStep st \<Longrightarrow> Some (s (matchVar st, i)) = inst s i (stepPat st)"
-      using this_thread.roleMap
-      by (cases st) (auto dest: in_steps_predOrd1 matchEqStepD Match_eq)
+        "matchEqStep st \<Longrightarrow> exec_match s i (matchVar st) (stepPat st)"
+      by (cases st) (auto dest: in_steps_predOrd1 matchEqStepD match_eq_rule)
     from step_ord have notMatch:
-        "notMatchStep st \<Longrightarrow> not_match_concl (step # done @ todo) s i st"
-      using thread_exists
-      by (cases st) (auto dest!: in_steps_predOrd1 notMatchStepD Not_Match)
+        "notMatchStep st \<Longrightarrow> \<not> exec_match s i (matchVar st) (stepPat st)"
+      by (cases st) (auto dest: in_steps_predOrd1 notMatchStepD not_match_rule)
     note step_ord recv matchEq notMatch
   }
   ultimately

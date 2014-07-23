@@ -43,7 +43,7 @@ definition approx :: "typing \<Rightarrow> state set"
 where "approx typing \<equiv> {q. case q of (t,r,s) \<Rightarrow>
   \<forall> (i,step) \<in> steps t. 
     \<forall> R. roleMap r i = Some R \<longrightarrow>
-      (\<forall> n. MVar n \<in> FV_rolestep step \<and> n \<notin> wildcards R step \<longrightarrow>
+      (\<forall> n. MVar n \<in> FV_rolestep step \<longrightarrow>
          s (MVar n, i) \<in> typing (R, n) i (t,r,s)
       )}"
 
@@ -63,7 +63,7 @@ lemma approx_unfold:
   "((t,r,s) \<in> approx typing) = 
    (\<forall> (i,step) \<in> steps t. 
       \<forall> R. roleMap r i = Some R \<longrightarrow>
-        (\<forall> n. MVar n \<in> FV_rolestep step \<and> n \<notin> wildcards R step \<longrightarrow>
+        (\<forall> n. MVar n \<in> FV_rolestep step \<longrightarrow>
            s (MVar n, i) \<in> typing (R, n) i (t,r,s)))"
 by (auto simp: approx_def)
 
@@ -72,8 +72,7 @@ lemma in_approxI:
     "\<And> i step R n.
      \<lbrakk> (i,step) \<in> steps t;
        roleMap r i = Some R;
-       MVar n \<in> FV_rolestep step;
-       n \<notin> wildcards R step
+       MVar n \<in> FV_rolestep step
      \<rbrakk>
        \<Longrightarrow> s (MV n i) \<in> typing (R, n) i (t,r,s)"
   shows "(t,r,s) \<in> approx typing"
@@ -84,7 +83,6 @@ lemma in_approxD:
   and asms: "(i,step) \<in> steps t"
             "roleMap r i = Some R"
             "MVar n \<in> FV_rolestep step"
-            "n \<notin> wildcards R step"
   shows "s (MV n i) \<in> typing (R, n) i (t,r,s)"
 using approx asms
 by (auto simp: approx_unfold)
@@ -253,12 +251,10 @@ lemma (in reachable_thread) step_done_typing:
   assumes typ_rule:
     "\<And> step.
      \<lbrakk> (i, step) \<in> steps t;
-       MVar v \<in> FV_rolestep step;
-       v \<notin> wildcards (done @ todo) step
+       MVar v \<in> FV_rolestep step
      \<rbrakk> \<Longrightarrow> s (MV v i) \<in> typing (done @ todo, v) i (t, r, s)"
   and step_done: "step \<in> set done"
   and step_var: "MVar v \<in> FV_rolestep step"
-                "v \<notin> wildcards (done @ todo) step"
   shows "s (MV v i) \<in> typing (done @ todo, v) i (t, r, s)"
 proof (cases "step \<in> skipped")
   case False
@@ -280,7 +276,6 @@ next
     where roleBefore: "listOrd (done@todo) step' (Note l ty pt)"
     and varSourced: "v \<in> sourced_vars step'"
     by auto
-  hence notWildcard: "v \<notin> wildcards (done @ todo) step'" by auto
   have notNote: "\<not> noteStep step'" using varSourced by auto
   have "step' \<in> set done" 
     using roleBefore step_done noteEq
@@ -294,7 +289,7 @@ next
     by(auto dest: done_notin_todoD)
   hence "(i, step') \<in> steps t" using notNote by (cases step', auto)
   thus ?thesis
-    using varSourced notWildcard by (auto intro!: typ_rule thread_exists)
+    using varSourced by (auto intro!: typ_rule thread_exists)
 qed
 
 
@@ -307,7 +302,7 @@ lemma (in reachable_state) reachable_in_approxI:
        (done, step # todo) \<in> set (splits R);
        \<not> sendStep step; \<not> noteStep step;
        n \<in> sourced_vars step;
-       \<forall> step' \<in> set done. MVar n \<in> FV_rolestep step' \<longrightarrow> n \<in> wildcards R step';
+       \<forall> step' \<in> set done. MVar n \<notin> FV_rolestep step';
        hint ''completenessCase'' (step, n);
        
        (t,r,s) \<in> reachable P;
@@ -315,7 +310,7 @@ lemma (in reachable_state) reachable_in_approxI:
        r i = Some (done, step # todo, skipped);
        
        recvStep step \<Longrightarrow> Some m = inst s i (stepPat step) \<and> m \<in> knows t;
-       matchEqStep step \<Longrightarrow> Some (s (matchVar step, i)) = inst s i (stepPat step)
+       matchEqStep step \<Longrightarrow> exec_match s i (matchVar step) (stepPat step)
      \<rbrakk> \<Longrightarrow> 
         s (MV n i) \<in> typing (R, n) i (t @ [Step (i, step)], r(i \<mapsto> (done @ [step], todo, skipped)), s)"
   shows "(t,r,s) \<in> approx typing"
@@ -324,8 +319,7 @@ proof -
     have
      "\<lbrakk> r i = Some (done, todo, skipped);
         (i,step) \<in> steps t;
-        MVar n \<in> FV_rolestep step;
-        n \<notin> wildcards (done@todo) step
+        MVar n \<in> FV_rolestep step
       \<rbrakk> \<Longrightarrow> s (MV n i) \<in> typing (done@todo, n) i (t,r,s)"
     proof(induct arbitrary: i "done" todo step n skipped rule: reachable_induct)
       case (send t r s i "done" l pt todo skipped m i' done' todo' step n skipped')
@@ -387,13 +381,11 @@ proof -
         hence cur_thread: "?role = done' @ todo'" "i = i'" 
           using recv by auto
         have ?case
-        proof(cases "\<exists> step' \<in> set done.
-                       MVar n \<in> FV_rolestep step' \<and> n \<notin> wildcards (done'@todo') step'")
+        proof(cases "\<exists> step' \<in> set done. MVar n \<in> FV_rolestep step'")
           case True
           with recv
           obtain step'
             where FV: "MVar n \<in> FV_rolestep step'" 
-            and notWildcard: "n \<notin> wildcards (done'@todo') step'"
             and step': "step' \<in> set done"
             by auto
           hence "s (MV n i) \<in> typing (done'@todo', n) i (t, r, s)"
@@ -515,13 +507,11 @@ proof -
           next
             assume "n \<in> sourced_vars step"
             thus ?thesis
-            proof (cases "\<exists> step' \<in> set done.
-                            MVar n \<in> FV_rolestep step' \<and> n \<notin> wildcards (done'@todo') step'")
+            proof (cases "\<exists> step' \<in> set done. MVar n \<in> FV_rolestep step'")
               case True
               with match
               obtain step'
                 where FV: "MVar n \<in> FV_rolestep step'"
-                and notWildcard: "n \<notin> wildcards (done'@todo') step'"
                 and step': "step' \<in> set done"
                 by auto
               hence "s (MV n i) \<in> typing (done'@todo', n) i (t, r, s)"
@@ -538,7 +528,7 @@ proof -
                   by (auto simp: approx_unfold dest!: IH roleMap_SomeD)
                 moreover note `?new`
                 moreover note `n \<in> sourced_vars step`
-                moreover have "Some (s (mv, i)) = inst s i pt"
+                moreover have "exec_match s i mv pt"
                   using match eq_case by simp
                 moreover note cur_thread[symmetric]
 
@@ -554,34 +544,12 @@ proof -
 
         next
           case False note notMatch = this
-          have role_split: "done'@todo' = ?role" "done' = done @ [step]"
-            using match `?new` by auto
-          have "\<exists> st. (i, st) \<in> steps t \<and> n \<in> sourced_vars st" proof (cases "n \<in> FMV pt")
-            case True
-            with match notMatch `?new` obtain step'
-              where source_ord: "listOrd (done'@todo') step' step"
-                and sourced: "n \<in> sourced_vars step'"
-              by auto
-            have "step' \<in> set done" proof -
-              have "wf_role ?role" using match by (auto intro: th1.role_in_P wf_roles)
-              hence "distinct ?role" unfolding wf_role_def distinct_list_def by simp
-              thus ?thesis using role_split source_ord
-                by (auto intro: in_set_listOrd1 in_set_listOrd2)
-            qed
-            hence "(i, step') \<in> steps t" using sourced
-              by (auto dest!: th1.in_steps_eq_in_done th1.note_in_skipped)
-            thus ?thesis using sourced by blast
-          next
-            case False
-            hence "MVar n = mv" using match `?new` by auto
-            hence "n \<in> used_vars step" using notMatch `?new` by auto
-            thus ?thesis using match `?new`
-              by (fastforce dest!: th1.source_step[OF th1.thread_exists])
-          qed
-          then obtain step'
+          moreover note `?new`
+          moreover hence "n \<in> used_vars step" using match notMatch by auto
+          ultimately obtain step'
             where "(i, step') \<in> steps t" 
                   "n \<in> sourced_vars step'"   
-            by auto
+            by (fastforce dest!: th1.source_step[OF th1.thread_exists])
           hence typed: "s (MV n i) \<in> typing (?role, n) i (t, r, s)"
             by (auto dest: IH[OF th1.thread_exists])
           have "done'@todo' = ?role" using match `?new` by auto
@@ -622,7 +590,7 @@ lemma (in reachable_state) reachable_in_approxI_ext:
        \<forall> st'. st' \<in> set done \<longrightarrow> \<not> noteStep st' \<longrightarrow> (i, st') \<in> steps t;
 
        recvStep step \<Longrightarrow> Some m = inst s i (stepPat step) \<and> m \<in> knows t;
-       matchEqStep step \<Longrightarrow> Some (s (matchVar step, i)) = inst s i (stepPat step)
+       matchEqStep step \<Longrightarrow> exec_match s i (matchVar step) (stepPat step)
      \<rbrakk> \<Longrightarrow>
         s (MV n i) \<in> typing (R, n) i ( t @ [Step (i, step)], r(i \<mapsto> (done @ [step], todo, skipped)), s)"
   shows "(t,r,s) \<in> approx typing"
@@ -630,13 +598,9 @@ proof(induct rule: reachable_in_approxI[OF monoTyp])
   case (1 t r s i "done" todo skipped m R step n)
   { fix v V
     assume "v \<in> V"
-      and "\<forall>step'\<in>set done. MVar v \<in> FV_rolestep step' \<longrightarrow> v \<in> wildcards R step'"
+      and "\<forall>step'\<in>set done. MVar v \<notin> FV_rolestep step'"
     hence "v \<in> foldl (\<lambda> fv step'. fv - sourced_vars step') V done"
-      proof (induct "done" arbitrary: V)
-        case (Cons st)
-        hence "v \<notin> sourced_vars st" by (auto intro!: sourced_imp_FV)
-        thus ?case using Cons by simp
-      qed simp
+      by (induct "done" arbitrary: V) (auto intro!: sourced_imp_FV)
   }
   hence "n \<in> foldl (\<lambda> fv step'. fv - sourced_vars step') (sourced_vars step) done"
     using 1 by auto

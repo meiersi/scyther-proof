@@ -33,10 +33,11 @@ datatype pattern =
   | PTup     pattern pattern 
   | PEnc     pattern pattern 
   | PSign    pattern pattern
-  | PSymK    pattern pattern 
-  | PShrK    "varid set"  (* variables denoting a set of agents sharing a key *)
-  | PAsymPK  pattern         
-  | PAsymSK  pattern         
+  | PSymK    pattern pattern
+  | PShrK    "varid set"  --{* variables denoting a set of agents sharing a key *}
+  | PAsymPK  pattern
+  | PAsymSK  pattern
+  | PAny     --{* wildcard for matching *}
 
 (* bi-directional keys between two agents referenced by variables *)
 definition sKbd :: "varid \<Rightarrow> varid \<Rightarrow> pattern"
@@ -133,10 +134,11 @@ text {*
 *}
 fun used_vars :: "rolestep \<Rightarrow> id set"
 where
-  "used_vars (Send  lbl      msg) = FMV msg"
-| "used_vars (Recv  lbl      pt)  = {}"
-| "used_vars (Match lbl eq v pt)  = {m. v = MVar m}"
-| "used_vars (Note  lbl ty   msg) = FMV msg"
+  "used_vars (Send  lbl         msg) = FMV msg"
+| "used_vars (Recv  lbl         pt)  = {}"
+| "used_vars (Match lbl True  v pt)  = {m. v = MVar m}"
+| "used_vars (Match lbl False v pt)  = {m. v = MVar m} \<union> FMV pt"
+| "used_vars (Note  lbl ty      msg) = FMV msg"
 
 text {* Free variables of a role step *}
 fun FV_rolestep :: "rolestep \<Rightarrow> varid set"
@@ -255,12 +257,6 @@ where
     ((used_vars step \<subseteq> bound)
     \<and> source_before_use (bound \<union> sourced_vars step) xs)"
 
-fun wildcards :: "role \<Rightarrow> rolestep \<Rightarrow> id set"
-where
-  "wildcards role (Match l False v pt) =
-    FMV pt - \<Union> (sourced_vars ` {pred. listOrd role pred (Match l False v pt)})"
-| "wildcards role _ = {}"
-
 
 locale wf_role =
   distinct_list R for R :: "role" +
@@ -353,14 +349,6 @@ lemma source_note_dest[dest]:
   "\<lbrakk> v \<in> sourced_vars st; noteStep st \<rbrakk> \<Longrightarrow> False"
 by (auto dest: noteStepD)
 
-lemma source_not_wildcard[dest]:
-  "v \<in> sourced_vars st \<Longrightarrow> v \<notin> wildcards R st"
-proof (cases st)
-  case (Match lbl eq mv pt)
-  assume "v \<in> sourced_vars st"
-  thus ?thesis using Match by (cases eq, auto)
-qed auto
-
 
 definition aVars:: "role \<Rightarrow> varid set"
 where
@@ -425,10 +413,5 @@ lemma firstComStep_Cons [simp]: "firstComStep (x#xs) =
 proof (cases "[s\<leftarrow>xs . \<not> noteStep s]")
 qed (fastforce simp add: firstComStep_def)+ 
 
-
-text{* Required to unfold applications of the \verb|wildcards| function *}
-lemma finite_union_apply:
-  "(\<Union> x\<in>{y. y = z \<or> P y}. F x) = F z \<union> (\<Union> x\<in>{y. P y}. F x)"
-by blast
 
 end

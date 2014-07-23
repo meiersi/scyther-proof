@@ -185,24 +185,25 @@ where
      (if   (\<forall> v \<in> V. s (v, i) \<in> Agent)
       then Some (KShr (agents {s (v, i) | v. v \<in> V})) 
       else None)"
+| "inst s i (PAny)       = None"
 
-fun inst_free :: "id set \<Rightarrow> store \<Rightarrow> tid \<Rightarrow> pattern \<Rightarrow> (execmsg, execmsg option) varfun"
+text{* Instantiate a pattern and export wildcards *}
+fun any_inst :: "store \<Rightarrow> tid \<Rightarrow> pattern \<Rightarrow> (execmsg, execmsg option) varfun"
 where
-  "inst_free F s i (PConst c)  = Val (Some (Lit (EConst c)))"
-| "inst_free F s i (PFresh n)  = Val (Some (Lit (ENonce n i)))"
-| "inst_free F s i (PVar (MVar v)) =
-     (if v \<in> F then Fun (\<lambda>m. Val (Some m))
-               else Val (Some (s (MVar v, i))))"
-| "inst_free F s i (PVar (AVar v)) = Val (Some (s (AVar v, i)))"
-| "inst_free F s i (PTup x y)  = var_zip_with (opt_map2 Tup) (inst_free F s i x) (inst_free F s i y)"
-| "inst_free F s i (PEnc m k)  = var_zip_with (opt_map2 Enc) (inst_free F s i m) (inst_free F s i k)"
-| "inst_free F s i (PSign m k) = var_zip_with
-    (\<lambda>m' k'. opt_map2 Tup m' (opt_map2 Enc m' (Option.map inv k'))) (inst_free F s i m) (inst_free F s i k)"
-| "inst_free F s i (PHash m)   = var_map (Option.map Hash) (inst_free F s i m)"
-| "inst_free F s i (PSymK a b) = var_zip_with (opt_map2 K) (inst_free F s i a) (inst_free F s i b)"
-| "inst_free F s i (PAsymPK a) = var_map (Option.map PK) (inst_free F s i a)"
-| "inst_free F s i (PAsymSK a) = var_map (Option.map SK) (inst_free F s i a)"
-| "inst_free F s i (PShrK V)   = Val (inst s i (PShrK V))"
+  "any_inst s i (PConst c)  = Val (Some (Lit (EConst c)))"
+| "any_inst s i (PFresh n)  = Val (Some (Lit (ENonce n i)))"
+| "any_inst s i (PVar v)    = Val (Some (s (v, i)))"
+| "any_inst s i (PTup x y)  = var_lift2 (opt_map2 Tup) (any_inst s i x) (any_inst s i y)"
+| "any_inst s i (PEnc m k)  = var_lift2 (opt_map2 Enc) (any_inst s i m) (any_inst s i k)"
+| "any_inst s i (PSign m k) = var_lift2
+    (\<lambda>m' k'. opt_map2 Tup m' (opt_map2 Enc m' (Option.map inv k')))
+    (any_inst s i m) (any_inst s i k)"
+| "any_inst s i (PHash m)   = var_map (Option.map Hash) (any_inst s i m)"
+| "any_inst s i (PSymK a b) = var_lift2 (opt_map2 K) (any_inst s i a) (any_inst s i b)"
+| "any_inst s i (PAsymPK a) = var_map (Option.map PK) (any_inst s i a)"
+| "any_inst s i (PAsymSK a) = var_map (Option.map SK) (any_inst s i a)"
+| "any_inst s i (PShrK V)   = Val (inst s i (PShrK V))"
+| "any_inst s i (PAny)      = Fun (\<lambda>m. Val (Some m))"
 
 
 text{* We assume that recipients making use of shared keys look them up
