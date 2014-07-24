@@ -734,8 +734,8 @@ ensureGraphVizDot dot = do
     putStrLn ""
   where
     check _ err
-      | "Graphviz" `isInfixOf` err = Right $ init err ++ ". OK."
-      | otherwise                  = Left  $ unlines $
+      | "graphviz" `isInfixOf` map toLower err = Right $ init err ++ ". OK."
+      | otherwise = Left $ unlines $
           [ "WARNING:"
           , ""
           , " The dot tool seems not to be provided by Graphviz."
