@@ -56,6 +56,7 @@ setDefaultAttributes = do
 getColorWithDefault :: TID -> M.Map (Maybe TID) v -> v
 getColorWithDefault tid m = M.findWithDefault (m M.! Nothing) (Just tid) m
 
+
 -----------------------------------------------------------------------------
 -- DOT Graph Generation
 -----------------------------------------------------------------------------
@@ -65,6 +66,8 @@ getColorWithDefault tid m = M.findWithDefault (m M.! Nothing) (Just tid) m
 
 type TIDMap = M.Map TID (Maybe Role)
 
+-- If a thread identifier may correspond to different roles, only one role gets
+-- mapped.
 extractTIDMap :: Sequent -> TIDMap
 extractTIDMap se = formulaMap (seConcl se) (M.fromList fromPrem)
   where
@@ -76,6 +79,7 @@ extractTIDMap se = formulaMap (seConcl se) (M.fromList fromPrem)
     (FExists (Left tid)  prop)              -> formulaMap prop . M.insert tid Nothing
     (FExists (Right _ ) prop)               -> formulaMap prop
     (FConj lprop rprop)                     -> formulaMap lprop . formulaMap rprop
+    (FDisj lprop rprop)                     -> formulaMap lprop . formulaMap rprop
     (FAtom (AEq (E.TIDRoleEq (tid, role)))) -> M.insert tid (Just role)
     _                                       -> id
 
@@ -334,10 +338,11 @@ tryNoteRole _   Nothing     env = env
 tryNoteRole tid (Just role) env = 
   env { threadMapping = E.addTIDRoleMapping tid role (threadMapping env) }
 
--- | Produce the dot code of the formula.
+-- | Produce the dot code of a formula without disjunctions.
 dotFormula :: Formula -> MyDot ()
 dotFormula (FAtom atom) = dotAtom atom
 dotFormula (FConj f1 f2) = dotFormula f1 >> dotFormula f2
+dotFormula (FDisj f1 f2) = error "dotFormula: disjunction encountered."
 dotFormula (FExists (Left tid) inner) = do
   localThreadInfo tid (findRole tid inner) $ do
     dotFormula inner
@@ -347,13 +352,30 @@ dotFormula (FExists (Right aid) inner) = do
   _ <- liftDot $ node [("label", "some agent " ++ show aid)]
   dotFormula inner
 
--- | Produce the dot code for a formula that is a conclusion of a sequent. This
--- takes care of handling the quantifiers stemming from the premises.
-dotConclusion :: Formula -> MyDot ()
-dotConclusion formula = do
+-- | Produce the dot code for a formula that is a single alternative of a
+-- conclusion. This takes care of handling the quantifiers stemming from the
+-- premises.
+dotConclusionAlt :: Formula -> MyDot ()
+dotConclusionAlt formula = do
   resetThreadAtoms []
   dotFormula formula
   dotThreads False
+
+-- | Produce the dot code for a formula that is a conclusion of a sequent.
+-- Quantifiers and conjunctions are first pushed inside. The resulting
+-- alternatives are put into separate clusters.
+dotConclusion :: Formula -> MyDot ()
+dotConclusion concl = case distributeOverDisj concl of
+    f@(FDisj _ _) -> clusterAlts f
+    f             -> dotConclusionAlt f  -- no extra cluster for single alternative
+  where
+    clusterAlts (FDisj f1 f2) = clusterAlts f1 >> clusterAlts f2
+    clusterAlts f = do
+        s <- get
+        _ <- myCluster $ do
+          liftDot $ attribute ("label","alternative")
+          dotConclusionAlt f
+        put s
 
 -- | Dot a sequent with two separate clusters for premise and conclusion.
 dotSequent :: Sequent -> MyDot ()

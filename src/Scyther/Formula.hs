@@ -11,6 +11,7 @@ module Scyther.Formula (
 -- ** Queries
   , hasQuantifiers
   , conjunctionToAtoms
+  , distributeOverDisj
   , isTypingFormula
   , destTypingFormula
   , atomTIDs
@@ -160,6 +161,24 @@ conjunctionToAtoms (FConj f1 f2) =
   (++) `liftM` conjunctionToAtoms f1 `ap` conjunctionToAtoms f2
 conjunctionToAtoms _             =
   fail "conjunctionToAtoms: existential quantifier or disjunction encountered."
+
+-- | Produce a logically equivalent formula by pushing conjunctions and
+-- quantifiers inside, i.e., apply their respective distributive laws over
+-- disjunction. Obvious danger of exponential explosion!
+distributeOverDisj :: Formula -> Formula
+distributeOverDisj = go
+  where
+    go (FConj f1 f2) = distribConj (go f1) (go f2)
+    go (FDisj f1 f2) = FDisj (go f1) (go f2)
+    go (FExists v f) = distribEx v (go f)
+    go f             = f
+
+    distribConj f (FDisj f1 f2) = FDisj (distribConj f f1) (distribConj f f2)
+    distribConj (FDisj f1 f2) f = FDisj (distribConj f1 f) (distribConj f2 f)
+    distribConj f1 f2           = FConj f1 f2
+
+    distribEx v (FDisj f1 f2) = FDisj (distribEx v f1) (distribEx v f2)
+    distribEx v f             = FExists v f
 
 -- | Find the first conjoined thread to role equality for this thread, if there
 -- is any.
