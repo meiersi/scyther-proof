@@ -19,7 +19,6 @@ module Scyther.Protocol (
   , variable
 
   -- ** Patterns
-  , wildcard
   , patFMV
   , patFAV
   , subpatterns
@@ -106,6 +105,7 @@ data Pattern =
   | PShrK   Pattern Pattern   -- ^ A long-term bi-directional symmetric key.
   | PAsymPK Pattern           -- ^ A long-term public key.
   | PAsymSK Pattern           -- ^ A long-term private key
+  | PAny                      -- ^ A wildcard (anonymous logical variable).
   deriving( Eq, Ord, Show, Data, Typeable {-! NFData !-} )
 
 -- | A label of a role step.
@@ -155,12 +155,6 @@ variable :: (Id -> a)  -- ^ Function to apply for an agent variable.
          -> a
 variable agent _ (SAVar a) = agent a
 variable _ msg   (SMVar m) = msg m
-
--- | Test whether a message variable is a wildcard.
---
--- TODO: Less magic (strings).
-wildcard :: Id -> Bool
-wildcard = ("_" ==) . getId
 
 -- | Pattern of a role step.
 stepPat :: RoleStep -> Pattern
@@ -249,7 +243,7 @@ stepUsedMV (Send _ pt)     = patFMV pt
 stepUsedMV (Recv _ _)      = S.empty
 stepUsedMV (Match _ eq v pt)
     | eq        = matched
-    | otherwise = matched `S.union` S.filter (not.wildcard) (patFMV pt)
+    | otherwise = matched `S.union` patFMV pt
   where
     matched = case v of
         SAVar _ -> S.empty
@@ -351,9 +345,6 @@ protoOrd proto = labelOrd proto ++ concatMap roleOrd (protoRoles proto)
 patMapFMV :: (Id -> Pattern) -> Pattern -> Pattern
 patMapFMV f = go
   where
-    go pt@(PConst _)   = pt
-    go pt@(PFresh _)   = pt
-    go pt@(PAVar _)    = pt
     go (PMVar i)       = f i
     go (PHash pt)      = PHash   (go pt)
     go (PTup pt1 pt2)  = PTup    (go pt1) (go pt2)
@@ -363,6 +354,7 @@ patMapFMV f = go
     go (PShrK pt1 pt2) = PShrK   (go pt1) (go pt2)
     go (PAsymPK pt)    = PAsymPK (go pt)
     go (PAsymSK pt)    = PAsymSK (go pt)
+    go pt              = pt
 
 
 ------------------------------------------------------------------------------
@@ -416,6 +408,7 @@ instance Isar Pattern where
       (PAsymPK a)                 -> text "PAsymPK" <-> ppTup a
       (PAsymSK (PAVar a))         -> text "sSK" <-> isar conf a
       (PAsymSK a)                 -> text "PAsymSK" <-> ppTup a
+      (PAny)                      -> text "PAny"
     where
       -- pretty print a tuple as right associate list
       ppTup pt@(PTup _ _) = nestShort n left right (fsep $ punctuate comma $ map (isar conf) $ split pt)
@@ -490,6 +483,7 @@ sptPattern x = case x of
     (PShrK a b)   -> fcat [text "k[", sptPattern a, comma, sptPattern b, text "]"]
     (PAsymPK a)   -> text "pk" <> ppBetween 1 "(" ")" a
     (PAsymSK a)   -> text "sk" <> ppBetween 1 "(" ")" a
+    (PAny)        -> char '_'
   where
     -- pretty print a tuple as right associate list
     ppBetween n lead finish pt@(PTup _ _) = 

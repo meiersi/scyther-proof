@@ -12,6 +12,7 @@ module Scyther.Message (
   , MVar(..)
   , ArbMsgId(..)
   , Message(..)
+
   -- ** Queries
   , lidId
   , lidTID
@@ -31,6 +32,7 @@ module Scyther.Message (
   , mapAVar
   , mapMVar
   , inst
+  , instVar
   , normMsg
   , splitNonTrivial
 
@@ -74,8 +76,9 @@ newtype TID = TID { getTID :: Int }
 instance Show TID where
   show (TID tid) = '#':show tid
 
--- | A logical message variable. Currently, bound variables are used only for
--- inequalities with implicit local quantification.
+-- | A logical message variable. There are two namespaces: Free variables have
+-- global scope. Bound variables are used for inequalities with implicit local
+-- quantification.
 data ArbMsgId = FreeVarId !Int
               | BoundVarId !Int
   deriving( Eq, Ord, Data, Typeable )
@@ -266,24 +269,25 @@ inst tid pattern = evalState (go pattern) 0
     go (PConst i)       = return $ MConst i
     go (PFresh i)       = return $ MFresh (Fresh (LocalId (i, tid)))
     go (PAVar i)        = return $ MAVar  (AVar (LocalId (i, tid)))
-    go (PMVar i)        =
-        if wildcard i
-        then do
-            id <- get
-            put (id + 1)
-            return $ MArbMsg $ BoundVarId id
-        else return $ MMVar  (MVar (LocalId (i, tid)))
+    go (PMVar i)        = return $ MMVar  (MVar (LocalId (i, tid)))
     go (PHash pt)       = MHash <$> go pt
     go (PTup pt1 pt2)   = MTup <$> go pt1 <*> go pt2
     go (PEnc pt1 pt2)   = MEnc <$> go pt1 <*> go pt2
-    go (PSign pt1 pt2)  = do
-        m1 <- go pt1
-        m2 <- go pt2
-        return $ MTup m1 (MEnc m1 (normMsg $ MInvKey m2))
+    go (PSign pt1 pt2)  = do m1 <- go pt1
+                             m2 <- go pt2
+                             return $ MTup m1 (MEnc m1 (normMsg $ MInvKey m2))
     go (PSymK pt1 pt2)  = MSymK <$> go pt1 <*> go pt2
     go (PShrK pt1 pt2)  = MShrK <$> go pt1 <*> go pt2
     go (PAsymPK pt)     = MAsymPK <$> go pt
     go (PAsymSK pt)     = MAsymSK <$> go pt
+    go (PAny)           = do bid <- get
+                             put (bid + 1)
+                             return $ MArbMsg (BoundVarId bid)
+
+-- | Instantiate a generic specification variable.
+instVar :: TID -> VarId -> Message
+instVar tid (SAVar i) = MAVar (AVar (LocalId (i, tid)))
+instVar tid (SMVar i) = MMVar (MVar (LocalId (i, tid)))
 
 -- | Normalize a message; i.e., apply key-inversion if possible and swap shared
 -- key arguments, if required.

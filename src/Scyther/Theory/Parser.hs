@@ -283,10 +283,10 @@ destMultPat _ = mzero
 -- TODO: Remove this ugly string hack.
 pattern :: Parser s Pattern
 pattern = asum
-    [              string "1" *> pure mkMultIdentityPat
+    [ string "1"    *> pure mkMultIdentityPat
+    , kw UNDERSCORE *> pure PAny
     , PConst   <$> singleQuoted ident
     , PMVar    <$> (kw QUESTIONMARK *> ident)
-    , PMVar    <$> Id <$> (kw UNDERSCORE *> pure "_")
     , PAVar    <$> (kw DOLLAR *> ident)
     , PFresh   <$> (kw TILDE *> ident)
     , parens tuplepattern

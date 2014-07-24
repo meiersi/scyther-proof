@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, DeriveDataTypeable, FlexibleInstances, TupleSections #-}
+{-# LANGUAGE TypeSynonymInstances, DeriveDataTypeable, FlexibleInstances #-}
 -- | Building typing invariants for security protocol in order to enable
 -- verification in an untyped model.
 module Scyther.Typing (
@@ -114,9 +114,7 @@ mscTyping proto =
 
     typeStep eqs (Send _ _, _) = return eqs
     typeStep eqs step@(Match _ True v pt, tidM) = do
-        let vinst = variable (MAVar . AVar . LocalId . (, tidM))
-                             (MMVar . MVar . LocalId . (, tidM)) v
-        eqs' <- lift $ E.solve [E.MsgEq (vinst, inst tidM pt)] eqs
+        eqs' <- lift $ E.solve [E.MsgEq (instVar tidM v, inst tidM pt)] eqs
         lty <- variable (const . return $ AgentT) (lookupType step) v
         typeMatchVars step lty (E.getMVarEqs eqs')
         return eqs'
