@@ -607,27 +607,18 @@ insertEvOrdNonTrivial ord prems = case certified ord of
 
 -- | Insert an executed role step and all non-trivial facts implied by the
 -- Input, MatchEq, and NotMatch rules.
---
--- TODO: Update name to include MatchEq/NotMatch rule.
-insertStepInputClosed :: Cert (TID, RoleStep) -> Facts -> Facts
-insertStepInputClosed s prems = case certified s of
+insertStepClosed :: Cert (TID, RoleStep) -> Facts -> Facts
+insertStepClosed s prems = case certified s of
   (tid, step@(Recv _ pt))         ->
     let m = substMsg prems (inst tid pt)
     in  insertEvOrdNonTrivial (Cert (Learn m, Step tid step)) prems
   (tid, step@(Match _ True v pt)) ->
-    let eq  = certAnyEq prems . mkEquality tid v $ substMsg prems (inst tid pt)
+    let eq  = certAnyEq prems $ MsgEq (instVar tid v, inst tid pt)
     in  insertEv (Cert (Step tid step)) . maybe (insertFailedEq eq prems) id $ solve [eq] prems
   (tid, step@(Match _ False v pt)) ->
-    let ineq = certInequality prems . Inequality . mkEquality tid v $ substMsg prems (inst tid pt)
+    let ineq = certInequality prems . Inequality $ MsgEq (instVar tid v, inst tid pt)
     in  insertEv (Cert (Step tid step)) $ insertInequality ineq prems
   (tid, step)                     -> insertEv (Cert (Step tid step)) prems
-  where
-    mkEquality tid var msg = case var of
-        SAVar i -> case msg of
-            MAVar av -> AVarEq (AVar $ LocalId (i, tid), av)
-            MMVar mv -> MVarEq (mv, MAVar $ AVar $ LocalId (i, tid))
-            _        -> MsgEq (msg, MAVar $ AVar $ LocalId (i, tid))
-        SMVar i -> MVarEq (MVar $ LocalId (i, tid), msg)
 
 -- | Insert an executed role step and all non-trivial facts implied by the
 -- Input, MatchEq, NotMatch, and Role rules.
@@ -638,7 +629,7 @@ insertStepPrefixClosed s = case certified s of
     role <- gets (fromMaybe err . threadRole tid)
     let prefix        = takeWhile (/= step) (roleSteps role) ++ [step]
         insertStepOrd = modify . insertEvOrdAndEvs . Cert . (Step tid *** Step tid)
-    mapM_ (modify . insertStepInputClosed . (Cert . ((,) tid))) prefix
+    mapM_ (modify . insertStepClosed . (Cert . ((,) tid))) prefix
     mapM_ insertStepOrd $ zip prefix (tail prefix)
 
 -- | Insert an event an all non-trivial facts implied by the Input, MatchEq,
