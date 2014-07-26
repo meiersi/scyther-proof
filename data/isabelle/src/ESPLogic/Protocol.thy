@@ -30,8 +30,8 @@ datatype pattern =
   | PFresh   id
   | PVar     varid
   | PHash    pattern
-  | PTup     pattern pattern 
-  | PEnc     pattern pattern 
+  | PTup     pattern pattern
+  | PEnc     pattern pattern
   | PSign    pattern pattern
   | PSymK    pattern pattern
   | PShrK    "varid set"  --{* variables denoting a set of agents sharing a key *}
@@ -39,7 +39,7 @@ datatype pattern =
   | PAsymSK  pattern
   | PAny     --{* wildcard for matching *}
 
-(* bi-directional keys between two agents referenced by variables *)
+text{* Bi-directional keys between two agents referenced by variables *}
 definition sKbd :: "varid \<Rightarrow> varid \<Rightarrow> pattern"
 where "sKbd a b = PShrK {a, b}"
 
@@ -80,6 +80,7 @@ lemma FMV_sKbd [simp]:
   by (auto simp: sKbd_def)
 
 
+text{* Free agent variables *}
 fun FAV :: "pattern \<Rightarrow> id set"
 where
   "FAV (PVar (AVar a)) = {a}"
@@ -98,12 +99,18 @@ lemma FAV_sKbd [simp]:
   by (auto simp: sKbd_def)
 
 
-subsubsection{* Roles *}
+subsubsection{* Role Steps *}
 
 text{*
-  Roles are non-empty lists of unique send and receive steps 
-  such that no long-term keys are used in message texts and all 
+  Roles are non-empty lists of unique send and receive steps
+  such that no long-term keys are used in message texts and all
   nonce variables are received before they are sent.
+  Additionally, match steps can be used to express local constraints
+  on variables and messages. Matching may be positive (equality
+  must hold in order to execute the step) or negative.
+
+  Note steps indicate possible points of dynamic information
+  leakage.
 
   The labels allow to make steps with identical message unique.
   They are currently defaulted to strings, but could be anything.
@@ -119,8 +126,8 @@ datatype rolestep = Send lbl pattern
 | Note lbl notetype pattern
 
 text {*
-  Free message variables guaranteed to be instantiated after
-  a role step.
+  Free message variables guaranteed to be instantiated (having
+  a semantic source) after a role step was executed.
 *}
 fun sourced_vars :: "rolestep \<Rightarrow> id set"
 where
@@ -129,7 +136,7 @@ where
 | "sourced_vars _ = {}"
 
 text {*
-  Free message variables which must have been instantiated
+  Free message variables which must have been obtained previously
   when performing a role step.
 *}
 fun used_vars :: "rolestep \<Rightarrow> id set"
@@ -156,6 +163,7 @@ where
 | "FAV_rolestep (Match lbl eq v pt) = {a. v = AVar a} \<union> FAV pt"
 | "FAV_rolestep (Note  lbl ty   pt) = FAV pt"
 
+text {* The pattern of a rolestep *}
 fun stepPat :: "rolestep \<Rightarrow> pattern"
 where
   "stepPat (Send  lbl      pt) = pt"
@@ -163,13 +171,20 @@ where
 | "stepPat (Match lbl eq v pt) = pt"
 | "stepPat (Note  lbl ty   pt) = pt"
 
+text {* The variable to match with (or not) *}
 fun matchVar :: "rolestep \<Rightarrow> varid"
 where
   "matchVar (Match l eq v pt) = v"
+| "matchVar _                 = undefined"
 
+text {* The type of possible information leakage *}
 fun noteType :: "rolestep \<Rightarrow> notetype"
 where
   "noteType (Note l ty pt) = ty"
+| "noteType _              = undefined"
+
+
+text {* Predicates for step types *}
 
 fun sendStep :: "rolestep \<Rightarrow> bool"
 where
@@ -191,6 +206,8 @@ where
   "matchStep (Match lbl eq v pt) = True"
 | "matchStep _                   = False"
 
+text {* Distinguishing positive and negative match steps *}
+
 fun matchEqStep :: "rolestep \<Rightarrow> bool"
 where
   "matchEqStep (Match lbl True v pt) = True"
@@ -200,6 +217,7 @@ fun notMatchStep :: "rolestep \<Rightarrow> bool"
 where
   "notMatchStep (Match lbl False v pt) = True"
 | "notMatchStep _                      = False"
+
 
 lemma sendStepD [simp]:
   assumes inStep: "sendStep step"
@@ -248,8 +266,15 @@ proof(cases step)
 qed auto
 
 
+subsubsection{* Roles *}
+
 type_synonym "role" = "rolestep list"
 
+text{*
+  Message variables whose values are semantically used in a
+  role step, i.e., sent or matched against, must have been
+  instantiated in an earlier step of the role.
+*}
 fun source_before_use :: "id set \<Rightarrow> role \<Rightarrow> bool"
 where
   "source_before_use bound [] = True"
@@ -313,6 +338,8 @@ proof -
 qed
 
 
+subsubsection{* Auxiliary Lemmas *}
+
 lemma FV_FAV_conv[iff]:
   "(a \<in> FAV pt) = ((AVar a) \<in> FV pt)"
 proof(induct pt)
@@ -345,7 +372,7 @@ proof (cases st)
   thus ?thesis using Match by (cases eq, auto)
 qed auto
 
-lemma source_note_dest[dest]:
+lemma source_noteD[dest]:
   "\<lbrakk> v \<in> sourced_vars st; noteStep st \<rbrakk> \<Longrightarrow> False"
 by (auto dest: noteStepD)
 

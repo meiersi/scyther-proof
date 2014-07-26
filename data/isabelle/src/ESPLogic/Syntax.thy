@@ -67,7 +67,6 @@ translations
 
 subsubsection{* Protocol Role Steps *}
 
-(* TODO better names *)
 abbreviation "MatchEq" where "MatchEq lbl \<equiv> Match lbl True"
 abbreviation "NotMatch" where "NotMatch lbl \<equiv> Match lbl False"
 

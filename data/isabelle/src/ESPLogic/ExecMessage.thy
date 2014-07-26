@@ -129,6 +129,7 @@ subsection{* Operations *}
 
 type_synonym store = "varid \<times> tid \<Rightarrow> execmsg"
 
+text{* Key inversion *}
 fun inv :: "execmsg \<Rightarrow> execmsg"
 where
   "inv (PK m)  = SK m"
@@ -139,34 +140,8 @@ lemma inv_Kbd [simp]:
   "\<lbrakk> a \<in> Agent; b \<in> Agent \<rbrakk> \<Longrightarrow> inv (Kbd a b) = Kbd a b"
   by(auto simp: Kbd_def)
 
-(* TODO: Move *)
-fun opt_map2 :: "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a option \<Rightarrow> 'b option \<Rightarrow> 'c option"
-where
-  "opt_map2 f (Some x) (Some y) = Some (f x y)"
-| "opt_map2 f _        _        = None"
 
-lemma Some_opt_map2 [simp]:
-  "(Some x = opt_map2 f a b) =
-   (\<exists> y z. x = f y z \<and> Some y = a \<and> Some z = b)"
-  "(opt_map2 f a b = Some x) =
-   (\<exists> y z. x = f y z \<and> Some y = a \<and> Some z = b)"
-  by (cases a, simp, cases b, simp_all add: eq_commute)+
-
-lemma Some_if_pushL [simp]:
-  "(Some x = (if b then Some y else None)) = (b \<and> x = y)"
-  "((if b then Some y else None) = Some x) = (b \<and> x = y)"
-  by (auto split: if_splits)
-
-lemma Some_if_pushR [simp]:
-  "(Some x = (if b then None else Some y)) = (\<not>b \<and> x = y)"
-  "((if b then None else Some y) = Some x) = (\<not>b \<and> x = y)"
-  by (auto split: if_splits)
-
-lemma Some_Option_map [simp]:
-  "(Some x = Option.map f a) = (\<exists>y. x = f y \<and> Some y = a)"
-  "(Option.map f a = Some x) = (\<exists>y. x = f y \<and> Some y = a)"
-  by (cases a, auto)+
-
+text{* Instantiating a pattern *}
 fun inst :: "store \<Rightarrow> tid \<Rightarrow> pattern \<Rightarrow> execmsg option"
 where
   "inst s i (PConst c)   = Some (Lit (EConst c))"
@@ -325,8 +300,6 @@ lemma inv_eqs [iff]:
 lemma inv_inj [iff]:
   "(inv x = inv y) = (x = y)"
   by (auto) (induct x, auto)
-
-
 
 
 subsubsection{* @{term subterms}  *}

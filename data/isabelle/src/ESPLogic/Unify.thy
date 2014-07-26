@@ -205,7 +205,7 @@ fun unify do_occurs_check ctxt ths =
     (* TODO: Remove hack by using Named_Thms data functor. *)
     val thm_by_name = Proof_Context.get_thm ctxt;
     val ss = ctxt 
-      delsimps map thm_by_name ["tid_eq_commute", "reorient_store_eq_store"];
+      delsimps map thm_by_name ["tid_eq_commute"];
 
     (* substitute an equality theorem in the given list of 'done' and 
        'todo' theorems. The changed theorems from 'done' are readded

@@ -295,10 +295,9 @@ proof -
       by(fastforce dest!: this_thread.note_in_skipped note_filtered_revRole)
     hence steps: "(i, st) \<in> steps t" "(i, st') \<in> steps t"
       by(auto dest: this_thread.in_steps_conv_done_skipped[THEN iffD1])
-    { assume "recvStep st" then
-      obtain l v where "st = Recv l v" by (cases st) auto
+    { assume "recvStep st"
       hence "\<exists> m. Some m = inst s i (stepPat st) \<and> Ln m \<prec> St (i, st)"
-        using steps by (auto dest: Ln_before_inp)
+        using steps by (auto dest!: recvStepD Ln_before_inp)
     }
     note input = this
     {
@@ -480,10 +479,10 @@ qed
 
 end
 
-text{* 
+(*
   TODO: Find the right place for this lemma. It is used only in
   the "prefix\_close" command.
-*}
+*)
 lemma steps_in_steps: "(i,step) \<in> steps t \<Longrightarrow> (i,step) \<in> steps t"
   by auto
 

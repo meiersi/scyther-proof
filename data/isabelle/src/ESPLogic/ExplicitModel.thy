@@ -697,9 +697,8 @@ proof -
     by (auto intro: this_thread.not_note_done_in_steps)
 qed
 
-
+(*
 subsubsection{* The Effect of a Step on the Intruder Knowledge *}
-
 
 context reachable_state
 begin
@@ -711,7 +710,7 @@ proof(induct rule: reachable_induct)
 qed auto
 
 end
-
+*)
 
 subsection{* Almost Distinct Traces *}
 
@@ -967,40 +966,40 @@ proof -
     next
       case (Cons e xs) thus ?case
       proof(cases e)
-	case (Step st) thus ?thesis
-	proof(cases "x = St st")
-	  case True hence "?decomp (e#xs) [e] xs" 
-	    using Step Cons by auto
-	  thus ?thesis by blast
-	next
-	  case False
-	  hence "predOrd xs x y"
-	    using Step Cons by auto
-	  then obtain ys zs where "?decomp xs ys zs"
-	    using Cons by blast
-	  hence "?decomp (e#xs) (e#ys) zs"
-	    using Step Cons by auto
-	  thus ?thesis by blast
-	qed
+        case (Step st) thus ?thesis
+        proof(cases "x = St st")
+          case True hence "?decomp (e#xs) [e] xs"
+            using Step Cons by auto
+          thus ?thesis by blast
+        next
+          case False
+          hence "predOrd xs x y"
+            using Step Cons by auto
+          then obtain ys zs where "?decomp xs ys zs"
+            using Cons by blast
+          hence "?decomp (e#xs) (e#ys) zs"
+            using Step Cons by auto
+          thus ?thesis by blast
+        qed
       next
-	case (Learns M) thus ?thesis
-	proof(cases "\<exists> m \<in> M. x = Ln m")
-	  case True 
-	  then obtain m where "m \<in> M" and "x = Ln m"
-	    by auto
-	  hence "?decomp (e#xs) [e] xs" 
-	    using Learns Cons by auto
-	  thus ?thesis by blast
-	next
-	  case False
-	  hence "predOrd xs x y"
-	    using Learns Cons by auto
-	  then obtain ys zs where "?decomp xs ys zs"
-	    using Cons by blast
-	  hence "?decomp (e#xs) (e#ys) zs"
-	    using Learns Cons by auto
-	  thus ?thesis by blast
-	qed
+        case (Learns M) thus ?thesis
+        proof(cases "\<exists> m \<in> M. x = Ln m")
+          case True
+          then obtain m where "m \<in> M" and "x = Ln m"
+            by auto
+          hence "?decomp (e#xs) [e] xs"
+            using Learns Cons by auto
+          thus ?thesis by blast
+        next
+          case False
+          hence "predOrd xs x y"
+            using Learns Cons by auto
+          then obtain ys zs where "?decomp xs ys zs"
+            using Cons by blast
+          hence "?decomp (e#xs) (e#ys) zs"
+            using Learns Cons by auto
+          thus ?thesis by blast
+        qed
       next
         case (LKReveal a) thus ?thesis
         proof(cases "x = LKR (Lit (EAgent a))")
@@ -1027,45 +1026,45 @@ proof -
     next
       case (Cons e xs)
       then obtain ys zs where decomp1: "?decomp (e#xs) ys zs"
-	by blast
+        by fast
       hence "ys = [] \<and> e # xs = zs \<or> (\<exists>ys'. e # ys' = ys \<and> xs = ys' @ zs)"
-	(is "?nil \<or> ?non_nil")
-	by (simp add: Cons_eq_append_conv)
+        (is "?nil \<or> ?non_nil")
+        by (simp add: Cons_eq_append_conv)
       moreover
       { assume ?nil hence ?case using decomp1 by auto }
       moreover
       { assume ?non_nil
-	then obtain ys' where decomp2: "ys = e # ys'" and "xs = ys' @ zs"
-	  by auto
-	hence ?case
-	proof(cases e)
-	  case (Step st) thus ?thesis
-	  proof(cases "x = St st")
-	    case True thus ?thesis
-	      using Step decomp1 decomp2 by auto
-	  next
-	    case False
-	    hence "?decomp xs ys' zs"
-	      using Step decomp1 decomp2 by auto
-	    hence "predOrd xs x y"
-	      using Cons by auto
-	    thus ?thesis
-	      using Step by auto
-	  qed
-	next
-	  case (Learns M) thus ?thesis
-	  proof(cases "\<exists> m \<in> M. x = Ln m")
-	    case True thus ?thesis
-	      using Learns decomp1 decomp2 by auto
-	  next
-	    case False
-	    hence "?decomp xs ys' zs"
-	      using Learns decomp1 decomp2 by auto
-	    hence "predOrd xs x y"
-	      using Cons by auto
-	    thus ?thesis
-	      using Learns by auto
-	  qed
+        then obtain ys' where decomp2: "ys = e # ys'" and "xs = ys' @ zs"
+          by auto
+        hence ?case
+        proof(cases e)
+          case (Step st) thus ?thesis
+          proof(cases "x = St st")
+            case True thus ?thesis
+              using Step decomp1 decomp2 by auto
+          next
+            case False
+            hence "?decomp xs ys' zs"
+              using Step decomp1 decomp2 by auto
+            hence "predOrd xs x y"
+              using Cons by auto
+            thus ?thesis
+              using Step by auto
+          qed
+        next
+          case (Learns M) thus ?thesis
+          proof(cases "\<exists> m \<in> M. x = Ln m")
+            case True thus ?thesis
+              using Learns decomp1 decomp2 by auto
+          next
+            case False
+            hence "?decomp xs ys' zs"
+              using Learns decomp1 decomp2 by auto
+            hence "predOrd xs x y"
+              using Cons by auto
+            thus ?thesis
+              using Learns by auto
+          qed
         next
           case (LKReveal a) thus ?thesis
           proof(cases "x = LKR (Lit (EAgent a))")
@@ -1080,7 +1079,7 @@ proof -
             thus ?thesis 
               using LKReveal by auto
           qed
-	qed
+        qed
       }
       ultimately show ?case by fast
     qed
@@ -1333,12 +1332,12 @@ proof -
     { assume "?tup"  hence "?thesis" by fastforce } moreover
     { assume "?chain t r s"
       hence "?chain (t@t') r s" 
-	by (fastforce intro!: decrChain_append)
+        by (fastforce intro!: decrChain_append)
       hence "?thesis" by blast
     } moreover
     { assume "?note t r s"
       hence "?note (t@t') r s" 
-	by (fastforce intro!: decrChain_append)
+        by (fastforce intro!: decrChain_append)
       hence "?thesis" by blast
     } moreover
     { assume "?keys" hence "?thesis" by auto }
@@ -1358,7 +1357,7 @@ proof -
       using hash by fastforce
     moreover
     { assume "?new" hence ?case 
-	using `m \<in> knows t` by fastforce 
+        using `m \<in> knows t` by fastforce
     }
     moreover
     { assume "?old" 
@@ -1373,7 +1372,7 @@ proof -
       using encr by fastforce
     moreover
     { assume "?new" hence ?case 
-	using `m \<in> knows t` and `k \<in> knows t` by fastforce 
+        using `m \<in> knows t` and `k \<in> knows t` by fastforce
     }
     moreover
     { assume "?old" 
@@ -1388,7 +1387,7 @@ proof -
       using tuple by fastforce
     moreover
     { assume "?new" hence ?case 
-	using `x \<in> knows t` and `y \<in> knows t` by fastforce 
+        using `x \<in> knows t` and `y \<in> knows t` by fastforce
     }
     moreover
     { assume "?old" 
@@ -1518,10 +1517,10 @@ proof -
     moreover
     { assume "?new"
       hence "decrChain [] ?t' {St (i, Send l pt)} m m'"
-	by (fastforce intro!: decrChain_unpair)
+        by (fastforce intro!: decrChain_unpair)
       moreover
       have "?r' i = Some (done @ [Send l pt], todo, skipped)"
-	using th1.thread_exists by auto
+        using th1.thread_exists by auto
       ultimately
       have ?case using `Some m = inst s i pt`
         apply-
@@ -1531,13 +1530,13 @@ proof -
         apply(rule disjI2)
         apply(rule disjI1)
         apply(fastforce)
-	done
+        done
     }
     moreover
     { assume "?old" 
       hence "?cases m' t r s" 
         (is "?ik0 \<or> ?hash \<or> ?enc \<or> ?tup \<or> ?chain t r s \<or> ?note t r s \<or> ?keys")
-	using send by clarsimp
+        using send by clarsimp
       moreover
       { assume "?ik0"   hence "?case" by blast    } moreover
       { assume "?hash"  hence "?case" by fastforce } moreover
@@ -1545,38 +1544,38 @@ proof -
       { assume "?keys"  hence "?case" by fastforce } moreover
       { assume "?tup"   hence "?case" by fastforce } moreover
       { assume "?chain t r s" then
-	obtain i' done' todo' l' pt' skipped' m
-	  where thread': "r i' = Some (done', todo',skipped')"
-	  and send: "Send l' pt' \<in> set done'"
-          and msg:  "Some m = inst s i' pt'"
-	  and chain: "decrChain [] t {St (i', Send l' pt')} m m'"
-	  by auto
-	obtain done'' todo'' skipped''
-	  where "Send l' pt' \<in> set done''"
-	  and "(r(i \<mapsto> (done @ [Send l pt], todo, skipped))) i' = Some (done'', todo'',skipped'')"
-	  using `r i = Some (done, Send l pt # todo, skipped)` thread' send
-	  by (cases "i = i'") (fastforce+)
-	hence "?chain ?t' ?r' s"
-	  using chain msg
-          by (fast intro!: decrChain_append)
-	hence "?case" by auto
+        obtain i' done' todo' l' pt' skipped' m
+          where thread': "r i' = Some (done', todo',skipped')"
+          and send: "Send l' pt' \<in> set done'"
+                and msg:  "Some m = inst s i' pt'"
+          and chain: "decrChain [] t {St (i', Send l' pt')} m m'"
+          by auto
+        obtain done'' todo'' skipped''
+          where "Send l' pt' \<in> set done''"
+          and "(r(i \<mapsto> (done @ [Send l pt], todo, skipped))) i' = Some (done'', todo'',skipped'')"
+          using `r i = Some (done, Send l pt # todo, skipped)` thread' send
+          by (cases "i = i'") (fastforce+)
+        hence "?chain ?t' ?r' s"
+          using chain msg
+                by (fast intro!: decrChain_append)
+        hence "?case" by auto
       } moreover
       { assume "?note t r s" then
         obtain i' done' todo' skipped' l' ty' pt' m
-	  where thread': "r i' = Some (done', todo', skipped')"
-	  and inDone: "Note l' ty' pt' \<in> set done'"
+          where thread': "r i' = Some (done', todo', skipped')"
+          and inDone: "Note l' ty' pt' \<in> set done'"
           and notSkipped: "Note l' ty' pt' \<notin> skipped'"
           and msg: "Some m = inst s i' pt'"
-	  and chain: "decrChain [] t {St (i', Note l' ty' pt')} m m'"
+          and chain: "decrChain [] t {St (i', Note l' ty' pt')} m m'"
           by auto
         obtain done'' todo'' skipped''
-	  where "Note l' ty' pt' \<in> set done''"
+          where "Note l' ty' pt' \<in> set done''"
           and "Note l' ty' pt' \<notin> skipped'' "
-	  and "?r' i' = Some (done'', todo'', skipped'')"
-	  using `r i = Some (done, Send l pt # todo, skipped)` thread' inDone notSkipped
-	  by (cases "i = i'") (fastforce+)
+          and "?r' i' = Some (done'', todo'', skipped'')"
+          using `r i = Some (done, Send l pt # todo, skipped)` thread' inDone notSkipped
+          by (cases "i = i'") (fastforce+)
         hence "?note ?t' ?r' s" using chain notSkipped inDone msg
- 	  by(fast intro!: decrChain_append)
+          by(fast intro!: decrChain_append)
         hence "?case" by auto
        }
       ultimately have ?case by fast
@@ -1595,53 +1594,53 @@ proof -
     { assume "?new"
       hence "m' \<in> pairParts m" and "m' \<notin> knows t" by auto
       hence 
-	"(predOrd t (Ln m) (Ln (Enc m k)) \<and> predOrd t (Ln k) (Ln (Enc m k))) \<or>
+        "(predOrd t (Ln m) (Ln (Enc m k)) \<and> predOrd t (Ln k) (Ln (Enc m k))) \<or>
          ((\<exists>i done todo skipped. r i = Some (done, todo,skipped) \<and>
           (\<exists>l pt ms. Send l pt \<in> set done \<and> Some ms = inst s i pt \<and> 
-                    decrChain [] t {St (i, Send l pt)} ms (Enc m k)))) \<or>
+                     decrChain [] t {St (i, Send l pt)} ms (Enc m k)))) \<or>
          ((\<exists>i done todo skipped. r i = Some (done, todo,skipped) \<and>
           (\<exists>l ty pt ms. Note l ty pt \<in> set done \<and> Note l ty pt \<notin> skipped \<and>
-                       Some ms = inst s i pt \<and> 
-                  decrChain [] t {St (i, Note l ty pt)} ms (Enc m k))))"
-	(is "?fake_enc \<or> ?decchain t (Enc m k) \<or> ?notechain t (Enc m k)")
-	using IH[OF `Enc m k \<in> knows t`] by auto
+                        Some ms = inst s i pt \<and>
+                        decrChain [] t {St (i, Note l ty pt)} ms (Enc m k))))"
+        (is "?fake_enc \<or> ?decchain t (Enc m k) \<or> ?notechain t (Enc m k)")
+        using IH[OF `Enc m k \<in> knows t`] by auto
       moreover
       { assume "?fake_enc"
-	hence "?case" using `?new`
-	  by (auto dest!: in_knows_predOrd1 s1.rev_knows_pairParts_closedD)
+        hence "?case" using `?new`
+          by (auto dest!: in_knows_predOrd1 s1.rev_knows_pairParts_closedD)
       }
       moreover
       { assume "?decchain t (Enc m k)" then
-	obtain i' done' todo' l' pt' skipped' ms
-	  where thread': "r i' = Some (done', todo',skipped')"
-	  and send: "Send l' pt' \<in> set done'"
-          and msg:  "Some ms = inst s i' pt'"
-	  and chain: "decrChain [] t {St (i', Send l' pt')} ms (Enc m k)"
-	  by auto
-	moreover
-	hence "decrChain [] ?t' {St (i', Send l' pt')} ms m'"
-	  using `?new` `Enc m k \<in> knows t` `inv k \<in> knows t`
-	  by (fastforce intro!: decrChain_decrypt)
-	ultimately
-	have "?decchain ?t' m'" by fastforce
-	hence "?case" by blast
+        obtain i' done' todo' l' pt' skipped' ms
+          where thread': "r i' = Some (done', todo',skipped')"
+          and send: "Send l' pt' \<in> set done'"
+                and msg:  "Some ms = inst s i' pt'"
+          and chain: "decrChain [] t {St (i', Send l' pt')} ms (Enc m k)"
+          by auto
+        moreover
+        hence "decrChain [] ?t' {St (i', Send l' pt')} ms m'"
+          using `?new` `Enc m k \<in> knows t` `inv k \<in> knows t`
+          by (fastforce intro!: decrChain_decrypt)
+        ultimately
+        have "?decchain ?t' m'" by fastforce
+        hence "?case" by blast
       }
       moreover
       { assume "?notechain t (Enc m k)" then
-	obtain i' done' todo' l' ty' pt' skipped' ms
-	  where thread': "r i' = Some (done', todo',skipped')"
-	  and inDone: "Note l' ty' pt' \<in> set done'"
-          and notSkipped: "Note l' ty' pt' \<notin>  skipped'"
-          and msg:   "Some ms = inst s i' pt'"
-	  and chain: "decrChain [] t {St (i', Note l' ty' pt')} ms (Enc m k)"
-	  by auto
-	moreover
-	hence "decrChain [] ?t' {St (i', Note l' ty' pt')} ms m'"
-	  using `?new` `Enc m k \<in> knows t` `inv k \<in> knows t`
-	  by (fastforce intro!: decrChain_decrypt)
-	ultimately
-	have "?notechain ?t' m'" by fastforce
-	hence "?case" by blast
+        obtain i' done' todo' l' ty' pt' skipped' ms
+          where thread': "r i' = Some (done', todo',skipped')"
+          and inDone: "Note l' ty' pt' \<in> set done'"
+                and notSkipped: "Note l' ty' pt' \<notin>  skipped'"
+                and msg:   "Some ms = inst s i' pt'"
+          and chain: "decrChain [] t {St (i', Note l' ty' pt')} ms (Enc m k)"
+          by auto
+        moreover
+        hence "decrChain [] ?t' {St (i', Note l' ty' pt')} ms m'"
+          using `?new` `Enc m k \<in> knows t` `inv k \<in> knows t`
+          by (fastforce intro!: decrChain_decrypt)
+        ultimately
+        have "?notechain ?t' m'" by fastforce
+        hence "?case" by blast
       }
       ultimately have ?case by fast
     }
@@ -1671,61 +1670,63 @@ proof -
     }
     ultimately show "?case" by fast
   next
-   case (skip t r s i "done" l ty pt todo skipped)
-   then interpret this_thread:  reachable_thread P t r s i "done" "Note l ty pt # todo" skipped  by unfold_locales
-   let ?r' = "r(i \<mapsto> (done @ [Note l ty pt], todo, insert (Note l ty pt) skipped))"
-   have "m' \<in> knows t" using skip by fastforce
-   hence "?cases m' t r s" 
-     (is "?ik0 \<or> ?hash \<or> ?enc \<or> ?tup \<or> ?chain t r s \<or> ?note t r s \<or> ?keys")
-     using skip by clarsimp
-   moreover
-   { assume "?ik0"   hence "?case" by blast    } moreover
-   { assume "?hash"  hence "?case" by fastforce } moreover
-   { assume "?enc"   hence "?case" by fastforce } moreover
-   { assume "?keys"  hence "?case" by fastforce } moreover
-   { assume "?tup"   hence "?case" by fastforce } moreover
-   { assume "?chain t r s" then
-     obtain i' done' todo' l' pt' skipped' m
+    case (skip t r s i "done" l ty pt todo skipped)
+    then interpret this_thread:
+      reachable_thread P t r s i "done" "Note l ty pt # todo" skipped
+      by unfold_locales
+    let ?r' = "r(i \<mapsto> (done @ [Note l ty pt], todo, insert (Note l ty pt) skipped))"
+    have "m' \<in> knows t" using skip by fastforce
+    hence "?cases m' t r s"
+      (is "?ik0 \<or> ?hash \<or> ?enc \<or> ?tup \<or> ?chain t r s \<or> ?note t r s \<or> ?keys")
+      using skip by clarsimp
+    moreover
+    { assume "?ik0"   hence "?case" by blast    } moreover
+    { assume "?hash"  hence "?case" by fastforce } moreover
+    { assume "?enc"   hence "?case" by fastforce } moreover
+    { assume "?keys"  hence "?case" by fastforce } moreover
+    { assume "?tup"   hence "?case" by fastforce } moreover
+    { assume "?chain t r s" then
+      obtain i' done' todo' l' pt' skipped' m
        where thread': "r i' = Some (done', todo',skipped')"
        and send: "Send l' pt' \<in> set done'"
        and msg: "Some m = inst s i' pt'"
        and chain: "decrChain [] t {St (i', Send l' pt')} m m'"
        by auto
-     obtain done'' todo'' skipped''
+      obtain done'' todo'' skipped''
        where "Send l' pt' \<in> set done''"
        and "?r' i' = Some (done'', todo'',skipped'')"
        using skip(3) thread' send
        by (cases "i = i'") (fastforce+)
-     hence "?chain t ?r'  s"
+      hence "?chain t ?r'  s"
        using chain msg by fast
-     hence "?case" by auto
-   }
-   moreover
-   { assume "?note t r s" then
-     obtain i' done' todo' skipped' l' ty' pt' m
-       where thread': "r i' = Some (done', todo', skipped')"
-       and inDone: "Note l' ty' pt' \<in> set done'"
-       and notSkipped: "Note l' ty' pt' \<notin> skipped'"
-       and msg:   "Some m = inst s i' pt'"
-       and chain: "decrChain [] t {St (i', Note l' ty' pt')} m m'"
-       by auto
+      hence "?case" by auto
+    }
+    moreover
+    { assume "?note t r s" then
+      obtain i' done' todo' skipped' l' ty' pt' m
+        where thread': "r i' = Some (done', todo', skipped')"
+        and inDone: "Note l' ty' pt' \<in> set done'"
+        and notSkipped: "Note l' ty' pt' \<notin> skipped'"
+        and msg:   "Some m = inst s i' pt'"
+        and chain: "decrChain [] t {St (i', Note l' ty' pt')} m m'"
+        by auto
       obtain done'' todo'' skipped''
-       where "Note l' ty' pt' \<in> set done''"
-       and "Note l' ty' pt' \<notin> skipped'' "
-       and "?r' i' = Some (done'', todo'', skipped'')"
-       using `r i = Some (done, Note l ty pt # todo, skipped)` thread' inDone notSkipped
-       by (cases "i = i'") (force dest: this_thread.done_notin_todoD)+
-     hence "?note t ?r' s" 
+        where "Note l' ty' pt' \<in> set done''"
+        and "Note l' ty' pt' \<notin> skipped'' "
+        and "?r' i' = Some (done'', todo'', skipped'')"
+        using `r i = Some (done, Note l ty pt # todo, skipped)` thread' inDone notSkipped
+        by (cases "i = i'") (force dest: this_thread.done_notin_todoD)+
+      hence "?note t ?r' s"
        using chain notSkipped inDone msg
        by fast
      hence "?case" by auto
-   } moreover
-   { assume "?keys" hence "?case" by fastforce }
-   ultimately  
-   show  "?case" by fastforce
+    } moreover
+    { assume "?keys" hence "?case" by fastforce }
+    ultimately
+    show  "?case" by fastforce
   next
-   case(compr t r s i "done" l ty pt todo skipped m m')
-   then interpret th1: 
+    case(compr t r s i "done" l ty pt todo skipped m m')
+    then interpret th1:
       reachable_thread P t r s i "done" "Note l ty pt # todo" skipped
       by unfold_locales
     let ?r' = "r(i \<mapsto> (done @ [Note l ty pt], todo, skipped))"
@@ -1735,12 +1736,8 @@ proof -
       using compr by fastforce
     moreover
     { assume "?new"
-  (*
-        hence "m' \<in> pairParts (inst s i pt)" and "m' \<notin> knows t" using `m = inst s i pt` 
-      by auto
-*)
-        hence "decrChain [] ?t' {St (i, Note l ty pt)} m m'" 
-          by (fastforce intro!: decrChain_unpair)
+      hence "decrChain [] ?t' {St (i, Note l ty pt)} m m'"
+        by (fastforce intro!: decrChain_unpair)
       moreover
         have "?r' i = Some (done @ [Note l ty pt], todo, skipped)" 
           using th1.thread_exists by auto
@@ -1751,7 +1748,7 @@ proof -
           by (fastforce dest: th1.todo_notin_skippedD)
       ultimately
       have ?case using `Some m = inst s i pt`
-	apply-
+        apply-
         apply(rule disjI2)
         apply(rule disjI2)
         apply(rule disjI2)
@@ -1764,7 +1761,7 @@ proof -
     { assume "?old" 
       hence "?cases m' t r s" 
         (is "?ik0 \<or> ?hash \<or> ?enc \<or> ?tup \<or> ?chain t r s \<or> ?note t r s \<or> ?keys")
-	using compr by clarsimp
+        using compr by clarsimp
       moreover
       { assume "?ik0"   hence "?case" by blast    } moreover
       { assume "?hash"  hence "?case" by fastforce } moreover
@@ -1772,35 +1769,35 @@ proof -
       { assume "?keys"  hence "?case" by fastforce } moreover
       { assume "?tup"   hence "?case" by fastforce } moreover
       { assume "?chain t r s" then
-	obtain i' done' todo' l' pt' skipped' m
-	  where thread': "r i' = Some (done', todo',skipped')"
-	  and send: "Send l' pt' \<in> set done'"
-          and msg:  "Some m = inst s i' pt'"
-	  and chain: "decrChain [] t {St (i', Send l' pt')} m m'"
-	  by auto
-	obtain done'' todo'' skipped''
-	  where "Send l' pt' \<in> set done''"
-	  and "(r(i \<mapsto> (done @ [Note l ty pt], todo, skipped))) i' = Some (done'', todo'',skipped'')"
-	  using compr(3) thread' send
-	  by (cases "i = i'") (fastforce+)
-	hence "?chain ?t' ?r' s" using chain msg
-          by(fast intro!: decrChain_append)
-	hence "?case"  by auto
+        obtain i' done' todo' l' pt' skipped' m
+          where thread': "r i' = Some (done', todo',skipped')"
+          and send: "Send l' pt' \<in> set done'"
+                and msg:  "Some m = inst s i' pt'"
+          and chain: "decrChain [] t {St (i', Send l' pt')} m m'"
+          by auto
+        obtain done'' todo'' skipped''
+          where "Send l' pt' \<in> set done''"
+          and "(r(i \<mapsto> (done @ [Note l ty pt], todo, skipped))) i' = Some (done'', todo'',skipped'')"
+          using compr(3) thread' send
+          by (cases "i = i'") (fastforce+)
+        hence "?chain ?t' ?r' s" using chain msg
+                by(fast intro!: decrChain_append)
+        hence "?case"  by auto
       } moreover
       { assume "?note t r s" then
         obtain i' done' todo' skipped' l' ty' pt' m
-	  where thread': "r i' = Some (done', todo', skipped')"
-	  and inDone: "Note l' ty' pt' \<in> set done'"
+          where thread': "r i' = Some (done', todo', skipped')"
+          and inDone: "Note l' ty' pt' \<in> set done'"
           and notSkipped: "Note l' ty' pt' \<notin> skipped'"
           and msg:   "Some m = inst s i' pt'"
-	  and chain: "decrChain [] t {St (i', Note l' ty' pt')} m m'"
+          and chain: "decrChain [] t {St (i', Note l' ty' pt')} m m'"
           by auto
         obtain done'' todo'' skipped''
-	  where "Note l' ty' pt' \<in> set done''"
+          where "Note l' ty' pt' \<in> set done''"
           and "Note l' ty' pt' \<notin> skipped'' "
-	  and "?r' i' = Some (done'', todo'', skipped'')"
-	  using `r i = Some (done, Note l ty pt # todo, skipped)` thread' inDone notSkipped
-	  by (cases "i = i'") (fastforce+)
+          and "?r' i' = Some (done'', todo'', skipped'')"
+          using `r i = Some (done, Note l ty pt # todo, skipped)` thread' inDone notSkipped
+          by (cases "i = i'") (fastforce+)
         hence "?note ?t' ?r' s"
           using chain notSkipped inDone msg
           by(fast intro!: decrChain_append)
