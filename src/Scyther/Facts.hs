@@ -1125,16 +1125,17 @@ chainRuleFacts m      facts0
           -- trace ("stepChains: " ++ roleName role ++"_"++getLabel l) (return ())
           modifyFacts $ insertStepPrefixClosed (Cert (tid, step))
           addCaseFragment $ stepLabel step
-          mapM_ annotateMVarType $ S.toList $ patFMV pt
+          subst <- getsFacts substMsg
+          mapM_ annotateMVarType . nub . msgFMV . subst $ inst tid pt
           msgChains [(Step tid step)] (inst tid pt)
         where
           -- annotating message variables with their type
-          annotateMVarType mv =
-              case M.lookup (mv, role) typ of
-                Nothing -> error $ "stepChains: no type provided for '"++show v++"'"
-                Just ty -> addExpandedTypeAnn (v, ty, tid)
-            where
-              v = MMVar (MVar (LocalId (mv, tid)))
+          annotateMVarType mv@(MVar (LocalId (v, tid')))
+              | tid' == tid = case M.lookup (v, role) typ of
+                  Nothing -> error $ "stepChains: no type provided for '"++show v++
+                                     "' of role "++roleName role
+                  Just ty -> addExpandedTypeAnn (MMVar mv, ty, tid)
+              | otherwise = return ()
 
           -- case naming
           msgName (MConst i)   = getId i
