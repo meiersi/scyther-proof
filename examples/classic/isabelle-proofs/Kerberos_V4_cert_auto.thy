@@ -141,78 +141,87 @@ proof -
   have "(t,r,s) : approx Kerberos_typing"
   proof(cases rule: reachable_in_approxI_ext
         [OF Kerberos_typing.monoTyp, completeness_cases_rule])
-    case (A_1_C t r s tid0) note facts = this
+    case (A_1_C t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = A_1_C
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (A_1_G t r s tid0) note facts = this
+    case (A_1_G t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = A_1_G
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (A_1_Tc1 t r s tid0) note facts = this
+    case (A_1_Tc1 t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = A_1_Tc1
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (C_2_A t r s tid0) note facts = this
+    case (C_2_A t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = C_2_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (C_2_AuthKey t r s tid0) note facts = this
+    case (C_2_AuthKey t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = C_2_AuthKey
+    thus ?case
     proof(sources! "
         Enc {| LC ''21'', s(MV ''AuthKey'' tid0), s(AV ''G'' tid0),
                s(MV ''Ta'' tid0), s(MV ''AuthTicket'' tid0)
             |}
             ( K ( s(AV ''C'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (C_2_AuthTicket t r s tid0) note facts = this
+    case (C_2_AuthTicket t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = C_2_AuthTicket
+    thus ?case
     proof(sources! "
         Enc {| LC ''21'', s(MV ''AuthKey'' tid0), s(AV ''G'' tid0),
                s(MV ''Ta'' tid0), s(MV ''AuthTicket'' tid0)
             |}
             ( K ( s(AV ''C'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (C_2_Ta t r s tid0) note facts = this
+    case (C_2_Ta t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = C_2_Ta
+    thus ?case
     proof(sources! "
         Enc {| LC ''21'', s(MV ''AuthKey'' tid0), s(AV ''G'' tid0),
                s(MV ''Ta'' tid0), s(MV ''AuthTicket'' tid0)
             |}
             ( K ( s(AV ''C'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (C_4_ServKey t r s tid0) note facts = this
+    case (C_4_ServKey t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = C_4_ServKey
+    thus ?case
     proof(sources! "
         Enc {| LC ''41'', s(MV ''ServKey'' tid0), s(AV ''S'' tid0),
                s(MV ''Tg'' tid0), s(MV ''ServTicket'' tid0)
             |}
             ( s(MV ''AuthKey'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (C_4_ServTicket t r s tid0) note facts = this
+    case (C_4_ServTicket t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = C_4_ServTicket
+    thus ?case
     proof(sources! "
         Enc {| LC ''41'', s(MV ''ServKey'' tid0), s(AV ''S'' tid0),
                s(MV ''Tg'' tid0), s(MV ''ServTicket'' tid0)
@@ -222,117 +231,129 @@ proof -
       thus ?thesis proof(sources! "
                        Enc {| LC ''3'', s(MV ''C'' tid1), s(MV ''Tc2'' tid1) |}
                            ( s(MV ''AuthKey'' tid0) ) ")
-      qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+      qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (C_4_Tg t r s tid0) note facts = this
+    case (C_4_Tg t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = C_4_Tg
+    thus ?case
     proof(sources! "
         Enc {| LC ''41'', s(MV ''ServKey'' tid0), s(AV ''S'' tid0),
                s(MV ''Tg'' tid0), s(MV ''ServTicket'' tid0)
             |}
             ( s(MV ''AuthKey'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (G_3_A t r s tid0) note facts = this
+    case (G_3_A t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = G_3_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (G_3_AuthKey t r s tid0) note facts = this
+    case (G_3_AuthKey t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = G_3_AuthKey
+    thus ?case
     proof(sources! "
         Enc {| LC ''22'', s(MV ''C'' tid0), s(AV ''G'' tid0),
                s(MV ''AuthKey'' tid0), s(MV ''Ta'' tid0)
             |}
             ( K ( s(MV ''A'' tid0) ) ( s(AV ''G'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (G_3_C t r s tid0) note facts = this
+    case (G_3_C t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = G_3_C
+    thus ?case
     proof(sources! "
         Enc {| LC ''3'', s(MV ''C'' tid0), s(MV ''Tc2'' tid0) |}
             ( s(MV ''AuthKey'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (G_3_S t r s tid0) note facts = this
+    case (G_3_S t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = G_3_S
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (G_3_Ta t r s tid0) note facts = this
+    case (G_3_Ta t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = G_3_Ta
+    thus ?case
     proof(sources! "
         Enc {| LC ''22'', s(MV ''C'' tid0), s(AV ''G'' tid0),
                s(MV ''AuthKey'' tid0), s(MV ''Ta'' tid0)
             |}
             ( K ( s(MV ''A'' tid0) ) ( s(AV ''G'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (G_3_Tc2 t r s tid0) note facts = this
+    case (G_3_Tc2 t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = G_3_Tc2
+    thus ?case
     proof(sources! "
         Enc {| LC ''3'', s(MV ''C'' tid0), s(MV ''Tc2'' tid0) |}
             ( s(MV ''AuthKey'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_5_C t r s tid0) note facts = this
+    case (S_5_C t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_5_C
+    thus ?case
     proof(sources! "
         Enc {| LC ''5'', s(MV ''C'' tid0), s(MV ''Tc3'' tid0) |}
             ( s(MV ''ServKey'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_5_G t r s tid0) note facts = this
+    case (S_5_G t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_5_G
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_5_ServKey t r s tid0) note facts = this
+    case (S_5_ServKey t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_5_ServKey
+    thus ?case
     proof(sources! "
         Enc {| LC ''42'', s(MV ''C'' tid0), s(AV ''S'' tid0),
                s(MV ''ServKey'' tid0), s(MV ''Tg'' tid0)
             |}
             ( K ( s(MV ''G'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_5_Tc3 t r s tid0) note facts = this
+    case (S_5_Tc3 t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_5_Tc3
+    thus ?case
     proof(sources! "
         Enc {| LC ''5'', s(MV ''C'' tid0), s(MV ''Tc3'' tid0) |}
             ( s(MV ''ServKey'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_5_Tg t r s tid0) note facts = this
+    case (S_5_Tg t r s tid0)
     then interpret state: Kerberos_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_5_Tg
+    thus ?case
     proof(sources! "
         Enc {| LC ''42'', s(MV ''C'' tid0), s(AV ''S'' tid0),
                s(MV ''ServKey'' tid0), s(MV ''Tg'' tid0)
             |}
             ( K ( s(MV ''G'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   qed
   thus "Kerberos_typing_state t r s" by unfold_locales auto
 qed
@@ -401,10 +422,10 @@ lemma (in restricted_Kerberos_state) A_AuthKey_secret:
   shows "False"
 using facts proof(sources! " LN ''AuthKey'' tid0 ")
   case A_2_AuthKey note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
+  thus ?thesis by (auto dest!: ltk_secrecy)
 next
   case A_2_AuthKey_1 note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
+  thus ?thesis by (auto dest!: ltk_secrecy)
 next
   case (C_3_AuthTicket_AuthKey tid1 a0 a1 tid3 a2 a3) note_unified facts = this facts
   thus ?thesis proof(sources! "
@@ -415,9 +436,9 @@ next
                        |}
                        ( K ( s(AV ''C'' tid1) ) ( s(MV ''A'' tid1) ) ) ")
     case (A_2_enc tid4) note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
-  qed (insert facts, (((clarsimp, order?) | order))+)?
-qed (insert facts, fastforce+)?
+    thus ?thesis by (auto dest!: ltk_secrecy)
+  qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_Kerberos_state) C_AuthKey_secret:
   assumes facts:
@@ -436,11 +457,11 @@ proof -
                        |}
                        ( K ( s(AV ''C'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (A_2_enc tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: A_AuthKey_secret intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_Kerberos_state) G_AuthKey_secret:
@@ -460,10 +481,10 @@ proof -
                        |}
                        ( K ( s(MV ''A'' tid0) ) ( s(AV ''G'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (A_2_enc_1 tid1) note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (C_3_AuthTicket_enc tid1 a0 a1 tid2 tid3 a2 a3) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -477,8 +498,8 @@ proof -
                          ( K ( s(AV ''C'' tid1) ) ( s(MV ''A'' tid1) ) ) ")
       case (A_2_enc tid4) note_unified facts = this facts
       thus ?thesis by (fastforce dest: A_AuthKey_secret intro: event_predOrdI)
-    qed (insert facts, (((clarsimp, order?) | order))+)?
-  qed (insert facts, fastforce+)?
+    qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_Kerberos_state) G_ServKey_sec:
@@ -500,8 +521,8 @@ using facts proof(sources! " LN ''ServKey'' tid0 ")
                        |}
                        ( s(MV ''AuthKey'' tid1) ) ")
     case (G_4_enc tid4) note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
-  qed (insert facts, (((clarsimp, order?) | order))+)?
+    thus ?thesis by (auto dest!: ltk_secrecy)
+  qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
 next
   case G_4_ServKey note_unified facts = this facts
   thus ?thesis proof(sources! "
@@ -510,18 +531,18 @@ next
                        |}
                        ( K ( s(MV ''A'' tid0) ) ( s(AV ''G'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (A_2_enc_1 tid1) note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (C_3_AuthTicket_enc tid1 a0 a1 tid2 tid3 a2 a3) note_unified facts = this facts
     thus ?thesis by (fastforce dest: G_AuthKey_secret intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 next
   case G_4_ServKey_1 note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
-qed (insert facts, fastforce+)?
+  thus ?thesis by (auto dest!: ltk_secrecy)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_Kerberos_state) C_ServKey_sec:
   assumes facts:
@@ -541,7 +562,7 @@ proof -
                        |}
                        ( K ( s(AV ''C'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (A_2_enc tid1) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -562,7 +583,7 @@ proof -
         thus ?thesis by (fastforce dest: A_AuthKey_secret intro: event_predOrdI)
       next
         case (A_2_enc_1 tid3) note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (C_3_AuthTicket_enc tid3 a0 a1 tid4 tid5 a2 a3) note_unified facts = this facts
         thus ?thesis proof(sources! "
@@ -576,10 +597,10 @@ proof -
                              ( K ( s(AV ''C'' tid3) ) ( s(MV ''A'' tid3) ) ) ")
           case (A_2_enc tid6) note_unified facts = this facts
           thus ?thesis by (fastforce dest: G_ServKey_sec intro: event_predOrdI)
-        qed (insert facts, (((clarsimp, order?) | order))+)?
-      qed (insert facts, fastforce+)?
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+        qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 (* subsection:  Authentication Properties  *)
@@ -624,7 +645,7 @@ proof -
                        |}
                        ( K ( s(AV ''C'' tid1) ) ( s(MV ''A'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (A_2_enc tid2) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -651,7 +672,7 @@ proof -
           thus ?thesis by (fastforce dest: A_AuthKey_secret intro: event_predOrdI)
         next
           case (A_2_enc_1 tid5) note_unified facts = this facts
-          thus ?thesis by (fastforce dest!: ltk_secrecy)
+          thus ?thesis by (auto dest!: ltk_secrecy)
         next
           case (C_3_AuthTicket_enc tid5 a0 a1 tid6 tid7 a2 a3) note_unified facts = this facts
           thus ?thesis proof(sources! "
@@ -684,16 +705,16 @@ proof -
                                    ( s(MV ''AuthKey'' tid8) ) ")
                 case (G_4_enc tid11) note_unified facts = this facts
                 thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-              qed (insert facts, (((clarsimp, order?) | order))+)?
-            qed (insert facts, (((clarsimp, order?) | order))+)?
+              qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
+            qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
           next
             case (G_4_enc_1 tid8) note_unified facts = this facts
             thus ?thesis by (fastforce dest: A_AuthKey_secret intro: event_predOrdI)
-          qed (insert facts, fastforce+)?
-        qed (insert facts, fastforce+)?
-      qed (insert facts, fastforce+)?
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+          qed (safe?, simp_all?, insert facts, (fastforce+)?)
+        qed (safe?, simp_all?, insert facts, (fastforce+)?)
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_Kerberos_state) G_auth:
@@ -725,10 +746,10 @@ proof -
                        |}
                        ( K ( s(MV ''A'' tid3) ) ( s(AV ''G'' tid3) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (A_2_enc_1 tid4) note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (C_3_AuthTicket_enc tid4 a0 a1 tid5 tid6 a2 a3) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -757,10 +778,10 @@ proof -
         next
           case (A_2_enc tid8) note_unified facts = this facts
           thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-        qed (insert facts, fastforce+)?
-      qed (insert facts, (((clarsimp, order?) | order))+)?
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+        qed (safe?, simp_all?, insert facts, (fastforce+)?)
+      qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 end

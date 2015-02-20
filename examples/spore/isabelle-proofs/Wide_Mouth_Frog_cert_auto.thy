@@ -65,33 +65,37 @@ proof -
   have "(t,r,s) : approx WMF_msc_typing"
   proof(cases rule: reachable_in_approxI_ext
         [OF WMF_msc_typing.monoTyp, completeness_cases_rule])
-    case (R_2_I t r s tid0) note facts = this
+    case (R_2_I t r s tid0)
     then interpret state: WMF_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = R_2_I
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (R_2_S t r s tid0) note facts = this
+    case (R_2_S t r s tid0)
     then interpret state: WMF_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = R_2_S
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (R_2_TimeS t r s tid0) note facts = this
+    case (R_2_TimeS t r s tid0)
     then interpret state: WMF_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = R_2_TimeS
+    thus ?case
     proof(sources! "
         Enc {| LC ''2'', s(MV ''TimeS'' tid0), s(MV ''I'' tid0),
                s(MV ''kIR'' tid0)
             |}
             ( K ( s(AV ''R'' tid0) ) ( s(MV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (R_2_kIR t r s tid0) note facts = this
+    case (R_2_kIR t r s tid0)
     then interpret state: WMF_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = R_2_kIR
+    thus ?case
     proof(sources! "
         Enc {| LC ''2'', s(MV ''TimeS'' tid0), s(MV ''I'' tid0),
                s(MV ''kIR'' tid0)
@@ -103,42 +107,46 @@ proof -
                               s(MV ''kIR'' tid0)
                            |}
                            ( K ( s(MV ''I'' tid0) ) ( s(AV ''S'' tid1) ) ) ")
-      qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+      qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_1_I t r s tid0) note facts = this
+    case (S_1_I t r s tid0)
     then interpret state: WMF_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_1_I
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_1_R t r s tid0) note facts = this
+    case (S_1_R t r s tid0)
     then interpret state: WMF_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_1_R
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_1_TimeI t r s tid0) note facts = this
+    case (S_1_TimeI t r s tid0)
     then interpret state: WMF_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_1_TimeI
+    thus ?case
     proof(sources! "
         Enc {| LC ''1'', s(MV ''TimeI'' tid0), s(MV ''R'' tid0),
                s(MV ''kIR'' tid0)
             |}
             ( K ( s(MV ''I'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_1_kIR t r s tid0) note facts = this
+    case (S_1_kIR t r s tid0)
     then interpret state: WMF_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_1_kIR
+    thus ?case
     proof(sources! "
         Enc {| LC ''1'', s(MV ''TimeI'' tid0), s(MV ''R'' tid0),
                s(MV ''kIR'' tid0)
             |}
             ( K ( s(MV ''I'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   qed
   thus "WMF_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -207,7 +215,7 @@ lemma (in restricted_WMF_state) I_kIR_sec:
   shows "False"
 using facts proof(sources! " LN ''kIR'' tid0 ")
   case I_1_kIR note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
+  thus ?thesis by (auto dest!: ltk_secrecy)
 next
   case (S_2_kIR tid1) note_unified facts = this facts
   thus ?thesis proof(sources! "
@@ -215,9 +223,9 @@ next
                        |}
                        ( K ( s(MV ''I'' tid1) ) ( s(AV ''S'' tid1) ) ) ")
     case (I_1_enc tid2) note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
-  qed (insert facts, (((clarsimp, order?) | order))+)?
-qed (insert facts, fastforce+)?
+    thus ?thesis by (auto dest!: ltk_secrecy)
+  qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_WMF_state) S_kIR_sec:
   assumes facts:
@@ -236,11 +244,11 @@ proof -
                        |}
                        ( K ( s(MV ''I'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (I_1_enc tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: I_kIR_sec intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_WMF_state) R_kIR_sec:
@@ -260,11 +268,11 @@ proof -
                        |}
                        ( K ( s(AV ''R'' tid0) ) ( s(MV ''S'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (S_2_enc tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: S_kIR_sec intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 (* subsection:  Authentication Properties  *)
@@ -297,11 +305,11 @@ proof -
                        |}
                        ( K ( s(MV ''I'' tid3) ) ( s(AV ''S'' tid3) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (I_1_enc tid4) note_unified facts = this facts
     thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_WMF_state) R_ni_synch:
@@ -337,7 +345,7 @@ proof -
                        |}
                        ( K ( s(AV ''R'' tid2) ) ( s(MV ''S'' tid2) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (S_2_enc tid3) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -346,12 +354,12 @@ proof -
                          |}
                          ( K ( s(MV ''I'' tid2) ) ( s(AV ''S'' tid3) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastforce dest!: ltk_secrecy)
+      thus ?thesis by (auto dest!: ltk_secrecy)
     next
       case (I_1_enc tid4) note_unified facts = this facts
       thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 end
