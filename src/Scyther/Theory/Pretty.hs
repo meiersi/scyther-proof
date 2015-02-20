@@ -303,7 +303,7 @@ prettySoundness :: Applicative f => Theory -> f Doc
 prettySoundness thy = case unsoundTheorems thy of
     []  -> emptyDoc
     ths -> vcat $
-      map text ["", "(* NOTE that the proofs of the following theorems are UNSOUND:", ""] ++
+      map text ["", "(* NOTE that the proofs of the following theorems are INVALID:", ""] ++
       map ppThm ths ++
       map text ["*)"]
   where
