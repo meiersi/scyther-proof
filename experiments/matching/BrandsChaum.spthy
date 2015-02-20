@@ -1,6 +1,20 @@
 theory BrandsChaum
 begin
 
+section{* Distance bounding following Brands, Chaum *}
+
+text{*
+
+We model the distance bounding protocol following Brands and Chaum
+
+  Stefan Brands and David Chaum. Distance-Bounding Protocols. EUROCRYPT '93     
+  Lecture Notes in Computer Science 765, pp. 344--359, Springer, 1993.
+
+Since the Dolev-Yao model has no notion of time, we can only show that
+the challenge-response steps have to happen in the right order.
+
+*}
+
 protocol BrandsChaum
 {
   1. P ->   : P, {m}k

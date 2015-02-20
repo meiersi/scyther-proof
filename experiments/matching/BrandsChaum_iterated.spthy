@@ -1,6 +1,13 @@
 theory BrandsChaum_iterated
 begin
 
+text{*
+
+The same model of the Brands Chaum distance bounding protocol as in BrandsChaum.spthy
+except that now two challenges are exchanged.
+
+*}
+
 protocol BrandsChaum
 {
   1.  P ->   : P, {m1, m2}k
