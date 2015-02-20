@@ -1,6 +1,23 @@
 theory ASW_optimistic_contract
 begin
 
+section{* Optimistic fair exchange following Asokan, Shoup, Waidner *}
+
+text{*
+
+We model the contract signing example from 
+
+  N. Asokan, V. Shoup, and M. Waidner. Asynchronous protocols for optimistic
+  fair exchange. In Proceedings of the IEEE Symposium on Research in Security
+  and Privacy, pages 86--99. IEEE Computer Society Press, 1998. 
+
+Since role scripts are linear, we model the non-deterministic choice to
+abort as separate roles that share the same prefix with the non-aborting role.
+The trusted party is therefore split into Ta and Tr which run only the
+abort protocol or only the resolve protocol.
+
+*}
+
 protocol Contract
 {
   00abort.   Ta ->    : {'bind', $T, n}sk($T)
@@ -30,6 +47,8 @@ protocol Contract
                         {{A, B, $T, n, 'text', h(sA)}sk(A), h(sB)}sk(B), sB
   verifyr.      -> Vr : {{A, B, $T, n, 'text', cA}sk(A), {{A, B, $T, n, 'text', cA}sk(A), cB}sk(B)}sk($T)
 }
+
+subsection{* Security Properties *}
 
 property (of Contract) Contract_typing:
   "n@A   :: Known(A_0regular) | n@Ta | n@Tr
