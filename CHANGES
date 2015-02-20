@@ -1,3 +1,8 @@
+* 0.10.0.0
+    - upgraded dependency on Isabelle to Isabelle2014
+    - add support for explicit matching and non-matching steps in protocols
+    - new protocol example for optimistic fair exchange
+
 * 0.8.0.0
     - upgraded dependency on Isabelle to Isabelle-2013-2
 
