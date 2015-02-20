@@ -31,7 +31,7 @@ setup{* ESPL_Definitions.KnowsCasesCache.setup *}
 method_setup sources =
   {* ESPL_Methods.sourcesP >> 
        (fn ((minimal, msg_t), opt_rule) => fn ctxt =>
-         METHOD_CASES (fn facts => 
+         METHOD_CASES (fn facts =>
            Seq.DETERM (HEADGOAL (
             ESPL_Methods.sources_tac ctxt 
              minimal msg_t opt_rule facts))))

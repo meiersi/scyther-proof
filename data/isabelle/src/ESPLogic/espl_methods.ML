@@ -84,7 +84,8 @@ fun finalize_knows_cases ctxt minimal facts case_th =
   end;
 
 (* The tactic underlying the "sources" proof method *)
-fun sources_tac ctxt minimal msg_t opt_raw_rule facts =
+fun sources_tac _ _ _ _ [] = (fn _ => fn _ => Seq.empty) (* fail when no facts are chained in *)
+ | sources_tac ctxt minimal msg_t opt_raw_rule facts =
   let
     val thy = Proof_Context.theory_of ctxt;
     val cert = Thm.cterm_of thy;
