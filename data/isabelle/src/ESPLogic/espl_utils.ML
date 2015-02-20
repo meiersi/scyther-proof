@@ -150,7 +150,7 @@ fun note_proven mk_tactic (a, ts) =
    inst is a positional instantiation.
 *)
 fun add_simple_locale b loc_name inst thy =
-  Expression.add_locale I b (Binding.empty)
+  Expression.add_locale b (Binding.empty)
   ( [ ( Locale.intern thy loc_name
       , ( ("",false)
         , Expression.Positional inst

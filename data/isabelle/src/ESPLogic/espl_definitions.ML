@@ -798,7 +798,7 @@ fun setup_typing mk_binding ann_def ctxt =
     val mono_typ_th = (@{const monoTyp} $ typ_const)
       |> HOLogic.mk_Trueprop
       |> Thm.cterm_of (Proof_Context.theory_of ctxt)
-      |> (fn ct => Goal.prove_internal [] ct
+      |> (fn ct => Goal.prove_internal ctxt [] ct
            (K autom_tac)
          );
   in

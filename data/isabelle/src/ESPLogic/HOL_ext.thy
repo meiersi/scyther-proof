@@ -55,8 +55,8 @@ lemma Some_if_pushR [simp]:
   by (auto split: if_splits)
 
 lemma Some_Option_map [simp]:
-  "(Some x = Option.map f a) = (\<exists>y. x = f y \<and> Some y = a)"
-  "(Option.map f a = Some x) = (\<exists>y. x = f y \<and> Some y = a)"
+  "(Some x = map_option f a) = (\<exists>y. x = f y \<and> Some y = a)"
+  "(map_option f a = Some x) = (\<exists>y. x = f y \<and> Some y = a)"
   by (cases a, auto)+
 
 

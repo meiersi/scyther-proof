@@ -88,15 +88,15 @@ lemma Kbd_split_inj:
    (Kbd a b = Kbd x y) = (a = x \<and> b = y \<or> a = y \<and> b = x)"
   apply(clarsimp simp: Kbd_def Agent_def agents_def set_eq_iff) 
   apply(rule iffI)
-  apply(rename_tac a b x y)
+  apply(rename_tac a' b' x' y')
   apply(safe)
-  apply(drule_tac x="a" in spec)
+  apply(drule_tac x="a'" in spec)
   apply(simp)
-  apply(drule_tac x="y" in spec)
+  apply(drule_tac x="y'" in spec)
   apply(simp)
-  apply(drule_tac x="x" in spec)
+  apply(drule_tac x="x'" in spec)
   apply(simp)
-  apply(drule_tac x="b" in spec)
+  apply(drule_tac x="b'" in spec)
   apply(simp)
   done
 
@@ -151,11 +151,11 @@ where
 | "inst s i (PEnc m k)   = opt_map2 Enc (inst s i m) (inst s i k)"
 | "inst s i (PSign m k)  = 
      opt_map2 Tup (inst s i m) 
-         (opt_map2 Enc  (inst s i m) (Option.map inv (inst s i k)))"
-| "inst s i (PHash m)    = Option.map Hash (inst s i m)"
+         (opt_map2 Enc  (inst s i m) (map_option inv (inst s i k)))"
+| "inst s i (PHash m)    = map_option Hash (inst s i m)"
 | "inst s i (PSymK a b)  = opt_map2   K    (inst s i a) (inst s i b)"
-| "inst s i (PAsymPK a)  = Option.map PK   (inst s i a)"
-| "inst s i (PAsymSK a)  = Option.map SK   (inst s i a)"
+| "inst s i (PAsymPK a)  = map_option PK   (inst s i a)"
+| "inst s i (PAsymSK a)  = map_option SK   (inst s i a)"
 | "inst s i (PShrK V)    = 
      (if   (\<forall> v \<in> V. s (v, i) \<in> Agent)
       then Some (KShr (agents {s (v, i) | v. v \<in> V})) 
@@ -171,12 +171,12 @@ where
 | "any_inst s i (PTup x y)  = var_lift2 (opt_map2 Tup) (any_inst s i x) (any_inst s i y)"
 | "any_inst s i (PEnc m k)  = var_lift2 (opt_map2 Enc) (any_inst s i m) (any_inst s i k)"
 | "any_inst s i (PSign m k) = var_lift2
-    (\<lambda>m' k'. opt_map2 Tup m' (opt_map2 Enc m' (Option.map inv k')))
+    (\<lambda>m' k'. opt_map2 Tup m' (opt_map2 Enc m' (map_option inv k')))
     (any_inst s i m) (any_inst s i k)"
-| "any_inst s i (PHash m)   = var_map (Option.map Hash) (any_inst s i m)"
+| "any_inst s i (PHash m)   = var_map (map_option Hash) (any_inst s i m)"
 | "any_inst s i (PSymK a b) = var_lift2 (opt_map2 K) (any_inst s i a) (any_inst s i b)"
-| "any_inst s i (PAsymPK a) = var_map (Option.map PK) (any_inst s i a)"
-| "any_inst s i (PAsymSK a) = var_map (Option.map SK) (any_inst s i a)"
+| "any_inst s i (PAsymPK a) = var_map (map_option PK) (any_inst s i a)"
+| "any_inst s i (PAsymSK a) = var_map (map_option SK) (any_inst s i a)"
 | "any_inst s i (PShrK V)   = Val (inst s i (PShrK V))"
 | "any_inst s i (PAny)      = Fun (\<lambda>m. Val (Some m))"
 

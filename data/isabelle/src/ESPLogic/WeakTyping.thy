@@ -412,7 +412,6 @@ proof -
               apply(rule source_case)
               apply(simp_all add: th1.role_in_P th1.roleMap th1.thread_exists 
                                   in_set_splits_conv remove_hints)
-              apply(blast)
               done
          qed
       }

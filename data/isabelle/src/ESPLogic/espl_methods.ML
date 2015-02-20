@@ -108,7 +108,7 @@ fun sources_tac ctxt minimal msg_t opt_raw_rule facts =
 
     val predOrd_elim_ths = @{thms in_knows_predOrd1 in_knows_predOrd2}
     val knows_thm = 
-      Goal.prove_internal [] knows_ct 
+      Goal.prove_internal ctxt [] knows_ct 
         (fn facts' => 
         ALLGOALS (Method.insert_tac (facts' @ facts)) THEN
         (ALLGOALS (assume_tac ORELSE' eresolve_tac predOrd_elim_ths)
@@ -222,7 +222,7 @@ fun prefix_close_cmd state =
 (* registering the prefix_close command *)
 val _ =
   Outer_Syntax.command @{command_spec "prefix_close"} "prefix close facts being used"
-    (Scan.succeed (Toplevel.print o (Toplevel.proof prefix_close_cmd)));
+    (Scan.succeed (Toplevel.proof prefix_close_cmd));
 
 
 (******************************************************************************

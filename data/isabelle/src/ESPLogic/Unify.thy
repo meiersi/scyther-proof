@@ -316,12 +316,12 @@ ML{*
 local
   fun define_cmd name info f =
     Outer_Syntax.command name info
-    (Parse_Spec.name_facts >> (Toplevel.print oo (Toplevel.proof o (note_modified_thmss f))));
+    (Parse_Spec.name_facts >> (Toplevel.proof o (note_modified_thmss f)));
 
   fun define_qualified_cmd name info f =
     Outer_Syntax.command name info
     (Parse.parname -- Parse_Spec.name_facts >> (fn (qualifier, args) =>
-      args |> note_modified_thmss (f qualifier) |> Toplevel.proof #> Toplevel.print));
+      args |> note_modified_thmss (f qualifier) |> Toplevel.proof));
 in
   val _ = 
     define_qualified_cmd @{command_spec "note_prefix_closed"}
