@@ -23,6 +23,7 @@ module Control.Monad.BoundedDFS (
 ) where
 
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Reader
@@ -41,10 +42,14 @@ class Monad m => MonadCost c m | m -> c where
 -- | An unbounded depth-first search monad for searches formulated using
 -- MonadPlus.
 newtype UnboundedDFS c a = UnboundedDFS { runUnboundedDFS :: Maybe a }
-  deriving( Monad )
+  deriving( Functor, Applicative, Monad )
 
 instance MonadCost c (UnboundedDFS c) where
   updateCost _ = return ()
+
+instance Alternative (UnboundedDFS c) where
+  empty = mzero
+  (<|>) = mplus
 
 instance MonadPlus (UnboundedDFS c) where
   mzero                                       = UnboundedDFS $ mzero
@@ -55,7 +60,7 @@ instance MonadPlus (UnboundedDFS c) where
 -- All choices are handled committing and there is no differentiation between
 -- failure due to cost overrun and other failures.
 newtype BoundedDFS c a = BoundedDFS { unBoundedDFS :: ReaderT (c -> Bool) (StateT c Maybe) a }
-  deriving( Monad )
+  deriving( Functor, Applicative, Monad )
 
 instance MonadCost c (BoundedDFS c) where
   updateCost f = BoundedDFS $ do
@@ -64,6 +69,10 @@ instance MonadCost c (BoundedDFS c) where
     let b' = f b
     guard (cond b')
     put b'
+
+instance Alternative (BoundedDFS c) where
+  empty = mzero
+  (<|>) = mplus
 
 instance MonadPlus (BoundedDFS c) where
   mzero = BoundedDFS mzero
@@ -86,7 +95,7 @@ newtype BranchAndBound c a =
   BranchAndBound { 
     unBranchAndBound :: ReaderT (c -> Bool) (StateT c Maybe) a 
   }
-  deriving( Monad )
+  deriving( Functor, Applicative, Monad )
 
 -- | Run a branch and bound search.
 runBranchAndBound :: Cost c => BranchAndBound c a -> c -> Maybe (a, c)
@@ -156,5 +165,8 @@ instance Cost c => MonadPlus (BranchAndBound c) where
      `mplus`
      -- m1 didn't do it, try m2
      unBranchAndBound m2)
-           
+
+instance Cost c => Alternative (BranchAndBound c) where
+  empty = mzero
+  (<|>) = mplus
 
