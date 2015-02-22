@@ -71,7 +71,7 @@ import qualified Text.Parsec as P
 import           Text.Parsec.Pos
 
 import qualified Scyther.Equalities as E
-import Scyther.Facts as F hiding (protocol)
+import Scyther.Facts as F hiding (variable, protocol)
 import Scyther.Sequent
 import Scyther.Proof
 import Scyther.Theory
@@ -328,6 +328,7 @@ tuplepattern = chainr1 multpattern (PTup <$ kw COMMA)
 
 -- | Parse a local identifier which is yet unresolved. The identifier is
 -- prefixed by a space to mark it for later resolution.
+tempIdentifier :: Parser s Id
 tempIdentifier = do i <- identifier
                     if isLetter (head i)
                       then return (Id (' ':i))

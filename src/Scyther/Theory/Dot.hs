@@ -342,7 +342,7 @@ tryNoteRole tid (Just role) env =
 dotFormula :: Formula -> MyDot ()
 dotFormula (FAtom atom) = dotAtom atom
 dotFormula (FConj f1 f2) = dotFormula f1 >> dotFormula f2
-dotFormula (FDisj f1 f2) = error "dotFormula: disjunction encountered."
+dotFormula (FDisj _f1 _f2) = error "dotFormula: disjunction encountered."
 dotFormula (FExists (Left tid) inner) = do
   localThreadInfo tid (findRole tid inner) $ do
     dotFormula inner

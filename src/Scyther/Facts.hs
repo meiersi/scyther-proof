@@ -273,7 +273,7 @@ tidQuantified facts tid =
 
 -- | Check if a agent id is quantified in these facts
 arbMsgIdQuantified :: Facts -> ArbMsgId -> CertResult
-arbMsgIdQuantified facts     (BoundVarId _) = certSuccess
+arbMsgIdQuantified _facts    (BoundVarId _) = certSuccess
 arbMsgIdQuantified facts aid@(FreeVarId _)  =
     certErrorIf (aid `S.notMember` amQuantifiers facts) $
         "unquantified aid: " ++ show aid
@@ -703,7 +703,10 @@ nextTID = maybe 0 (succ . fst) . S.maxView . tidQuantifiers
 -- | The next free agent identifier
 nextArbMsgId :: Facts -> ArbMsgId
 nextArbMsgId = FreeVarId . maybe 0 (next . fst) . S.maxView . amQuantifiers
-  where next (FreeVarId aid) = succ aid
+  where
+    -- FIXME (SM): there is an incomplete pattern-match here! This must be
+    -- fixed.
+    next (FreeVarId aid) = succ aid
 
 -- | Try to retrieve the typing; equal to 'mzero' if there is none.
 getTyping :: MonadPlus m => Facts -> m Typing
@@ -739,6 +742,8 @@ proveAtom facts = checkAtom . certified . certAtom facts
   checkAtom atom = case atom of
     ABool b              -> b
     AEq eq               -> E.reflexive eq
+    -- FIXME (SM): can't we do better than just defaulting to 'False'? If the
+    -- equalities don't contain variables, then we can check the inequality.
     AIneq eq             -> False
     AEv (Learn m)        -> all checkLearn (splitNonTrivial m)
     AEv ev               -> ev `S.member` events facts
