@@ -136,7 +136,7 @@ mscTyping proto =
               return eqs'
           _ -> error "mscTyping: the impossible happened"
 
-    lookupType (step, tid) v = gets (M.! (v, roleeqs M.! tid))
+    lookupType (_step, tid) v = gets (M.! (v, roleeqs M.! tid))
 
     keepExisting _new old = old
 

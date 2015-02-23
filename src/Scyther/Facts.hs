@@ -743,7 +743,7 @@ proveAtom facts = checkAtom . certified . certAtom facts
     AEq eq               -> E.reflexive eq
     -- NOTE (SM): inequalities typically contain variables. It is therefore
     -- not much use to try hard to prove inequalities.
-    AIneq eq             -> False
+    AIneq _eq            -> False
     AEv (Learn m)        -> all checkLearn (splitNonTrivial m)
     AEv ev               -> ev `S.member` events facts
     AEvOrd (Learn m, e2) -> all (checkLearnBefore e2) (splitNonTrivial m)
