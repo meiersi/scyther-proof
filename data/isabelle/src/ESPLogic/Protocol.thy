@@ -30,15 +30,16 @@ datatype pattern =
   | PFresh   id
   | PVar     varid
   | PHash    pattern
-  | PTup     pattern pattern 
-  | PEnc     pattern pattern 
+  | PTup     pattern pattern
+  | PEnc     pattern pattern
   | PSign    pattern pattern
-  | PSymK    pattern pattern 
-  | PShrK    "varid set"  (* variables denoting a set of agents sharing a key *)
-  | PAsymPK  pattern         
-  | PAsymSK  pattern         
+  | PSymK    pattern pattern
+  | PShrK    "varid set"  --{* variables denoting a set of agents sharing a key *}
+  | PAsymPK  pattern
+  | PAsymSK  pattern
+  | PAny     --{* wildcard for matching *}
 
-(* bi-directional keys between two agents referenced by variables *)
+text{* Bi-directional keys between two agents referenced by variables *}
 definition sKbd :: "varid \<Rightarrow> varid \<Rightarrow> pattern"
 where "sKbd a b = PShrK {a, b}"
 
@@ -79,6 +80,7 @@ lemma FMV_sKbd [simp]:
   by (auto simp: sKbd_def)
 
 
+text{* Free agent variables *}
 fun FAV :: "pattern \<Rightarrow> id set"
 where
   "FAV (PVar (AVar a)) = {a}"
@@ -97,12 +99,18 @@ lemma FAV_sKbd [simp]:
   by (auto simp: sKbd_def)
 
 
-subsubsection{* Roles *}
+subsubsection{* Role Steps *}
 
 text{*
-  Roles are non-empty lists of unique send and receive steps 
-  such that no long-term keys are used in message texts and all 
+  Roles are non-empty lists of unique send and receive steps
+  such that no long-term keys are used in message texts and all
   nonce variables are received before they are sent.
+  Additionally, match steps can be used to express local constraints
+  on variables and messages. Matching may be positive (equality
+  must hold in order to execute the step) or negative.
+
+  Note steps indicate possible points of dynamic information
+  leakage.
 
   The labels allow to make steps with identical message unique.
   They are currently defaulted to strings, but could be anything.
@@ -112,32 +120,104 @@ type_synonym lbl = string
 
 datatype notetype = RandGen | State | SessKey
 
-datatype rolestep = Send lbl pattern | Recv lbl pattern | Note lbl notetype pattern
+datatype rolestep = Send lbl pattern
+| Recv lbl pattern
+| Match lbl bool varid pattern
+| Note lbl notetype pattern
 
+text {*
+  Free message variables guaranteed to be instantiated (having
+  a semantic source) after a role step was executed.
+*}
+fun sourced_vars :: "rolestep \<Rightarrow> id set"
+where
+  "sourced_vars (Recv  lbl        pt) = FMV pt"
+| "sourced_vars (Match lbl True v pt) = FMV pt"
+| "sourced_vars _ = {}"
+
+text {*
+  Free message variables which must have been obtained previously
+  when performing a role step.
+*}
+fun used_vars :: "rolestep \<Rightarrow> id set"
+where
+  "used_vars (Send  lbl         msg) = FMV msg"
+| "used_vars (Recv  lbl         pt)  = {}"
+| "used_vars (Match lbl True  v pt)  = {m. v = MVar m}"
+| "used_vars (Match lbl False v pt)  = {m. v = MVar m} \<union> FMV pt"
+| "used_vars (Note  lbl ty      msg) = FMV msg"
+
+text {* Free variables of a role step *}
+fun FV_rolestep :: "rolestep \<Rightarrow> varid set"
+where
+  "FV_rolestep (Send  lbl      pt) = FV pt"
+| "FV_rolestep (Recv  lbl      pt) = FV pt"
+| "FV_rolestep (Match lbl eq v pt) = {v} \<union> FV pt"
+| "FV_rolestep (Note  lbl ty   pt) = FV pt"
+
+text {* Free agent variables of a role step *}
+fun FAV_rolestep :: "rolestep \<Rightarrow> id set"
+where
+  "FAV_rolestep (Send  lbl      pt) = FAV pt"
+| "FAV_rolestep (Recv  lbl      pt) = FAV pt"
+| "FAV_rolestep (Match lbl eq v pt) = {a. v = AVar a} \<union> FAV pt"
+| "FAV_rolestep (Note  lbl ty   pt) = FAV pt"
+
+text {* The pattern of a rolestep *}
 fun stepPat :: "rolestep \<Rightarrow> pattern"
 where
-  "stepPat (Send lbl msg)    = msg"
-| "stepPat (Recv lbl msg)    = msg"
-| "stepPat (Note lbl ty msg) = msg"
+  "stepPat (Send  lbl      pt) = pt"
+| "stepPat (Recv  lbl      pt) = pt"
+| "stepPat (Match lbl eq v pt) = pt"
+| "stepPat (Note  lbl ty   pt) = pt"
 
+text {* The variable to match with (or not) *}
+fun matchVar :: "rolestep \<Rightarrow> varid"
+where
+  "matchVar (Match l eq v pt) = v"
+| "matchVar _                 = undefined"
+
+text {* The type of possible information leakage *}
 fun noteType :: "rolestep \<Rightarrow> notetype"
 where
   "noteType (Note l ty pt) = ty"
+| "noteType _              = undefined"
+
+
+text {* Predicates for step types *}
 
 fun sendStep :: "rolestep \<Rightarrow> bool"
 where
-  "sendStep (Send lbl    msg) = True"
-| "sendStep (Recv lbl    msg) = False"
-| "sendStep (Note lbl ty msg) = False"
+  "sendStep (Send lbl pt) = True"
+| "sendStep _             = False"
 
 fun noteStep :: "rolestep \<Rightarrow> bool"
 where
-  "noteStep (Send lbl    msg) = False"
-| "noteStep (Recv lbl    msg) = False"
-| "noteStep (Note lbl ty msg) = True"
+  "noteStep (Note lbl ty pt) = True"
+| "noteStep _                = False"
 
+fun recvStep :: "rolestep \<Rightarrow> bool"
+where
+  "recvStep (Recv lbl pt) = True"
+| "recvStep _             = False"
 
-abbreviation recvStep where "recvStep x \<equiv> \<not>sendStep x \<and> \<not> noteStep x"
+fun matchStep :: "rolestep \<Rightarrow> bool"
+where
+  "matchStep (Match lbl eq v pt) = True"
+| "matchStep _                   = False"
+
+text {* Distinguishing positive and negative match steps *}
+
+fun matchEqStep :: "rolestep \<Rightarrow> bool"
+where
+  "matchEqStep (Match lbl True v pt) = True"
+| "matchEqStep _                     = False"
+
+fun notMatchStep :: "rolestep \<Rightarrow> bool"
+where
+  "notMatchStep (Match lbl False v pt) = True"
+| "notMatchStep _                      = False"
+
 
 lemma sendStepD [simp]:
   assumes inStep: "sendStep step"
@@ -148,9 +228,34 @@ qed auto
 
 lemma recvStepD [simp]:
   assumes inStep: "recvStep step"
-  shows "\<exists> l pt. step = (Recv l pt)"
+  shows "\<exists> l v. step = (Recv l v)"
 using inStep
 proof(cases step)
+qed auto
+
+lemma matchStepD [simp]:
+  assumes inStep: "matchStep step"
+  shows "\<exists> l eq v pt. step = (Match l eq v pt)"
+using inStep
+proof (cases step)
+qed auto
+
+lemma matchEqStepD [simp]:
+  assumes inStep: "matchEqStep step"
+  shows "\<exists> l v pt. step = (Match l True v pt)"
+using inStep
+proof (cases step)
+  case (Match lbl eq v pt)
+  thus ?thesis using inStep by (cases eq, auto)
+qed auto
+
+lemma notMatchStepD [simp]:
+  assumes inStep: "notMatchStep step"
+  shows "\<exists> l v pt. step = (Match l False v pt)"
+using inStep
+proof (cases step)
+  case (Match lbl eq v pt)
+  thus ?thesis using inStep by (cases eq, auto)
 qed auto
 
 lemma noteStepD [simp]:
@@ -161,24 +266,28 @@ proof(cases step)
 qed auto
 
 
+subsubsection{* Roles *}
+
 type_synonym "role" = "rolestep list"
 
-fun recv_before :: "id set \<Rightarrow> role \<Rightarrow> bool"
+text{*
+  Message variables whose values are semantically used in a
+  role step, i.e., sent or matched against, must have been
+  instantiated in an earlier step of the role.
+*}
+fun source_before_use :: "id set \<Rightarrow> role \<Rightarrow> bool"
 where
-  "recv_before bound []                = True"
-| "recv_before bound (Recv _ msg # xs) = 
-     recv_before (bound \<union> FMV msg) xs"
-| "recv_before bound (Note _ _ msg # xs) =
-     ((\<forall> v. v \<in> FMV msg \<longrightarrow> v \<in> bound) \<and>  recv_before bound xs)"
-| "recv_before bound (Send _ msg # xs) =
-     ((\<forall> v. v \<in> FMV msg \<longrightarrow> v \<in> bound) \<and>  recv_before bound xs)"
+  "source_before_use bound [] = True"
+| "source_before_use bound (step # xs) =
+    ((used_vars step \<subseteq> bound)
+    \<and> source_before_use (bound \<union> sourced_vars step) xs)"
 
 
 locale wf_role =
   distinct_list R for R :: "role" +
-  assumes recv_msgVar_first [iff]: "recv_before {} R"
+  assumes source_msgVar_first [iff]: "source_before_use {} R"
 
-  
+
 subsubsection{* Protocols *}
 
 type_synonym proto = "role set"
@@ -192,80 +301,44 @@ subsection{* Properties *}
 
 subsubsection{* Well-Formed Roles *}
 
-lemma recv_before_sent_distinct_Send_FV:
-  "\<lbrakk>  recv_before V (R@ Send lbl pt # R'); 
-      distinct (R @ Send lbl pt # R');
-      v \<in> FMV pt; v \<notin> V 
+lemma source_before_use_distinct:
+  "\<lbrakk>  source_before_use V (R @ step # R');
+      distinct (R @ step # R');
+      v \<in> used_vars step; v \<notin> V
    \<rbrakk> \<Longrightarrow>
-   \<exists> lbl' pt'. Recv lbl' pt' \<in> set R \<and> v \<in> FMV pt'"
-proof(induct R arbitrary: V)
-  case (Cons step R) note IH = this show ?case
-    proof(cases step)
-      case (Send lbl pt) thus ?thesis using IH by auto
+   (\<exists> step'. step' \<in> set R \<and> v \<in> sourced_vars step')"
+proof (induct R arbitrary: V)
+  case (Cons step R)
+    note IH = this show ?case
+    proof (cases step)
+      case Send thus ?thesis using IH by fastforce
     next
-      case (Recv lbl pt) thus ?thesis using IH by (auto, fast)
+      case Recv thus ?thesis using IH by fastforce
     next
-      case (Note lbl ty pt) thus ?thesis using IH by auto
+      case Match thus ?thesis using IH by fastforce
+    next
+      case Note thus ?thesis using IH by fastforce
     qed
-qed simp
+qed auto
 
-lemma recv_before_note_distinct_Note_FV:
-  "\<lbrakk>  recv_before V (R@ Note lbl ty pt # R'); 
-      distinct (R @ Note lbl ty pt # R');
-      v \<in> FMV pt; v \<notin> V 
-   \<rbrakk> \<Longrightarrow>
-   \<exists> lbl' pt'. Recv lbl' pt' \<in> set R \<and> v \<in> FMV pt'"
-proof(induct R arbitrary: V)
-  case (Cons Note R) 
-  note IH = this show ?case
-    proof(cases Note)
-      case (Send lbl pt) thus ?thesis using IH by auto
-    next
-      case (Recv lbl pt) thus ?thesis using IH by (auto, fast)
-    next
-      case (Note lbl ty pt) thus ?thesis using IH by auto
-    qed
-qed simp
-
-
-lemma (in wf_role) Send_FV:
-  assumes Send: "Send lbl pt \<in> set R" (is "?send \<in> set R")
-      and FV:   "v \<in> FMV pt"
-  shows "\<exists> lbl' pt'. listOrd R (Recv lbl' pt') (Send lbl pt) \<and> v \<in> FMV pt'" 
-using Send 
+lemma (in wf_role) source_use_ord:
+  assumes useR: "ustep \<in> set R"
+      and useV: "v \<in> used_vars ustep"
+    shows "\<exists> sstep. v \<in> sourced_vars sstep \<and> listOrd R sstep ustep" (is "\<exists> sstep. ?source sstep")
+using useR
 proof -
-  let ?send = "Send lbl pt"
-    and "\<exists> lbl' pt'. ?received lbl' pt'" = ?thesis
-  assume "?send \<in> set R" then
-  obtain ys zs 
-    where split: "R = ys @ ?send # zs" by (blast dest!: split_list)
-  moreover have "distinct R" and "recv_before {} R" by auto
-  ultimately obtain lbl' pt' where "Recv lbl' pt' \<in> set ys" 
-                                and "v \<in> FMV pt'"
-             by (fastforce dest!: recv_before_sent_distinct_Send_FV intro!: FV)
-  hence "?received lbl' pt'" using split by auto
+  assume "ustep \<in> set R"
+  then obtain ys zs 
+    where split: "R = ys @ ustep # zs" by (blast dest!: split_list)
+  moreover have "distinct R" and "source_before_use {} R" by auto
+  ultimately obtain sstep where "v \<in> sourced_vars sstep" and "sstep \<in> set ys"
+             by (fastforce dest!: source_before_use_distinct intro!: useV)
+  hence "?source sstep" using split by fastforce
   thus ?thesis by blast
 qed
 
 
-lemma (in wf_role) Note_FV:
-  assumes Note: "Note lbl ty pt \<in> set R" (is "?note \<in> set R")
-      and FV:   "v \<in> FMV pt"
-  shows "\<exists> lbl' pt'. listOrd R (Recv lbl' pt') (Note lbl ty pt) \<and> v \<in> FMV pt'" 
-using Note
-proof -
-  let ?send = "Note lbl ty pt"
-    and "\<exists> lbl' pt'. ?received lbl' pt'" = ?thesis
-  assume "?note \<in> set R" then
-  obtain ys zs 
-    where split: "R = ys @ ?note # zs" by (blast dest!: split_list)
-  moreover have "distinct R" and "recv_before {} R" by auto
-  ultimately obtain lbl' pt' where "Recv lbl' pt' \<in> set ys" 
-                                and "v \<in> FMV pt'"
-             by (fastforce dest!: recv_before_note_distinct_Note_FV intro!: FV)
-  hence "?received lbl' pt'" using split by auto
-  thus ?thesis by blast
-qed
+subsubsection{* Auxiliary Lemmas *}
 
 lemma FV_FAV_conv[iff]:
   "(a \<in> FAV pt) = ((AVar a) \<in> FV pt)"
@@ -283,11 +356,30 @@ proof(induct pt)
     by(cases vid) auto
 qed auto
 
+lemma sourced_imp_FV[dest]:
+  "v \<in> sourced_vars st \<Longrightarrow> MVar v \<in> FV_rolestep st"
+proof (cases st)
+  case (Match lbl eq mv pt)
+  assume "v \<in> sourced_vars st"
+  thus ?thesis using Match by (cases eq, auto)
+qed auto
+
+lemma used_imp_FV[dest]:
+  "v \<in> used_vars st \<Longrightarrow> MVar v \<in> FV_rolestep st"
+proof (cases st)
+  case (Match lbl eq mv pt)
+  assume "v \<in> used_vars st"
+  thus ?thesis using Match by (cases eq, auto)
+qed auto
+
+lemma source_noteD[dest]:
+  "\<lbrakk> v \<in> sourced_vars st; noteStep st \<rbrakk> \<Longrightarrow> False"
+by (auto dest: noteStepD)
 
 
 definition aVars:: "role \<Rightarrow> varid set"
 where
-  "aVars role = foldr (\<lambda> st se. (AVar ` FAV (stepPat st)) \<union> se) role {}"
+  "aVars role = foldr (\<lambda> st se. (AVar ` FAV_rolestep st) \<union> se) role {}"
 
 lemma aVars_singleton[iff]:
   "AVar a \<notin> aVars []"
@@ -296,11 +388,11 @@ by(fastforce simp add: aVars_def)
 lemma aVars_Nil [iff]: "aVars [] = {}"
   by (auto simp: aVars_def)
 
-lemma aVars_Cons [simp]: "aVars (s#xs) = (AVar ` FAV (stepPat s) \<union> aVars xs)"
+lemma aVars_Cons [simp]: "aVars (s#xs) = (AVar ` FAV_rolestep s \<union> aVars xs)"
   by (auto simp: aVars_def)
 
 lemma aVars_FAV_conv:
-  "(AVar a \<in> aVars R) = (\<exists> s \<in> set R. \<exists> pt. (stepPat s = pt \<and> a \<in> FAV pt))"
+  "(AVar a \<in> aVars R) = (\<exists> s \<in> set R. a \<in> FAV_rolestep s)"
 by (induct R) ( fastforce simp add: aVars_def)+
 
 
@@ -347,8 +439,6 @@ lemma firstComStep_Cons [simp]: "firstComStep (x#xs) =
   )"
 proof (cases "[s\<leftarrow>xs . \<not> noteStep s]")
 qed (fastforce simp add: firstComStep_def)+ 
-
-
 
 
 end

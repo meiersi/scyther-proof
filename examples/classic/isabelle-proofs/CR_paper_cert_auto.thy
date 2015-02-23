@@ -32,12 +32,13 @@ proof -
   have "(t,r,s) : approx CR_msc_typing"
   proof(cases rule: reachable_in_approxI_ext
         [OF CR_msc_typing.monoTyp, completeness_cases_rule])
-    case (S_1_k t r s tid0) note facts = this
+    case (S_1_k t r s tid0)
     then interpret state: CR_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_1_k
+    thus ?case
     proof(sources! " Enc ( s(MV ''k'' tid0) ) ( PK ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   qed
   thus "CR_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -102,8 +103,8 @@ lemma (in restricted_CR_state) C_k_secrecy:
   shows "False"
 using facts proof(sources! " LN ''k'' tid0 ")
   case C_1_k note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
-qed (insert facts, fastforce+)?
+  thus ?thesis by (auto dest!: ltk_secrecy)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_CR_state) C_ni_synch:
   assumes facts:
@@ -132,8 +133,8 @@ proof -
     next
       case (C_1_enc tid3) note_unified facts = this facts
       thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 end

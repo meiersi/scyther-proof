@@ -87,7 +87,7 @@ import Scyther.Message
 import qualified Scyther.Typing     as T
 import           Scyther.Typing          hiding (substTypeAnn)
 import qualified Scyther.Equalities as E
-import           Scyther.Equalities      hiding (solve, substTID, threadRole, substMVar, substAVar, substMsg, substAnyEq, substAMID, empty, null)
+import           Scyther.Equalities      hiding (solve, substTID, threadRole, substMVar, substAVar, substMsg, substAnyEq, substInequality, substAMID, empty, null)
 import           Scyther.Event           hiding (substEv, substEvOrd)
 import qualified Scyther.Event      as E
 import           Scyther.Formula         hiding (substAtom)
@@ -126,6 +126,7 @@ data Facts = Facts {
   , compromised    :: S.Set Message  -- ^ Statements about agents being compromised.
   , uncompromised  :: S.Set Message  -- ^ Statements about agents being uncompromised.
   , equalities     :: E.Equalities   -- ^ All equalities that must hold.
+  , inequalities   :: S.Set Inequality -- ^ All inequalities that must hold.
   , tidQuantifiers :: S.Set TID      -- ^ All thread IDs occurring in the facts.
   , amQuantifiers  :: S.Set ArbMsgId  -- ^ All arbitrary-message IDs ocurring in the facts.
   , optTyping      :: Maybe Typing   -- ^ The typing if there is any that the
@@ -135,6 +136,8 @@ data Facts = Facts {
 
   , covered        :: S.Set Message  -- ^ The messages that have already been used in a
                                      --   case distinction.
+  , failedEqs      :: S.Set AnyEq    -- ^ All equalities which could not be solved.
+                                     --   A non-empty set implies false.
   , protocol       :: Protocol       -- ^ The protocol that the current state
                                      --   is a reachable state of.
   }
@@ -154,7 +157,9 @@ nullFacts facts =
   S.null (compromised facts) &&
   S.null (uncompromised facts) &&
   S.null (typeAnns facts) &&
-  E.null (equalities facts)
+  E.null (equalities facts) &&
+  S.null (inequalities facts) &&
+  S.null (failedEqs facts)
 
 ------------------------------------------------------------------------------
 -- Construction
@@ -162,7 +167,8 @@ nullFacts facts =
 
 -- | Empty set of facts; logically equivalent to true.
 empty :: Protocol -> Facts
-empty = Facts S.empty S.empty S.empty S.empty E.empty S.empty S.empty Nothing S.empty S.empty
+empty = Facts
+    S.empty S.empty S.empty S.empty E.empty S.empty S.empty S.empty Nothing S.empty S.empty S.empty
 
 -- | Set the protocol.
 --
@@ -267,7 +273,8 @@ tidQuantified facts tid =
 
 -- | Check if a agent id is quantified in these facts
 arbMsgIdQuantified :: Facts -> ArbMsgId -> CertResult
-arbMsgIdQuantified facts aid =
+arbMsgIdQuantified _facts    (BoundVarId _) = certSuccess
+arbMsgIdQuantified facts aid@(FreeVarId _)  =
     certErrorIf (aid `S.notMember` amQuantifiers facts) $
         "unquantified aid: " ++ show aid
 
@@ -314,11 +321,16 @@ anyEqQuantified facts eq = case eq of
     E.MVarEq (mv, m)      -> mvarQuantified facts mv >< msgQuantified facts m
     E.MsgEq (m1, m2)      -> msgQuantified facts m1 >< msgQuantified facts m2
 
+-- | Check if an inequality contains only quantified logical variables.
+ineqQuantified :: Facts -> E.Inequality -> CertResult
+ineqQuantified facts = anyEqQuantified facts . getInequality
+
 -- | Check if an atom contains only quantified logical variables.
 atomQuantified :: Facts -> Atom -> CertResult
 atomQuantified facts atom = case atom of
   ABool _      -> certSuccess
   AEq eq       -> anyEqQuantified facts eq
+  AIneq eq     -> ineqQuantified  facts eq
   AEv ev       -> evQuantified    facts ev
   AEvOrd ord   -> evOrdQuantified facts ord
   ACompr m     -> msgQuantified   facts m
@@ -364,6 +376,10 @@ certEvOrd = certify evOrdQuantified substEvOrd
 -- | Certify an equality.
 certAnyEq :: Facts -> E.AnyEq -> Cert E.AnyEq
 certAnyEq = certify anyEqQuantified substAnyEq
+
+-- | Certify an inequality.
+certInequality :: Facts -> Inequality -> Cert Inequality
+certInequality = certify ineqQuantified substInequality
 
 -- | Certify an atom: All logical variables are quantified under the given
 -- facts and all values are invariant under the equalities associated with the
@@ -413,6 +429,10 @@ substMsg = liftSubst E.substMsg
 substAnyEq :: Facts -> E.AnyEq -> E.AnyEq
 substAnyEq = liftSubst E.substAnyEq
 
+-- | Substitute an inequality.
+substInequality :: Facts -> Inequality -> Inequality
+substInequality = liftSubst E.substInequality
+
 -- | Substitute an atom.
 substAtom :: Facts -> Atom -> Atom
 substAtom = liftSubst F.substAtom
@@ -458,10 +478,12 @@ solve ueqs facts = do
     , compromised    = S.map (E.substMsg eqs)   (compromised   facts)
     , uncompromised  = S.map (E.substMsg eqs)   (uncompromised facts)
     , equalities     = eqs
+    , inequalities   = S.map (E.substInequality eqs) (inequalities facts)
     , tidQuantifiers = tidQuantifiers facts
     , amQuantifiers  = amQuantifiers facts
     , typeAnns       = S.map (T.substTypeAnn eqs) (typeAnns facts)
     , covered        = S.map (E.substMsg eqs)     (covered facts)
+    , failedEqs      = S.map (E.substAnyEq eqs)   (failedEqs facts)
     }
 
 
@@ -521,6 +543,16 @@ insertTypeAnn:: Cert TypeAnn -> Facts -> Facts
 insertTypeAnn tya prems =
   prems { typeAnns = S.insert (certified tya) (typeAnns prems) }
 
+-- | Insert an inequality.
+insertInequality :: Cert Inequality -> Facts -> Facts
+insertInequality ineq facts =
+  facts { inequalities = S.insert (certified ineq) (inequalities facts) }
+
+-- | Insert a failed equation.
+insertFailedEq :: Cert E.AnyEq -> Facts -> Facts
+insertFailedEq eq facts =
+  facts { failedEqs = S.insert (certified eq) (failedEqs facts) }
+
 -- | Build the conjunction of the atoms and the facts; a result of 'Nothing'
 -- means that the conjunction is logically equivalent to False. This will occur
 -- in case 'AFalse' is conjoined or an equality that cannot be unified.
@@ -538,6 +570,7 @@ conjoinAtoms atoms facts0 =
       -- FIXME: repeated calls to solve may be a bit expensive due to duplicated
       -- work of 'removeTrivialFacts'.
       AEq eq       -> return        $ solve [Cert eq] facts
+      AIneq eq     -> return . Just $ insertInequality (Cert eq) facts
       AEv ev       -> return . Just $ insertEvNonTrivial (Cert ev) facts
       AEvOrd ord   -> return . Just $ insertEvOrdNonTrivial (Cert ord) facts
       ACompr m     -> return . Just $ compromise m facts
@@ -573,16 +606,22 @@ insertEvOrdNonTrivial ord prems = case certified ord of
   insertLearnBefore to p m = insertEvOrdAndEvs (Cert (Learn m, to)) p
 
 -- | Insert an executed role step and all non-trivial facts implied by the
--- Input rule.
-insertStepInputClosed :: Cert (TID, RoleStep) -> Facts -> Facts
-insertStepInputClosed s prems = case certified s of
-  (tid, step@(Recv _ pt)) ->
-    let m = substMsg prems (inst tid pt) in
-    insertEvOrdNonTrivial (Cert (Learn m, Step tid step)) prems
-  (tid, step@(Send _ _))  -> insertEv (Cert (Step tid step)) prems
+-- Input, MatchEq, and NotMatch rules.
+insertStepClosed :: Cert (TID, RoleStep) -> Facts -> Facts
+insertStepClosed s prems = case certified s of
+  (tid, step@(Recv _ pt))         ->
+    let m = substMsg prems (inst tid pt)
+    in  insertEvOrdNonTrivial (Cert (Learn m, Step tid step)) prems
+  (tid, step@(Match _ True v pt)) ->
+    let eq  = certAnyEq prems $ MsgEq (instVar tid v, inst tid pt)
+    in  insertEv (Cert (Step tid step)) . maybe (insertFailedEq eq prems) id $ solve [eq] prems
+  (tid, step@(Match _ False v pt)) ->
+    let ineq = certInequality prems . Inequality $ MsgEq (instVar tid v, inst tid pt)
+    in  insertEv (Cert (Step tid step)) $ insertInequality ineq prems
+  (tid, step)                     -> insertEv (Cert (Step tid step)) prems
 
 -- | Insert an executed role step and all non-trivial facts implied by the
--- Input and Role rules.
+-- Input, MatchEq, NotMatch, and Role rules.
 insertStepPrefixClosed :: Cert (TID, RoleStep) -> Facts -> Facts
 insertStepPrefixClosed s = case certified s of
   (tid, step) -> execState $ do
@@ -590,11 +629,11 @@ insertStepPrefixClosed s = case certified s of
     role <- gets (fromMaybe err . threadRole tid)
     let prefix        = takeWhile (/= step) (roleSteps role) ++ [step]
         insertStepOrd = modify . insertEvOrdAndEvs . Cert . (Step tid *** Step tid)
-    mapM_ (modify . insertStepInputClosed . (Cert . ((,) tid))) prefix
+    mapM_ (modify . insertStepClosed . (Cert . ((,) tid))) prefix
     mapM_ insertStepOrd $ zip prefix (tail prefix)
 
--- | Insert an event an all non-trivial facts implied by the Input and Role
--- rules.
+-- | Insert an event an all non-trivial facts implied by the Input, MatchEq,
+-- and Role rules.
 insertEvSaturated :: Cert Event -> Facts -> Facts
 insertEvSaturated ev = case certified ev of
   (Learn _      ) -> insertEvNonTrivial ev
@@ -663,7 +702,10 @@ nextTID = maybe 0 (succ . fst) . S.maxView . tidQuantifiers
 
 -- | The next free agent identifier
 nextArbMsgId :: Facts -> ArbMsgId
-nextArbMsgId = maybe 0 (succ . fst) . S.maxView . amQuantifiers
+nextArbMsgId = FreeVarId . maybe 0 (next . fst) . S.maxView . amQuantifiers
+  where
+    next (FreeVarId aid) = succ aid
+    next (BoundVarId bid) = error ("nextArbMsgId: amQuantifiers contains BoundVarId " ++ show bid)
 
 -- | Try to retrieve the typing; equal to 'mzero' if there is none.
 getTyping :: MonadPlus m => Facts -> m Typing
@@ -675,9 +717,11 @@ getTyping = maybe mzero return . optTyping
 -- premises. The checks are separated due to efficiency reasons.
 proveFalse :: Facts -> Bool
 proveFalse prems =
+    not (S.null (failedEqs prems)) ||
     not (S.null (compromised prems `S.intersection` uncompromised prems)) ||
     any noAgent (S.toList (compromised prems)) ||
-    cyclic (eventOrd prems)
+    cyclic (eventOrd prems) ||
+    any falseIneq (S.toList (inequalities prems))
   where
     noAgent (MMVar _)  = False
     noAgent (MAVar _)  = False
@@ -697,6 +741,9 @@ proveAtom facts = checkAtom . certified . certAtom facts
   checkAtom atom = case atom of
     ABool b              -> b
     AEq eq               -> E.reflexive eq
+    -- NOTE (SM): inequalities typically contain variables. It is therefore
+    -- not much use to try hard to prove inequalities.
+    AIneq _eq            -> False
     AEv (Learn m)        -> all checkLearn (splitNonTrivial m)
     AEv ev               -> ev `S.member` events facts
     AEvOrd (Learn m, e2) -> all (checkLearnBefore e2) (splitNonTrivial m)
@@ -756,6 +803,7 @@ proveFormula facts = prove (Mapping E.empty)
   where
   prove mapping (FAtom atom)  = proveAtom facts (F.substAtom (getMappingEqs mapping) atom)
   prove mapping (FConj f1 f2) = prove mapping f1 && prove mapping f2
+  prove mapping (FDisj f1 f2) = prove mapping f1 || prove mapping f2
   prove mapping (FExists v f) = any (\mk -> prove (mk mapping) f) (mkMappings v)
   -- the mappings assign witnesses to the existentially quantified variables.
   mkMappings (Left  tid) = map (E.addTIDMapping tid)     (S.toList $ tidQuantifiers facts)
@@ -783,9 +831,12 @@ exploitLongTermKeySecrecy facts = msum . map check . S.toList $ events facts
 -----------------
 
 -- | Represent the facts as a set of atoms.
+--
+-- TODO: non-empty failedEqs imply False?
 toAtoms :: Facts -> [Atom]
 toAtoms facts = mconcat [
     AEq      <$> E.toAnyEqs (equalities    facts)
+  , AIneq    <$> S.toList   (inequalities  facts)
   , AUncompr <$> S.toList   (uncompromised facts)
   , ACompr   <$> S.toList   (compromised   facts)
   , AEv      <$> S.toList   (events        facts)
@@ -1072,21 +1123,23 @@ chainRuleFacts m      facts0
       msum . map stepChains $ roleSteps role
     where
       stepChains :: RoleStep -> ChainRuleM ()
-      stepChains (Recv _ _) = mzero
+      stepChains (Recv _ _)       = mzero
+      stepChains (Match _ _ _ _)  = mzero
       stepChains step@(Send _ pt) = do
           -- trace ("stepChains: " ++ roleName role ++"_"++getLabel l) (return ())
           modifyFacts $ insertStepPrefixClosed (Cert (tid, step))
           addCaseFragment $ stepLabel step
-          mapM_ annotateMVarType $ S.toList $ patFMV pt
+          subst <- getsFacts substMsg
+          mapM_ annotateMVarType . nub . msgFMV . subst $ inst tid pt
           msgChains [(Step tid step)] (inst tid pt)
         where
           -- annotating message variables with their type
-          annotateMVarType mv =
-              case M.lookup (mv, role) typ of
-                Nothing -> error $ "stepChains: no type provided for '"++show v++"'"
-                Just ty -> addExpandedTypeAnn (v, ty, tid)
-            where
-              v = MMVar (MVar (LocalId (mv, tid)))
+          annotateMVarType mv@(MVar (LocalId (v, tid')))
+              | tid' == tid = case M.lookup (v, role) typ of
+                  Nothing -> error $ "stepChains: no type provided for '"++show v++
+                                     "' of role "++roleName role
+                  Just ty -> addExpandedTypeAnn (MMVar mv, ty, tid)
+              | otherwise = return ()
 
           -- case naming
           msgName (MConst i)   = getId i
@@ -1274,6 +1327,7 @@ isaFacts conf facts =
     ( ppSet (isar conf) (tidQuantifiers facts) ++
       ppSet (isar conf) (amQuantifiers facts)
     , map (isar conf) reprEqs ++
+      ppSet (isar conf)       (inequalities facts) ++
       ppSet (isaUncompr conf) (uncompromised facts) ++
       ppSet (isaCompr   conf) (compromised facts) ++
       ppSet (isaEventOrd conf (Mapping eqs)) (eventOrd facts) ++
@@ -1296,6 +1350,7 @@ sptFacts facts =
     ( ppSet sptTID     (tidQuantifiers facts) ++
       ppSet sptArbMsgId (amQuantifiers facts)
     , map sptAnyEq reprEqs ++
+      ppSet sptInequality (inequalities facts) ++
       ppComprInfo "uncompromised" (uncompromised facts) ++
       ppComprInfo "compromised"   (compromised facts) ++
       (map (sptEventOrd (Mapping eqs)) $ transitiveChains $ S.toList $ eventOrd facts) ++

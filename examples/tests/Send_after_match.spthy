@@ -1,0 +1,20 @@
+theory Send_after_match
+begin
+
+/* Regression test: Sending a message variable after it has been matched.
+   The equality arising from the match step is applied while the chain rule
+   cases are unfolded for step 3 of role B. We need type assertions for each
+   variable introduced by substitution, not only for those in the send step
+   pattern.
+*/
+
+protocol Test
+{
+  1. A ->   : A, {'msg', m}k, {'key', k}sk(A)
+       -> B : A, c, {'key', k}sk(A)
+  2.      B : c -> {'msg', m}k
+  3.   <- B : c
+     A <-   : {'msg', m}k
+}
+
+end

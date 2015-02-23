@@ -1,0 +1,28 @@
+theory Wildcard_test
+begin
+
+protocol P
+{
+  1. A ->   : {A, {n}k(A,B)}pk(B)
+       -> B : {A, m}pk(B)
+  2.      B : m # {_}k(A,B)
+}
+
+property (of P) from_intruder:
+  premises
+    "role(1) = B"
+    "step(1, B_2)"
+  imply
+    "knows(m#1)"
+
+/* The property does not hold if the not-match step is excluded.
+
+property (of P) without_match:
+  premises
+    "role(1) = B"
+    "step(1, B_1)"
+  imply
+    "knows(m#1)"
+*/
+
+end

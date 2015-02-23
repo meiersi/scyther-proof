@@ -205,7 +205,7 @@ fun unify do_occurs_check ctxt ths =
     (* TODO: Remove hack by using Named_Thms data functor. *)
     val thm_by_name = Proof_Context.get_thm ctxt;
     val ss = ctxt 
-      delsimps map thm_by_name ["tid_eq_commute", "reorient_store_eq_store"];
+      delsimps map thm_by_name ["tid_eq_commute"];
 
     (* substitute an equality theorem in the given list of 'done' and 
        'todo' theorems. The changed theorems from 'done' are readded
@@ -316,10 +316,15 @@ ML{*
 local
   fun define_cmd name info f =
     Outer_Syntax.command name info
-    (Parse_Spec.name_facts >> (Toplevel.print oo (Toplevel.proof o (note_modified_thmss f))));
+    (Parse_Spec.name_facts >> (Toplevel.proof o (note_modified_thmss f)));
+
+  fun define_qualified_cmd name info f =
+    Outer_Syntax.command name info
+    (Parse.parname -- Parse_Spec.name_facts >> (fn (qualifier, args) =>
+      args |> note_modified_thmss (f qualifier) |> Toplevel.proof));
 in
   val _ = 
-    define_cmd @{command_spec "note_prefix_closed"} 
+    define_qualified_cmd @{command_spec "note_prefix_closed"}
       "prefix close facts and store them under the given name"
       ESPL_Methods.prefix_close_thms;
 

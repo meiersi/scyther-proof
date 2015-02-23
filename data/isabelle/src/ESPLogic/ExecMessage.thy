@@ -11,7 +11,8 @@
  * All rights reserved. See file LICENCE for more information.
  ******************************************************************************)
 theory ExecMessage
-imports 
+imports
+  HOL_ext
   Protocol
 begin
 
@@ -87,15 +88,15 @@ lemma Kbd_split_inj:
    (Kbd a b = Kbd x y) = (a = x \<and> b = y \<or> a = y \<and> b = x)"
   apply(clarsimp simp: Kbd_def Agent_def agents_def set_eq_iff) 
   apply(rule iffI)
-  apply(rename_tac a b x y)
+  apply(rename_tac a' b' x' y')
   apply(safe)
-  apply(drule_tac x="a" in spec)
+  apply(drule_tac x="a'" in spec)
   apply(simp)
-  apply(drule_tac x="y" in spec)
+  apply(drule_tac x="y'" in spec)
   apply(simp)
-  apply(drule_tac x="x" in spec)
+  apply(drule_tac x="x'" in spec)
   apply(simp)
-  apply(drule_tac x="b" in spec)
+  apply(drule_tac x="b'" in spec)
   apply(simp)
   done
 
@@ -128,6 +129,7 @@ subsection{* Operations *}
 
 type_synonym store = "varid \<times> tid \<Rightarrow> execmsg"
 
+text{* Key inversion *}
 fun inv :: "execmsg \<Rightarrow> execmsg"
 where
   "inv (PK m)  = SK m"
@@ -138,34 +140,8 @@ lemma inv_Kbd [simp]:
   "\<lbrakk> a \<in> Agent; b \<in> Agent \<rbrakk> \<Longrightarrow> inv (Kbd a b) = Kbd a b"
   by(auto simp: Kbd_def)
 
-(* TODO: Move *)
-fun opt_map2 :: "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a option \<Rightarrow> 'b option \<Rightarrow> 'c option"
-where
-  "opt_map2 f (Some x) (Some y) = Some (f x y)"
-| "opt_map2 f _        _        = None"
 
-lemma Some_opt_map2 [simp]:
-  "(Some x = opt_map2 f a b) =
-   (\<exists> y z. x = f y z \<and> Some y = a \<and> Some z = b)"
-  "(opt_map2 f a b = Some x) =
-   (\<exists> y z. x = f y z \<and> Some y = a \<and> Some z = b)"
-  by (cases a, simp, cases b, simp_all add: eq_commute)+
-
-lemma Some_if_pushL [simp]:
-  "(Some x = (if b then Some y else None)) = (b \<and> x = y)"
-  "((if b then Some y else None) = Some x) = (b \<and> x = y)"
-  by (auto split: if_splits)
-
-lemma Some_if_pushR [simp]:
-  "(Some x = (if b then None else Some y)) = (\<not>b \<and> x = y)"
-  "((if b then None else Some y) = Some x) = (\<not>b \<and> x = y)"
-  by (auto split: if_splits)
-
-lemma Some_Option_map [simp]:
-  "(Some x = Option.map f a) = (\<exists>y. x = f y \<and> Some y = a)"
-  "(Option.map f a = Some x) = (\<exists>y. x = f y \<and> Some y = a)"
-  by (cases a, auto)+
-
+text{* Instantiating a pattern *}
 fun inst :: "store \<Rightarrow> tid \<Rightarrow> pattern \<Rightarrow> execmsg option"
 where
   "inst s i (PConst c)   = Some (Lit (EConst c))"
@@ -175,15 +151,35 @@ where
 | "inst s i (PEnc m k)   = opt_map2 Enc (inst s i m) (inst s i k)"
 | "inst s i (PSign m k)  = 
      opt_map2 Tup (inst s i m) 
-         (opt_map2 Enc  (inst s i m) (Option.map inv (inst s i k)))"
-| "inst s i (PHash m)    = Option.map Hash (inst s i m)"
+         (opt_map2 Enc  (inst s i m) (map_option inv (inst s i k)))"
+| "inst s i (PHash m)    = map_option Hash (inst s i m)"
 | "inst s i (PSymK a b)  = opt_map2   K    (inst s i a) (inst s i b)"
-| "inst s i (PAsymPK a)  = Option.map PK   (inst s i a)"
-| "inst s i (PAsymSK a)  = Option.map SK   (inst s i a)"
+| "inst s i (PAsymPK a)  = map_option PK   (inst s i a)"
+| "inst s i (PAsymSK a)  = map_option SK   (inst s i a)"
 | "inst s i (PShrK V)    = 
      (if   (\<forall> v \<in> V. s (v, i) \<in> Agent)
       then Some (KShr (agents {s (v, i) | v. v \<in> V})) 
       else None)"
+| "inst s i (PAny)       = None"
+
+text{* Instantiate a pattern and export wildcards *}
+fun any_inst :: "store \<Rightarrow> tid \<Rightarrow> pattern \<Rightarrow> (execmsg, execmsg option) varfun"
+where
+  "any_inst s i (PConst c)  = Val (Some (Lit (EConst c)))"
+| "any_inst s i (PFresh n)  = Val (Some (Lit (ENonce n i)))"
+| "any_inst s i (PVar v)    = Val (Some (s (v, i)))"
+| "any_inst s i (PTup x y)  = var_lift2 (opt_map2 Tup) (any_inst s i x) (any_inst s i y)"
+| "any_inst s i (PEnc m k)  = var_lift2 (opt_map2 Enc) (any_inst s i m) (any_inst s i k)"
+| "any_inst s i (PSign m k) = var_lift2
+    (\<lambda>m' k'. opt_map2 Tup m' (opt_map2 Enc m' (map_option inv k')))
+    (any_inst s i m) (any_inst s i k)"
+| "any_inst s i (PHash m)   = var_map (map_option Hash) (any_inst s i m)"
+| "any_inst s i (PSymK a b) = var_lift2 (opt_map2 K) (any_inst s i a) (any_inst s i b)"
+| "any_inst s i (PAsymPK a) = var_map (map_option PK) (any_inst s i a)"
+| "any_inst s i (PAsymSK a) = var_map (map_option SK) (any_inst s i a)"
+| "any_inst s i (PShrK V)   = Val (inst s i (PShrK V))"
+| "any_inst s i (PAny)      = Fun (\<lambda>m. Val (Some m))"
+
 
 text{* We assume that recipients making use of shared keys look them up
        in a table. This lookup only succeeds if agent identities are 
@@ -304,8 +300,6 @@ lemma inv_eqs [iff]:
 lemma inv_inj [iff]:
   "(inv x = inv y) = (x = y)"
   by (auto) (induct x, auto)
-
-
 
 
 subsubsection{* @{term subterms}  *}

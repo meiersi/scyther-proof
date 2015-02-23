@@ -309,6 +309,9 @@ classifyProperties toClassify = foldl classify (0,0,0) . thyItems
 
   -- | True, if the sequents conclusion contains an existentially quantified
   -- thread.
+  --
+  -- TODO: Does this describe authentication properties precisely if disjunction
+  -- is present?
   isExistsStructureProp :: Sequent -> Bool
   isExistsStructureProp = hasQuantifiers . seConcl
 

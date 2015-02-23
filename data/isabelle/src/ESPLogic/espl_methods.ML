@@ -24,7 +24,7 @@ sig
        ((bool * term) * thm option) * (Context.generic * Token.T list)
 
   (* "prefix_close" proof state transformation *)
-  val prefix_close_thms: Proof.context -> thm list -> thm list
+  val prefix_close_thms: string -> Proof.context -> thm list -> thm list
   val prefix_close_cmd: Proof.state -> Proof.state
   val note_prefix_closed_cmd: Proof.state -> Proof.state
 
@@ -84,7 +84,8 @@ fun finalize_knows_cases ctxt minimal facts case_th =
   end;
 
 (* The tactic underlying the "sources" proof method *)
-fun sources_tac ctxt minimal msg_t opt_raw_rule facts =
+fun sources_tac _ _ _ _ [] = (fn _ => fn _ => Seq.empty) (* fail when no facts are chained in *)
+ | sources_tac ctxt minimal msg_t opt_raw_rule facts =
   let
     val thy = Proof_Context.theory_of ctxt;
     val cert = Thm.cterm_of thy;
@@ -108,7 +109,7 @@ fun sources_tac ctxt minimal msg_t opt_raw_rule facts =
 
     val predOrd_elim_ths = @{thms in_knows_predOrd1 in_knows_predOrd2}
     val knows_thm = 
-      Goal.prove_internal [] knows_ct 
+      Goal.prove_internal ctxt [] knows_ct 
         (fn facts' => 
         ALLGOALS (Method.insert_tac (facts' @ facts)) THEN
         (ALLGOALS (assume_tac ORELSE' eresolve_tac predOrd_elim_ths)
@@ -178,11 +179,11 @@ fun derive_step_thms th = map_filter (try (fn rule => th RS rule))
 (* NOTE: this works only correctly in the context of a reachable_state locale
    as the theorem ext_prefixClose is dependent on this locale.
 *)
-fun prefix_close_thms ctxt facts = 
+fun prefix_close_thms qualifier ctxt facts =
   let
-    val prefixClose_th = Proof_Context.get_thm ctxt "ext_prefixClose";
+    val prefixClose_th = Proof_Context.get_thm ctxt (Long_Name.qualify qualifier "ext_prefixClose");
     fun close step roleMap = [step, roleMap] MRS prefixClose_th;
-    val expand = Simplifier.simplify ctxt;
+    val expand = Simplifier.simplify (ctxt addsimps @{thms exec_match_def});
     val distinct_prop = distinct (Thm.eq_thm);
     (* fun new_fact th = 
         forall (not_equal (Thm.prop_of th) o Thm.prop_of) facts; *)
@@ -204,7 +205,7 @@ fun prefix_close_thms ctxt facts =
 fun note_prefix_closed_cmd state =
   let val ctxt  = Proof.context_of state;
       val facts = Proof.the_facts state;
-      val facts' = facts @ prefix_close_thms ctxt facts
+      val facts' = facts @ prefix_close_thms "" ctxt facts
   in Proof.set_facts facts' state end
 
 (* A proof state transformation implementing prefix closing of
@@ -215,14 +216,14 @@ fun prefix_close_cmd state =
     val using = state 
       |> Proof.goal
       |> (fn {context = ctxt, facts=using, goal=_} => 
-           prefix_close_thms ctxt using)
+           prefix_close_thms "" ctxt using)
 
   in Proof.using [[(using,[])]] state end;
 
 (* registering the prefix_close command *)
 val _ =
   Outer_Syntax.command @{command_spec "prefix_close"} "prefix close facts being used"
-    (Scan.succeed (Toplevel.print o (Toplevel.proof prefix_close_cmd)));
+    (Scan.succeed (Toplevel.proof prefix_close_cmd));
 
 
 (******************************************************************************
@@ -265,7 +266,7 @@ fun completeness_case_names th =
 *)
 fun completeness_cases_attrib ctxt th =
   let
-    val ss = Context.proof_of ctxt addsimps @{thms finite_setdiff_compute};
+    val ss = Context.proof_of ctxt addsimps @{thms finite_setdiff_compute exec_match_def};
     fun add_case_info th = th
       |> Rule_Cases.add_consumes 0
       |> Rule_Cases.name (completeness_case_names th)

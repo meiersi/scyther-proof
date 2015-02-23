@@ -1,0 +1,166 @@
+theory ASW_optimistic_contract
+begin
+
+section{* Optimistic fair exchange following Asokan, Shoup, Waidner *}
+
+text{*
+
+We model the contract signing example from 
+
+  N. Asokan, V. Shoup, and M. Waidner. Asynchronous protocols for optimistic
+  fair exchange. In Proceedings of the IEEE Symposium on Research in Security
+  and Privacy, pages 86--99. IEEE Computer Society Press, 1998. 
+
+Since role scripts are linear, we model the non-deterministic choice to
+abort as separate roles that share the same prefix with the non-aborting role.
+The trusted party is therefore split into Ta and Tr which run only the
+abort protocol or only the resolve protocol.
+
+*}
+
+protocol Contract
+{
+  00abort.   Ta ->    : {'bind', $T, n}sk($T)
+  00resolve. Tr ->    : {'bind', $T, n}sk($T)
+
+  0regular.  A  <-    : {'bind', $T, n}sk($T)
+  1regular.  A  ->    : {$A, $B, $T, n, 'text', h(sA)}sk($A)
+                -> B  : {$A, $B, $T, n, 'text', cA}sk($A)
+  2regular.     <- B  : {{$A, $B, $T, n, 'text', cA}sk($A), h(sB)}sk($B)
+             A  <-    : {{$A, $B, $T, n, 'text', h(sA)}sk($A), cB}sk($B)
+  3regular.  A  -> B  : sA
+  4regular.        B  : cA -> h(sA)
+  5regular.  A  <- B  : sB
+  6regular.  A        : cB -> h(sB)
+
+  0abort.    Aa <-    : {'bind', $T, n}sk($T)
+  1abort.    Aa ->    : {$A, $B, $T, n, 'text', h(sA)}sk($A)
+  2abort.    Aa ->    : {'aborted', {$A, $B, $T, n, 'text', h(sA)}sk($A)}sk($A)
+                -> Ta : {'aborted', {A, B, $T, n, 'text', cA}sk(A)}sk(A)
+  3abort.       <- Ta : {'aborted', {'aborted', {A, B, $T, n, 'text', cA}sk(A)}sk(A)}sk($T)
+             Aa <-    : {'aborted', {'aborted', {$A, $B, $T, n, 'text', h(sA)}sk($A)}sk($A)}sk($T)
+
+  resolve1.     -> Tr : {A, B, $T, n, 'text', cA}sk(A), {{A, B, $T, n, 'text', cA}sk(A), cB}sk(B)
+  resolve2.     <- Tr : {{A, B, $T, n, 'text', cA}sk(A), {{A, B, $T, n, 'text', cA}sk(A), cB}sk(B)}sk($T)
+
+  verify.       -> V  : {A, B, $T, n, 'text', h(sA)}sk(A), sA,
+                        {{A, B, $T, n, 'text', h(sA)}sk(A), h(sB)}sk(B), sB
+  verifyr.      -> Vr : {{A, B, $T, n, 'text', cA}sk(A), {{A, B, $T, n, 'text', cA}sk(A), cB}sk(B)}sk($T)
+}
+
+subsection{* Security Properties *}
+
+property (of Contract) Contract_typing:
+  "n@A   :: Known(A_0regular) | n@Ta | n@Tr
+   n@B   :: Known(B_1regular) | n@Ta | n@Tr
+   cA@B  :: Known(B_1regular) | h(sA@A) | h(sA@Aa)
+   cB@A  :: Known(A_2regular) | h(sB@B)
+   sA@B  :: Known(B_3regular)
+   sB@A  :: Known(A_5regular)
+
+   n@Aa  :: Known(Aa_0abort) | n@Ta | n@Tr
+   A@Ta  :: Known(Ta_2abort) | Agent
+   B@Ta  :: Known(Ta_2abort) | Agent
+   cA@Ta :: Known(Ta_2abort) | h(sA@A) | h(sA@Aa)
+
+   A@Tr  :: Known(Tr_resolve1) | Agent
+   B@Tr  :: Known(Tr_resolve1) | Agent
+   cA@Tr :: Known(Tr_resolve1) | h(sA@A) | h(sA@Aa)
+   cB@Tr :: Known(Tr_resolve1) | h(sB@B)
+
+   A@V   :: Known(V_verify) | Agent
+   B@V   :: Known(V_verify) | Agent
+   n@V   :: Known(V_verify) | n@Ta | n@Tr
+   sA@V  :: Known(V_verify) | sA@A
+   sB@V  :: Known(V_verify) | sB@B
+
+   A@Vr  :: Known(Vr_verifyr) | Agent
+   B@Vr  :: Known(Vr_verifyr) | Agent
+   n@Vr  :: Known(Vr_verifyr) | n@Ta | n@Tr
+   cA@Vr :: Known(Vr_verifyr) | h(sA@A) | h(sA@Aa)
+   cB@Vr :: Known(Vr_verifyr) | h(sB@B)
+  "
+
+properties (of Contract)
+  regular_agree_A: iagree(A_6regular[A,B,T,n,sA,sB] -> B_5regular[A,B,T,n,sA,sB], {A,B})
+  regular_agree_B: niagree(B_4regular[A,B,T,n,sA] -> A_3regular[A,B,T,n,sA], {A,B})
+
+property (of Contract) regular_verified:
+  premises
+    "role(0) = V"
+    "step(0, V_verify)"
+    "uncompromised(A#0)"
+    "uncompromised(B#0)"
+  imply threads 1, 2 such that
+    "role(1) = A &
+     step(1, A_3regular) &
+
+     role(2) = B &
+     step(2, B_5regular) &
+
+     A#0 = A#1 & A#0 = A#2 &
+     B#0 = B#1 & B#0 = B#2 &
+     T#0 = T#1 & T#0 = T#2 &
+
+     n#0 = n#1 & n#0 = n#2 &
+     sA#0 = sA#1 &
+     sB#0 = sB#2
+    "
+
+property (of Contract) resolve_verified:
+  premises
+    "role(0) = Vr"
+    "step(0, Vr_verifyr)"
+    "uncompromised(A#0)"
+    "uncompromised(B#0)"
+    "uncompromised(T#0)"
+  imply threads 1, 2 such that
+    "( role(1) = A &
+       step(1, A_1regular) &
+       A#0 = A#1 &
+       B#0 = B#1 &
+       T#0 = T#1 &
+       n#0 = n#1 &
+       cA#0 = h(sA#1)
+       |
+       role(1) = Aa &
+       step(1, Aa_1abort) &
+       A#0 = A#1 &
+       B#0 = B#1 &
+       T#0 = T#1 &
+       n#0 = n#1 &
+       cA#0 = h(sA#1)
+     ) &
+
+     role(2) = B &
+     step(2, B_2regular) &
+     A#0 = A#2 &
+     B#0 = B#2 &
+     T#0 = T#2 &
+     n#0 = n#2 &
+     cB#0 = h(sB#2)
+    "
+
+property (of Contract) regular_verified_not_aborted:
+  premises
+    "role(0) = V"
+    "step(0, V_verify)"
+    "uncompromised(A#0)"
+    "uncompromised(T#0)"
+    // cA#0 should be replaced with a wildcard
+    "knows({'aborted', {'aborted', {A#0, B#0, T#0, n#0, 'text', cA#0}sk(A#0)}sk(A#0)}sk(T#0))"
+  imply
+    "False"
+
+property (of Contract) resolve_verified_not_aborted:
+  premises
+    "role(0) = Vr"
+    "step(0, Vr_verifyr)"
+    "uncompromised(A#0)"
+    "uncompromised(T#0)"
+    // cA#0 should be replaced with a wildcard
+    "knows({'aborted', {'aborted', {A#0, B#0, T#0, n#0, 'text', cA#0}sk(A#0)}sk(A#0)}sk(T#0))"
+  imply
+    "False"
+
+end

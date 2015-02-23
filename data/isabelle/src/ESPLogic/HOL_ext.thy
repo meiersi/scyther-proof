@@ -29,6 +29,70 @@ lemma map_leI:
   "\<lbrakk> \<And> x y. m x = Some y \<Longrightarrow> m' x = Some y \<rbrakk> \<Longrightarrow>  m \<subseteq>\<^sub>m m'"
   by(force simp: map_le_def)
 
+
+section{* Option *}
+
+fun opt_map2 :: "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a option \<Rightarrow> 'b option \<Rightarrow> 'c option"
+where
+  "opt_map2 f (Some x) (Some y) = Some (f x y)"
+| "opt_map2 f _        _        = None"
+
+lemma Some_opt_map2 [simp]:
+  "(Some x = opt_map2 f a b) =
+   (\<exists> y z. x = f y z \<and> Some y = a \<and> Some z = b)"
+  "(opt_map2 f a b = Some x) =
+   (\<exists> y z. x = f y z \<and> Some y = a \<and> Some z = b)"
+  by (cases a, simp, cases b, simp_all add: eq_commute)+
+
+lemma Some_if_pushL [simp]:
+  "(Some x = (if b then Some y else None)) = (b \<and> x = y)"
+  "((if b then Some y else None) = Some x) = (b \<and> x = y)"
+  by (auto split: if_splits)
+
+lemma Some_if_pushR [simp]:
+  "(Some x = (if b then None else Some y)) = (\<not>b \<and> x = y)"
+  "((if b then None else Some y) = Some x) = (\<not>b \<and> x = y)"
+  by (auto split: if_splits)
+
+lemma Some_Option_map [simp]:
+  "(Some x = map_option f a) = (\<exists>y. x = f y \<and> Some y = a)"
+  "(map_option f a = Some x) = (\<exists>y. x = f y \<and> Some y = a)"
+  by (cases a, auto)+
+
+
+section{* Variadic Functions *}
+
+datatype ('a, 'b) varfun = Val 'b | Fun "'a \<Rightarrow> ('a, 'b) varfun"
+
+primrec var_map :: "('b \<Rightarrow> 'c) \<Rightarrow> ('a, 'b) varfun \<Rightarrow> ('a, 'c) varfun"
+where
+  "var_map f (Val x) = Val (f x)"
+| "var_map f (Fun g) = Fun (\<lambda>x. var_map f (g x))"
+
+primrec var_apply :: "('a, 'b \<Rightarrow> 'c) varfun \<Rightarrow> ('a, 'b) varfun \<Rightarrow> ('a, 'c) varfun"
+where
+  "var_apply (Val f) v = var_map f v"
+| "var_apply (Fun g) v = Fun (\<lambda>x. var_apply (g x) v)"
+
+abbreviation var_lift2 :: "('b \<Rightarrow> 'c \<Rightarrow> 'd) \<Rightarrow> ('a, 'b) varfun \<Rightarrow> ('a, 'c) varfun \<Rightarrow> ('a, 'd) varfun"
+where "var_lift2 f v1 v2 \<equiv> var_apply (var_map f v1) v2"
+
+primrec var_fold :: "(('a \<Rightarrow> 'b) \<Rightarrow> 'b) \<Rightarrow> ('a, 'b) varfun \<Rightarrow> 'b"
+where
+  "var_fold f (Val x) = x"
+| "var_fold f (Fun g) = f (\<lambda>x. var_fold f (g x))"
+
+
+lemma var_map_map [simp]: "var_map f (var_map g v) = var_map (f o g) v"
+by (induct v) (auto)
+
+lemma var_fold_not_all: "(\<not> var_fold All v) = var_fold Ex (var_map Not v)"
+by (induct v) (auto)
+
+lemma var_fold_not_ex: "(\<not> var_fold Ex v) = var_fold All (var_map Not v)"
+by (induct v) (auto)
+
+
 section{* Finite Sets *}
 
 text{* 

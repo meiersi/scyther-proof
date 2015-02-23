@@ -102,101 +102,112 @@ proof -
   have "(t,r,s) : approx WooLam_msc_typing"
   proof(cases rule: reachable_in_approxI_ext
         [OF WooLam_msc_typing.monoTyp, completeness_cases_rule])
-    case (A_2_B t r s tid0) note facts = this
+    case (A_2_B t r s tid0)
     then interpret state: WooLam_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = A_2_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (A_2_nb t r s tid0) note facts = this
+    case (A_2_nb t r s tid0)
     then interpret state: WooLam_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = A_2_nb
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (A_6_kab t r s tid0) note facts = this
+    case (A_6_kab t r s tid0)
     then interpret state: WooLam_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = A_6_kab
+    thus ?case
     proof(sources! "
         Enc {| LC ''enc51'', s(MV ''B'' tid0), LN ''na'' tid0, s(MV ''nb'' tid0),
                s(MV ''kab'' tid0)
             |}
             ( K ( s(AV ''A'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (B_1_A t r s tid0) note facts = this
+    case (B_1_A t r s tid0)
     then interpret state: WooLam_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = B_1_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (B_1_na t r s tid0) note facts = this
+    case (B_1_na t r s tid0)
     then interpret state: WooLam_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = B_1_na
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (B_5_Ticket2 t r s tid0) note facts = this
+    case (B_5_Ticket2 t r s tid0)
     then interpret state: WooLam_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = B_5_Ticket2
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (B_5_kab t r s tid0) note facts = this
+    case (B_5_kab t r s tid0)
     then interpret state: WooLam_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = B_5_kab
+    thus ?case
     proof(sources! "
         Enc {| LC ''enc52'', s(MV ''A'' tid0), s(MV ''na'' tid0), LN ''nb'' tid0,
                s(MV ''kab'' tid0)
             |}
             ( K ( s(AV ''B'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_4_A t r s tid0) note facts = this
+    case (S_4_A t r s tid0)
     then interpret state: WooLam_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_4_A
+    thus ?case
     proof(sources! "
         Enc {| LC ''enc3'', s(MV ''A'' tid0), s(MV ''B'' tid0),
                s(MV ''na'' tid0), s(MV ''nb'' tid0)
             |}
             ( K ( s(MV ''A'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_4_B t r s tid0) note facts = this
+    case (S_4_B t r s tid0)
     then interpret state: WooLam_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_4_B
+    thus ?case
     proof(sources! "
         Enc {| LC ''enc3'', s(MV ''A'' tid0), s(MV ''B'' tid0),
                s(MV ''na'' tid0), s(MV ''nb'' tid0)
             |}
             ( K ( s(MV ''A'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_4_na t r s tid0) note facts = this
+    case (S_4_na t r s tid0)
     then interpret state: WooLam_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_4_na
+    thus ?case
     proof(sources! "
         Enc {| LC ''enc3'', s(MV ''A'' tid0), s(MV ''B'' tid0),
                s(MV ''na'' tid0), s(MV ''nb'' tid0)
             |}
             ( K ( s(MV ''A'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_4_nb t r s tid0) note facts = this
+    case (S_4_nb t r s tid0)
     then interpret state: WooLam_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_4_nb
+    thus ?case
     proof(sources! "
         Enc {| LC ''enc3'', s(MV ''A'' tid0), s(MV ''B'' tid0),
                s(MV ''na'' tid0), s(MV ''nb'' tid0)
             |}
             ( K ( s(MV ''A'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   qed
   thus "WooLam_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -265,11 +276,11 @@ lemma (in restricted_WooLam_state) S_sec_kab:
   shows "False"
 using facts proof(sources! " LN ''kab'' tid0 ")
   case S_5_kab note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
+  thus ?thesis by (auto dest!: ltk_secrecy)
 next
   case S_5_kab_1 note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
-qed (insert facts, fastforce+)?
+  thus ?thesis by (auto dest!: ltk_secrecy)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_WooLam_state) A_sec_kab:
   assumes facts:
@@ -288,11 +299,11 @@ proof -
                        |}
                        ( K ( s(AV ''A'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (S_5_enc tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: S_sec_kab intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_WooLam_state) B_sec_kab:
@@ -312,11 +323,11 @@ proof -
                        |}
                        ( K ( s(AV ''B'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (S_5_enc_1 tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: S_sec_kab intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_WooLam_state) A_sec_inv_kab:
@@ -336,11 +347,11 @@ proof -
                        |}
                        ( K ( s(AV ''A'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (S_5_enc tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: S_sec_kab intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_WooLam_state) B_sec_inv_kab:
@@ -360,11 +371,11 @@ proof -
                        |}
                        ( K ( s(AV ''B'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (S_5_enc_1 tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: S_sec_kab intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 (* subsection:  Authentication  *)
@@ -389,7 +400,7 @@ next
                        ( K ( s(MV ''A'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
     case (A_3_enc tid3) note_unified facts = this facts
     thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-  qed (insert facts, (((clarsimp, order?) | order))+)?
+  qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
 next
   case (S_5_na_1 tid2) note_unified facts = this facts
   thus ?thesis proof(sources! "
@@ -399,8 +410,8 @@ next
                        ( K ( s(MV ''A'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
     case (A_3_enc tid3) note_unified facts = this facts
     thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-  qed (insert facts, (((clarsimp, order?) | order))+)?
-qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_WooLam_state) nb_first_send:
   assumes facts:
@@ -423,7 +434,7 @@ next
                           s(MV ''na'' tid2), LN ''nb'' tid1
                        |}
                        ( K ( s(MV ''A'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
-  qed (insert facts, (((clarsimp, order?) | order))+)?
+  qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
 next
   case (S_5_nb_1 tid2) note_unified facts = this facts
   thus ?thesis proof(sources! "
@@ -431,8 +442,8 @@ next
                           s(MV ''na'' tid2), LN ''nb'' tid1
                        |}
                        ( K ( s(MV ''A'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
-  qed (insert facts, (((clarsimp, order?) | order))+)?
-qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_WooLam_state) A_ni_synch:
   assumes facts:
@@ -477,7 +488,7 @@ proof -
                        |}
                        ( K ( s(AV ''A'' tid1) ) ( s(AV ''S'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (S_5_enc tid2) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -486,7 +497,7 @@ proof -
                          |}
                          ( K ( s(AV ''A'' tid1) ) ( s(AV ''S'' tid1) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastforce dest!: ltk_secrecy)
+      thus ?thesis by (auto dest!: ltk_secrecy)
     next
       case (A_3_enc tid3) note_unified facts = this facts
       thus ?thesis proof(sources! "
@@ -495,7 +506,7 @@ proof -
                            |}
                            ( K ( s(AV ''A'' tid1) ) ( s(AV ''S'' tid1) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (B_4_enc tid3) note_unified facts = this facts
         have f1: "roleMap r tid1 = Some A" using facts by (auto intro: event_predOrdI)
@@ -517,15 +528,15 @@ proof -
                                |}
                                ( K ( s(AV ''A'' tid1) ) ( s(AV ''S'' tid1) ) ) ")
             case fake note_unified facts = this facts
-            thus ?thesis by (fastforce dest!: ltk_secrecy)
+            thus ?thesis by (auto dest!: ltk_secrecy)
           next
             case (S_5_enc_1 tid4) note_unified facts = this facts
             thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-          qed (insert facts, fastforce+)?
-        qed (insert facts, fastforce+)?
-      qed (insert facts, fastforce+)?
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+          qed (safe?, simp_all?, insert facts, (fastforce+)?)
+        qed (safe?, simp_all?, insert facts, (fastforce+)?)
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_WooLam_state) B_ni_synch:
@@ -573,7 +584,7 @@ proof -
                        |}
                        ( K ( s(AV ''B'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (S_5_enc_1 tid3) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -582,7 +593,7 @@ proof -
                          |}
                          ( K ( s(MV ''A'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastforce dest!: ltk_secrecy)
+      thus ?thesis by (auto dest!: ltk_secrecy)
     next
       case (A_3_enc tid4) note_unified facts = this facts
       have f1: "roleMap r tid4 = Some A" using facts by (auto intro: event_predOrdI)
@@ -603,7 +614,7 @@ proof -
                              |}
                              ( K ( s(AV ''A'' tid4) ) ( s(AV ''S'' tid2) ) ) ")
           case fake note_unified facts = this facts
-          thus ?thesis by (fastforce dest!: ltk_secrecy)
+          thus ?thesis by (auto dest!: ltk_secrecy)
         next
           case (B_4_enc tid6) note_unified facts = this facts
           thus ?thesis proof(sources! "
@@ -614,11 +625,11 @@ proof -
           next
             case (B_6_enc tid6) note_unified facts = this facts
             thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-          qed (insert facts, fastforce+)?
-        qed (insert facts, fastforce+)?
-      qed (insert facts, fastforce+)?
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+          qed (safe?, simp_all?, insert facts, (fastforce+)?)
+        qed (safe?, simp_all?, insert facts, (fastforce+)?)
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_WooLam_state) S_ni_synch:
@@ -658,7 +669,7 @@ proof -
                        |}
                        ( K ( s(MV ''A'' tid3) ) ( s(AV ''S'' tid3) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (A_3_enc tid4) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -667,7 +678,7 @@ proof -
                          |}
                          ( K ( s(AV ''A'' tid4) ) ( s(AV ''S'' tid3) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastforce dest!: ltk_secrecy)
+      thus ?thesis by (auto dest!: ltk_secrecy)
     next
       case (B_4_enc tid5) note_unified facts = this facts
       have f1: "roleMap r tid4 = Some A" using facts by (auto intro: event_predOrdI)
@@ -677,8 +688,8 @@ proof -
       have f2: "LN ''nb'' tid5 : knows t" using facts by (auto intro: event_predOrdI)
       note facts = facts nb_first_send[OF f1 f2, simplified]
       thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 end

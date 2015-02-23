@@ -79,7 +79,7 @@ fun mk_hint_thm ctxt name t =
     val hint_ct = mk_hint name t |> HOLogic.mk_Trueprop
                                  |> Thm.cterm_of (Proof_Context.theory_of ctxt);
   in
-    Goal.prove_internal [] hint_ct (K (ALLGOALS (remove_all_hints_tac ctxt)))
+    Goal.prove_internal ctxt [] hint_ct (K (ALLGOALS (remove_all_hints_tac ctxt)))
   end;
 
 end;

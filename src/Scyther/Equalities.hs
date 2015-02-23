@@ -9,6 +9,7 @@ module Scyther.Equalities (
   , MVarEq
   , MsgEq
   , AnyEq(..)
+  , Inequality(..)
 
   , arbmEqToMsgEq
   , mvarEqToMsgEq
@@ -31,6 +32,9 @@ module Scyther.Equalities (
   , getPostEqs
   , toAnyEqs
   , anyEqTIDs
+  , anyEqAMIDs
+  , inequalityTIDs
+  , inequalityAMIDs
 
   -- ** Substitution
   , substTID
@@ -40,12 +44,14 @@ module Scyther.Equalities (
   , substAMID
   , substMsg
   , substAnyEq
+  , substInequality
 
   -- ** Additional Queries
   , threadRole
   , maxMappedTID
   , maxMappedArbMsgId
   , reflexive
+  , falseIneq
   , null
 
 -- * Mapping Logical Variables
@@ -60,10 +66,12 @@ module Scyther.Equalities (
 
 -- * Pretty Printing
   , sptAnyEq
+  , sptInequality
 ) where
 
 import Prelude hiding (null)
 
+import qualified Data.List      as L
 import qualified Data.Map       as M
 import qualified Data.UnionFind as U
 import Data.Data
@@ -124,10 +132,14 @@ data AnyEq =
     TIDEq     !TIDEq
   | TIDRoleEq !TIDRoleEq
   | RoleEq    !RoleEq
-  | ArbMsgEq   !ArbMsgEq
+  | ArbMsgEq  !ArbMsgEq
   | AVarEq    !AVarEq
   | MVarEq    !MVarEq
   | MsgEq     !MsgEq
+  deriving( Eq, Ord, Show, Data, Typeable )
+
+-- | An inequality. Bound logical variables are universally quantified.
+newtype Inequality = Inequality { getInequality :: AnyEq }
   deriving( Eq, Ord, Show, Data, Typeable )
 
 -- | A conjunction of equality facts.
@@ -275,6 +287,10 @@ substAnyEq eqs eq0 = case eq0 of
   MVarEq    eq  -> MsgEq  $ substMVarEq    eqs eq
   MsgEq     eq  -> MsgEq  $ substMsgEq     eqs eq
 
+-- | Substitute both sides of an inequality.
+substInequality :: Equalities -> Inequality -> Inequality
+substInequality eqs = Inequality . substAnyEq eqs . getInequality
+
 
 -- Checking for reflexivity
 ---------------------------
@@ -297,6 +313,7 @@ reflexive eq0 = case eq0 of
   AVarEq    eq -> uncurry (==) eq
   MVarEq    eq -> reflexive . MsgEq $ mvarEqToMsgEq eq
   MsgEq     eq -> uncurry (==) eq
+
 
 -- Deconstruction
 -----------------
@@ -351,6 +368,25 @@ anyEqTIDs eq = case eq of
   AVarEq (a1, a2)    -> return (avarTID a1) `mplus` return (avarTID a2)
   MVarEq (v, m)      -> return (mvarTID v)  `mplus` msgTIDs m
   MsgEq (m1, m2)     -> msgTIDs m1          `mplus` msgTIDs m2
+
+-- | The logical message variables occuring in an equality.
+anyEqAMIDs :: AnyEq -> [ArbMsgId]
+anyEqAMIDs eq = case eq of
+  TIDEq _         -> mzero
+  TIDRoleEq _     -> mzero
+  RoleEq _        -> mzero
+  ArbMsgEq (a, m) -> a : msgAMIDs m
+  AVarEq _        -> mzero
+  MVarEq (_, m)   -> msgAMIDs m
+  MsgEq (m1, m2)  -> msgAMIDs m1 `mplus` msgAMIDs m2
+
+-- | The threads occurring in an inequality.
+inequalityTIDs :: Inequality -> [TID]
+inequalityTIDs = anyEqTIDs . getInequality
+
+-- | The logical message variables occuring in an inequality.
+inequalityAMIDs  :: Inequality -> [ArbMsgId]
+inequalityAMIDs = anyEqAMIDs . getInequality
 
 
 -- Unification
@@ -574,10 +610,32 @@ maxMappedTID = fmap (fst . fst) . M.maxViewWithKey . tidEqs
 maxMappedArbMsgId :: Equalities -> Maybe ArbMsgId
 maxMappedArbMsgId = fmap (fst . fst) . M.maxViewWithKey . arbmEqs
 
-
 -- | Retrieve the role of a thread.
 threadRole :: TID -> Equalities -> Maybe Role
 threadRole tid eqs = M.lookup (substTID eqs tid) $ roleEqs eqs
+
+-- | Test whether the equalities impose constraints on bound variables only.
+onlyLocalConstraints :: Equalities -> Bool
+onlyLocalConstraints eqs =
+    M.null (tidEqs eqs) &&
+    M.null (roleEqs eqs) &&
+    M.null (avarEqs eqs) &&
+    all isBoundVarMsg (map snd $ M.toList $ mvarEqs eqs) &&
+    all isBoundVarEq (M.toList $ arbmEqs eqs) &&
+    L.null (U.toList (postEqs eqs))
+  where
+    isBoundVar (BoundVarId _) = True
+    isBoundVar _              = False
+
+    isBoundVarMsg (MArbMsg v) = isBoundVar v
+    isBoundVarMsg _           = False
+
+    isBoundVarEq (lhs, rhs) = isBoundVar lhs || isBoundVarMsg rhs
+
+-- | Check if an inequality is trivially false, i.e., there exists an
+-- substitution of bound logical variables which makes it reflexive.
+falseIneq :: Inequality -> Bool
+falseIneq ineq = maybe False onlyLocalConstraints $ solve [getInequality ineq] empty
 
 
 -------------------------------------------------------------------------------
@@ -641,42 +699,73 @@ deleteArbMsgIdMapping aid = mapMapping $ \eqs ->
 -- Helper functions for pretty printing
 ---------------------------------------
 
-ppEq :: (a -> Doc) -> (b -> Doc) -> (a, b) -> Doc
-ppEq pp1 pp2 (x1, x2) = pp1 x1 <-> char '=' <-> pp2 x2
+ppEq :: Doc -> (a -> Doc) -> (b -> Doc) -> (a, b) -> Doc
+ppEq sym pp1 pp2 (x1, x2) = pp1 x1 <-> sym <-> pp2 x2
 
-ppEq' :: (a -> Doc) -> (a, a) -> Doc
-ppEq' pp = ppEq pp pp
+ppEq' :: Doc -> (a -> Doc) -> (a, a) -> Doc
+ppEq' sym pp = ppEq sym pp pp
+
+filterBoundVars :: [ArbMsgId] -> [ArbMsgId]
+filterBoundVars = filter p
+  where
+    p (BoundVarId _) = True
+    p (FreeVarId _)  = False
 
 -- Isar
 -------
 
+ppIsarEq :: Doc -> IsarConf -> AnyEq -> Doc
+ppIsarEq sym conf eq0 = case eq0 of
+    TIDEq eq  -> ppEq' sym ppIsar eq
+    RoleEq eq -> ppEq' sym (text . roleName) eq
+    TIDRoleEq (tid, role) ->
+      text "roleMap r" <-> ppIsar tid <-> sym <-> text ("Some " ++ roleName role)
+    ArbMsgEq eq -> ppEq  sym ppIsar ppIsar eq
+    AVarEq  eq  -> ppEq' sym ppIsar eq
+    MVarEq  eq  -> ppEq  sym ppIsar ppIsar eq
+    MsgEq   eq  -> ppEq' sym ppIsar eq
+  where
+    ppIsar :: Isar a => a -> Doc
+    ppIsar = isar conf
+
 instance Isar AnyEq where
-  isar conf eq0 = case eq0 of
-      TIDEq eq  -> ppEq' ppIsar eq
-      RoleEq eq -> ppEq' (text . roleName) eq
-      TIDRoleEq (tid, role) -> 
-        text "roleMap r" <-> ppIsar tid <-> text ("= Some " ++ roleName role)
-      ArbMsgEq eq -> ppEq  ppIsar ppIsar eq
-      AVarEq  eq  -> ppEq' ppIsar eq
-      MVarEq  eq  -> ppEq  ppIsar ppIsar eq
-      MsgEq   eq  -> ppEq' ppIsar eq
+  isar = ppIsarEq (char '=')
+
+instance Isar Inequality where
+  isar conf eq = if L.null boundVars
+                 then ineq
+                 else parens $ quantifiers <-> ineq
     where
-      ppIsar :: Isar a => a -> Doc
-      ppIsar = isar conf
+      boundVars = map (isar conf) $ filterBoundVars $ inequalityAMIDs eq
+      ineq = ppIsarEq (isaNotEq conf) conf (getInequality eq)
+      quantifiers = foldl (<->) (isaForall conf) boundVars <> char '.'
+
 
 -- SP Theory
 ------------
 
+ppSPTEq :: Doc -> AnyEq -> Doc
+ppSPTEq sym eq0 = case eq0 of
+    TIDEq eq  -> ppEq' sym sptTID eq
+    RoleEq eq -> ppEq' sym (text . roleName) eq
+    TIDRoleEq (tid, role) ->
+      text "role(" <-> sptTID tid <-> char ')' <-> sym <-> text (roleName role)
+    ArbMsgEq eq -> ppEq  sym sptArbMsgId sptMessage eq
+    AVarEq  eq  -> ppEq' sym sptAVar eq
+    MVarEq  eq  -> ppEq  sym sptMVar sptMessage eq
+    MsgEq   eq  -> ppEq' sym sptMessage eq
+
 sptAnyEq :: AnyEq -> Doc
-sptAnyEq eq0 = case eq0 of
-  TIDEq eq  -> ppEq' sptTID eq
-  RoleEq eq -> ppEq' (text . roleName) eq
-  TIDRoleEq (tid, role) -> 
-    text "role(" <-> sptTID tid <-> text (") = " ++ roleName role)
-  ArbMsgEq eq -> ppEq  sptArbMsgId sptMessage eq
-  AVarEq  eq  -> ppEq' sptAVar eq
-  MVarEq  eq  -> ppEq  sptMVar sptMessage eq
-  MsgEq   eq  -> ppEq' sptMessage eq
+sptAnyEq = ppSPTEq (char '=')
+
+sptInequality :: Inequality -> Doc
+sptInequality eq = if L.null boundVars
+                   then ineq
+                   else parens $ quantifiers <-> ineq
+  where
+    boundVars = map sptArbMsgId $ filterBoundVars $ inequalityAMIDs eq
+    ineq = ppSPTEq (text "!=") (getInequality eq)
+    quantifiers = foldl (<->) (char '!') boundVars <> char '.'
 
 
 {-

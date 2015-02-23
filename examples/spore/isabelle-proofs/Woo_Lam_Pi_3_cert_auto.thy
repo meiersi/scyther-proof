@@ -73,28 +73,31 @@ proof -
   have "(t,r,s) : approx WooLamPi_msc_typing"
   proof(cases rule: reachable_in_approxI_ext
         [OF WooLamPi_msc_typing.monoTyp, completeness_cases_rule])
-    case (S_4_A t r s tid0) note facts = this
+    case (S_4_A t r s tid0)
     then interpret state: WooLamPi_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_4_A
+    thus ?case
     proof(sources! "
         Enc {| LC ''4'', s(MV ''A'' tid0),
                Enc {| LC ''3'', s(MV ''Nb'' tid0) |}
                    ( K ( s(MV ''A'' tid0) ) ( s(AV ''S'' tid0) ) )
             |}
             ( K ( s(MV ''B'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_4_B t r s tid0) note facts = this
+    case (S_4_B t r s tid0)
     then interpret state: WooLamPi_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_4_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_4_Nb t r s tid0) note facts = this
+    case (S_4_Nb t r s tid0)
     then interpret state: WooLamPi_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_4_Nb
+    thus ?case
     proof(sources! "
         Enc {| LC ''4'', s(MV ''A'' tid0),
                Enc {| LC ''3'', s(MV ''Nb'' tid0) |}
@@ -105,14 +108,14 @@ proof -
       thus ?thesis proof(sources! "
                        Enc {| LC ''3'', s(MV ''Nb'' tid0) |}
                            ( K ( s(MV ''A'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-      qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+      qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
     next
       case (B_4_enc tid1) note_unified facts = this facts
       thus ?thesis proof(sources! "
                        Enc {| LC ''3'', s(MV ''Nb'' tid0) |}
                            ( K ( s(MV ''A'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-      qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
-    qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
   qed
   thus "WooLamPi_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -190,7 +193,7 @@ proof -
                    Enc {| LC ''5'', s(MV ''A'' tid2), LN ''Nb'' tid2 |}
                        ( K ( s(AV ''B'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (S_5_enc tid3) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -200,20 +203,20 @@ proof -
                          |}
                          ( K ( s(AV ''B'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastforce dest!: ltk_secrecy)
+      thus ?thesis by (auto dest!: ltk_secrecy)
     next
       case (B_4_enc tid4) note_unified facts = this facts
       thus ?thesis proof(sources! "
                        Enc {| LC ''3'', LN ''Nb'' tid2 |}
                            ( K ( s(MV ''A'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (A_3_enc tid5) note_unified facts = this facts
         thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-      qed (insert facts, fastforce+)?
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 end

@@ -21,7 +21,7 @@ sig
   (* Additional Utilities *)
   val unnamed_caseN: string
 
-  datatype steptyp = Recv | Send | Note of term
+  datatype steptyp = Recv | Send | Note of term | Match of bool * term
   val mk_rolestep: steptyp * term * term -> term
   val dest_rolestep: term -> steptyp * term * term
   val dest_role: term -> (steptyp * term * term) list
@@ -76,15 +76,21 @@ open ESPL_Utils;
 ******************************************************************************)
 
 
-datatype steptyp = Recv | Send | Note of term;
+datatype steptyp = Recv | Send | Note of term | Match of bool * term;
 
 fun mk_rolestep (Send, lbl, msg) = @{const Send} $ lbl $ msg
   | mk_rolestep (Recv, lbl, msg) = @{const Recv} $ lbl $ msg
   | mk_rolestep (Note nTy, lbl, msg) = @{const Note} $ lbl $ nTy $ msg
+  | mk_rolestep (Match (true, mv), lbl, msg) = @{const Match} $ lbl $ @{const True} $ mv $ msg
+  | mk_rolestep (Match (false, mv), lbl, msg) = @{const Match} $ lbl $ @{const False} $ mv $ msg
 
 fun dest_rolestep (Const (@{const_name Send},_) $ lbl $ msg)       = (Send,     lbl, msg)
   | dest_rolestep (Const (@{const_name Recv},_) $ lbl $ msg)       = (Recv,     lbl, msg)
   | dest_rolestep (Const (@{const_name Note},_) $ lbl $ nTy $ msg) = (Note nTy, lbl, msg)
+  | dest_rolestep (Const (@{const_name Match},_) $ lbl $ Const (@{const_name True},_) $ mv $ msg) =
+      (Match (true, mv), lbl, msg)
+  | dest_rolestep (Const (@{const_name Match},_) $ lbl $ Const (@{const_name False},_) $ mv $ msg) =
+      (Match (false, mv), lbl, msg)
   | dest_rolestep t = raise TERM ("dest_rolestep", [t])
 
 val dest_role = map dest_rolestep o HOLogic.dest_list
@@ -178,14 +184,25 @@ fun setup_rolestep mk_binding ann_defs lthy =
     val ss_full = lthy addsimps [step_def, msg_def] |> simpset_of;
 
     val sendStep_t = @{const sendStep} $ step_const;
+    val recvStep_t = @{const recvStep} $ step_const;
+    val matchStep_t = @{const matchStep} $ step_const;
+    val matchEqStep_t = @{const matchEqStep} $ step_const;
+    val notMatchStep_t = @{const notMatchStep} $ step_const;
     val noteStep_t = @{const noteStep} $ step_const;
     val stepPat_t = @{const stepPat} $ step_const;
+    val matchVar_t = @{const matchVar} $ step_const;
     val noteType_t = @{const noteType} $ step_const;
 
+    val sourced_vars_t = @{const sourced_vars} $ step_const;
+    val used_vars_t = @{const used_vars} $ step_const;
+    val FV_rolestep_t = @{const FV_rolestep} $ step_const;
+    val FAV_rolestep_t = @{const FAV_rolestep} $ step_const;
+
     val inst_t = @{term "inst s i"} $ msg_const;
-    val FV_t = @{term "FV"} $ msg_const;
-    val FMV_t = @{term "FMV"} $ msg_const;
-    val FAV_t = @{term "FAV"} $ msg_const;
+    val any_inst_t = @{term "any_inst s i"} $ msg_const;
+    val FV_t = @{const FV} $ msg_const;
+    val FMV_t = @{const FMV} $ msg_const;
+    val FAV_t = @{const FAV} $ msg_const;
   in
    lthy
    (* unfold theorems *)
@@ -193,13 +210,23 @@ fun setup_rolestep mk_binding ann_defs lthy =
    (* step expansions *)
      |> #2 o notes_expansion ss_step
        [ (mk_binding "sendStep_conv", [([sendStep_t],[att_iff_add])]) 
+       , (mk_binding "recvStep_conv", [([recvStep_t],[att_iff_add])]) 
+       , (mk_binding "matchStep_conv", [([matchStep_t],[att_iff_add])]) 
+       , (mk_binding "matchEqStep_conv", [([matchEqStep_t],[att_iff_add])])
+       , (mk_binding "notMatchStep_conv", [([notMatchStep_t],[att_iff_add])])
        , (mk_binding "noteStep_conv", [([noteStep_t],[att_iff_add])]) 
        , (mk_binding "stepPat_conv",  [([stepPat_t],[att_simp_add])]) 
+       , (mk_binding "matchVar_conv",  [([matchVar_t],[att_simp_add])])
        , (mk_binding "noteType_conv",  [([noteType_t],[att_simp_add])])
+       , (mk_binding "sourced_vars_conv",  [([sourced_vars_t],[att_simp_add])])
+       , (mk_binding "used_vars_conv",  [([used_vars_t],[att_simp_add])])
+       , (mk_binding "FV_rolestep_conv",  [([FV_rolestep_t],[att_simp_add])])
+       , (mk_binding "FAV_rolestep_conv",  [([FAV_rolestep_t],[att_simp_add])])
        ]
    (* full expansions *)
      |> notes_expansion ss_full
        [ (mk_binding "inst_conv", [([inst_t], [att_simp_add])])
+       , (mk_binding "any_inst_conv", [([any_inst_t], [att_simp_add])])
        , (mk_binding "FV_conv",   [([FV_t],   [att_simp_add])])
        , (mk_binding "FMV_conv",  [([FMV_t],  [att_simp_add])])
        , (mk_binding "FAV_conv",  [([FAV_t],  [att_simp_add])])
@@ -260,13 +287,14 @@ fun setup_role mk_binding (defs as ((role_const, role_def), steps)) ctxt =
 
     val ss_role = ctxt addsimps [role_def, @{thm prefixClose_def}] |> simpset_of;
     val ss_full = ctxt addsimps ([role_def, @{thm prefixClose_def}] @ pat_defs @ step_defs @
-      @{thms wf_role_def distinct_list_def wf_role_axioms_def}) |> simpset_of
+      @{thms wf_role_def distinct_list_def wf_role_axioms_def}) |> simpset_of;
 
-    fun simp_tactic {prems, context} = FIRSTGOAL (Simplifier.full_simp_tac (put_simpset ss_full context));
+    fun simp_tactic {prems=_, context} = FIRSTGOAL (Simplifier.full_simp_tac (put_simpset ss_full context));
 
     val distinct_steps_thms = prove_distinctness ctxt simp_tactic step_consts;
 
-    val ss_prefixClose = ctxt addsimps ([role_def, @{thm prefixClose_def}] @ distinct_steps_thms) |> simpset_of;
+    val ss_prefixClose = ctxt addsimps ([role_def, @{thm prefixClose_def}] @ distinct_steps_thms @
+      @{thms exec_match_def}) |> simpset_of;
 
     val wf_goal = HOLogic.mk_Trueprop (@{const wf_role} $ role_const);
 
@@ -489,7 +517,16 @@ fun extract_msg_name prems =
                     #1 o dest_msg_eq;
     val fixed_msg = msg_name o #2 o dest_msg_eq;
 
-    val subst = try hd (ESPL_Utils.gather_props subst_var prems);
+    (* We only use substitutions which are enabled by the corresponding hint.
+       This excludes equalities introduced by the MatchEq rule from the name
+       computation.
+    *)
+    val naming_substs = map HOLogic.dest_string (Hints.gather_by_name "case_name_subst" prems);
+    fun is_naming_subst v1 = exists (fn v2 => v1 = v2) naming_substs;
+
+    val subst = prems |> ESPL_Utils.gather_props subst_var
+                      |> filter is_naming_subst
+                      |> try hd;
     val fixed = try hd (ESPL_Utils.gather_props fixed_msg prems);
   in
     if is_none subst andalso is_none fixed then 
@@ -761,7 +798,7 @@ fun setup_typing mk_binding ann_def ctxt =
     val mono_typ_th = (@{const monoTyp} $ typ_const)
       |> HOLogic.mk_Trueprop
       |> Thm.cterm_of (Proof_Context.theory_of ctxt)
-      |> (fn ct => Goal.prove_internal [] ct
+      |> (fn ct => Goal.prove_internal ctxt [] ct
            (K autom_tac)
          );
   in

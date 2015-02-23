@@ -1,0 +1,46 @@
+theory SimpleCommit2
+begin
+
+section{* Simple commitment protocol, variant 2 *}
+
+text{*
+  In this protocol, agent C commits itself to a data value c, which we model as
+  a nonce. The predefined public-key infrastructure is used to identify C.
+  We allow the verifier V to be compromised, such that the adversary could fully
+  impersonate V. The hiding property, which is proven for the adversary,
+  therefore extends to V.
+*}
+
+protocol SimpleCommit
+{
+  1. V -> C : n
+  2. C ->   : {C, n, h(c)}sk(C)
+       -> V : {C, n, t}sk(C)
+  (* C decides to open the commitment *)
+  3. C -> V : c
+  4.      V : t -> h(c)
+}
+
+property (of SimpleCommit) hiding:
+  premises
+    "role(1) = C"
+    "knows(c#1)"
+  imply
+    "step(1, C_3)"
+
+property (of SimpleCommit) binding:
+  premises
+    "role(0) = V"
+    "step(0, V_4)"
+    "uncompromised(C#0)"
+  injectively imply a thread 1 such that
+    "role(1) = C &
+    C#0 = C#1 &
+
+    n#0 = n#1 &
+    c#0 = c#1 &
+
+    St(0, V_1) < St(1, C_2) < St(1, C_3) < St(0, V_4)
+    "
+
+end

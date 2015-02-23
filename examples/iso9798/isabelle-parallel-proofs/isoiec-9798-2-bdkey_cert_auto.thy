@@ -731,1075 +731,1217 @@ proof -
   have "(t,r,s) : approx isoiec_9798_2_bdkey_composed_typing"
   proof(cases rule: reachable_in_approxI_ext
         [OF isoiec_9798_2_bdkey_composed_typing.monoTyp, completeness_cases_rule])
-    case (isoiec_9798_2_1_bdkey_A_text_1_Text1 t r s tid0) note facts = this
+    case (isoiec_9798_2_1_bdkey_A_text_1_Text1 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_1_bdkey_A_text_1_Text1
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_1_bdkey_A_text_1_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_1_bdkey_A_text_1_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_1_bdkey_A_text_1_Text2
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_1_bdkey_B_1_A t r s tid0) note facts = this
+    case (isoiec_9798_2_1_bdkey_B_1_A t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_1_bdkey_B_1_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_1_bdkey_B_1_TNA t r s tid0) note facts = this
+    case (isoiec_9798_2_1_bdkey_B_1_TNA t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_1_bdkey_B_1_TNA
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_1_enc_1'', s(MV ''TNA'' tid0),
                s(AV ''B'' tid0), s(MV ''Text1'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_1_bdkey_B_1_Text1 t r s tid0) note facts = this
+    case (isoiec_9798_2_1_bdkey_B_1_Text1 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_1_bdkey_B_1_Text1
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_1_enc_1'', s(MV ''TNA'' tid0),
                s(AV ''B'' tid0), s(MV ''Text1'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_1_bdkey_B_1_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_1_bdkey_B_1_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_1_bdkey_B_1_Text2
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_2_bdkey_A_1_B t r s tid0) note facts = this
+    case (isoiec_9798_2_2_bdkey_A_1_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_2_bdkey_A_1_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_2_bdkey_A_1_RB t r s tid0) note facts = this
+    case (isoiec_9798_2_2_bdkey_A_1_RB t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_2_bdkey_A_1_RB
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_2_bdkey_A_1_Text1 t r s tid0) note facts = this
+    case (isoiec_9798_2_2_bdkey_A_1_Text1 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_2_bdkey_A_1_Text1
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_2_bdkey_A_text_2_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_2_bdkey_A_text_2_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_2_bdkey_A_text_2_Text2
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_2_bdkey_A_text_2_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_2_bdkey_A_text_2_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_2_bdkey_A_text_2_Text3
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_2_bdkey_B_2_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_2_bdkey_B_2_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_2_bdkey_B_2_Text2
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_2_enc_2'', LN ''RB'' tid0, s(AV ''B'' tid0),
                s(MV ''Text2'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_2_bdkey_B_2_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_2_bdkey_B_2_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_2_bdkey_B_2_Text3
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_3_bdkey_A_text_1_Text1 t r s tid0) note facts = this
+    case (isoiec_9798_2_3_bdkey_A_text_1_Text1 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_3_bdkey_A_text_1_Text1
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_3_bdkey_A_text_1_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_3_bdkey_A_text_1_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_3_bdkey_A_text_1_Text2
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_3_bdkey_A_2_TNB t r s tid0) note facts = this
+    case (isoiec_9798_2_3_bdkey_A_2_TNB t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_3_bdkey_A_2_TNB
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_3_enc_2'', s(MV ''TNB'' tid0),
                s(AV ''A'' tid0), s(MV ''Text3'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_3_bdkey_A_2_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_3_bdkey_A_2_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_3_bdkey_A_2_Text3
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_3_enc_2'', s(MV ''TNB'' tid0),
                s(AV ''A'' tid0), s(MV ''Text3'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_3_bdkey_A_2_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_3_bdkey_A_2_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_3_bdkey_A_2_Text4
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_3_bdkey_B_1_A t r s tid0) note facts = this
+    case (isoiec_9798_2_3_bdkey_B_1_A t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_3_bdkey_B_1_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_3_bdkey_B_1_TNA t r s tid0) note facts = this
+    case (isoiec_9798_2_3_bdkey_B_1_TNA t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_3_bdkey_B_1_TNA
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_3_enc_1'', s(MV ''TNA'' tid0),
                s(AV ''B'' tid0), s(MV ''Text1'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_3_bdkey_B_1_Text1 t r s tid0) note facts = this
+    case (isoiec_9798_2_3_bdkey_B_1_Text1 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_3_bdkey_B_1_Text1
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_3_enc_1'', s(MV ''TNA'' tid0),
                s(AV ''B'' tid0), s(MV ''Text1'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_3_bdkey_B_1_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_3_bdkey_B_1_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_3_bdkey_B_1_Text2
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_3_bdkey_B_text_2_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_3_bdkey_B_text_2_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_3_bdkey_B_text_2_Text3
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_3_bdkey_B_text_2_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_3_bdkey_B_text_2_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_3_bdkey_B_text_2_Text4
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_4_bdkey_A_1_B t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_A_1_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_A_1_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_4_bdkey_A_1_RB t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_A_1_RB t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_A_1_RB
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_4_bdkey_A_1_Text1 t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_A_1_Text1 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_A_1_Text1
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_4_bdkey_A_text_2_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_A_text_2_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_A_text_2_Text2
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_4_bdkey_A_text_2_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_A_text_2_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_A_text_2_Text3
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_4_bdkey_A_3_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_A_3_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_A_3_Text4
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_4_enc_2'', s(MV ''RB'' tid0), LN ''RA'' tid0,
                s(MV ''Text4'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(MV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_4_bdkey_A_3_Text5 t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_A_3_Text5 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_A_3_Text5
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_4_bdkey_B_2_RA t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_B_2_RA t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_B_2_RA
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_4_enc_1'', s(MV ''RA'' tid0), LN ''RB'' tid0,
                s(AV ''B'' tid0), s(MV ''Text2'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_4_bdkey_B_2_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_B_2_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_B_2_Text2
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_4_enc_1'', s(MV ''RA'' tid0), LN ''RB'' tid0,
                s(AV ''B'' tid0), s(MV ''Text2'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_4_bdkey_B_2_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_B_2_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_B_2_Text3
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_4_bdkey_B_text_3_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_B_text_3_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_B_text_3_Text4
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_4_bdkey_B_text_3_Text5 t r s tid0) note facts = this
+    case (isoiec_9798_2_4_bdkey_B_text_3_Text5 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_4_bdkey_B_text_3_Text5
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_A_2_Kab t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_A_2_Kab t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_A_2_Kab
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid0,
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(AV ''B'' tid0),
                s(MV ''Text3'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_bdkey_A_2_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_A_2_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_A_2_Text3
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_enc_2_1'', LN ''TVPa'' tid0,
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(AV ''B'' tid0),
                s(MV ''Text3'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_bdkey_A_2_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_A_2_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_A_2_Text4
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_A_2_TokenPA_for_B t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_A_2_TokenPA_for_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_A_2_TokenPA_for_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_A_text_3_Text5 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_A_text_3_Text5 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_A_text_3_Text5
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_A_text_3_Text6 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_A_text_3_Text6 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_A_text_3_Text6
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_A_4_TNb t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_A_4_TNb t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_A_4_TNb
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_enc_4'', s(MV ''TNb'' tid0),
                s(AV ''A'' tid0), s(MV ''Text7'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_bdkey_A_4_Text7 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_A_4_Text7 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_A_4_Text7
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_enc_4'', s(MV ''TNb'' tid0),
                s(AV ''A'' tid0), s(MV ''Text7'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_bdkey_A_4_Text8 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_A_4_Text8 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_A_4_Text8
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_B_3_A t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_B_3_A t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_B_3_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_B_3_Kab t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_B_3_Kab t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_B_3_Kab
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid0),
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(AV ''B'' tid0),
                s(MV ''Text2'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_bdkey_B_3_P t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_B_3_P t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_B_3_P
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_B_3_TNa t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_B_3_TNa t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_B_3_TNa
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_enc_3'', s(MV ''TNa'' tid0),
                s(AV ''B'' tid0), s(MV ''Text5'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_bdkey_B_3_TNp t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_B_3_TNp t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_B_3_TNp
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid0),
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(AV ''B'' tid0),
                s(MV ''Text2'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_bdkey_B_3_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_B_3_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_B_3_Text2
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_enc_2_2'', s(MV ''TNp'' tid0),
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(AV ''B'' tid0),
                s(MV ''Text2'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_bdkey_B_3_Text5 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_B_3_Text5 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_B_3_Text5
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_enc_3'', s(MV ''TNa'' tid0),
                s(AV ''B'' tid0), s(MV ''Text5'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_bdkey_B_3_Text6 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_B_3_Text6 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_B_3_Text6
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_B_text_4_Text7 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_B_text_4_Text7 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_B_text_4_Text7
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_B_text_4_Text8 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_B_text_4_Text8 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_B_text_4_Text8
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_P_1_A t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_P_1_A t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_P_1_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_P_1_B t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_P_1_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_P_1_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_P_1_TVPa t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_P_1_TVPa t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_P_1_TVPa
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_P_1_Text1 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_P_1_Text1 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_P_1_Text1
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_P_text_2_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_P_text_2_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_P_text_2_Text2
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_P_text_2_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_P_text_2_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_P_text_2_Text3
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_bdkey_P_text_2_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_bdkey_P_text_2_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_bdkey_P_text_2_Text4
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_A_1_B t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_A_1_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_A_1_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_A_1_Rb t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_A_1_Rb t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_A_1_Rb
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_A_1_Text1 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_A_1_Text1 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_A_1_Text1
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_A_3_Kab t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_A_3_Kab t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_A_3_Kab
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid0,
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''B'' tid0),
                s(MV ''Text4'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_bdkey_A_3_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_A_3_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_A_3_Text4
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_enc_3_1'', LN ''Ra'' tid0,
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''B'' tid0),
                s(MV ''Text4'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_bdkey_A_3_Text5 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_A_3_Text5 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_A_3_Text5
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_A_3_TokenPA_for_B t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_A_3_TokenPA_for_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_A_3_TokenPA_for_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_A_text_4_Text6 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_A_text_4_Text6 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_A_text_4_Text6
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_A_text_4_Text7 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_A_text_4_Text7 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_A_text_4_Text7
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_A_5_Text8 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_A_5_Text8 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_A_5_Text8
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_enc_5'', s(MV ''Rb'' tid0), LN ''Rpa'' tid0,
                s(MV ''Text8'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_bdkey_A_5_Text9 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_A_5_Text9 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_A_5_Text9
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_B_4_Kab t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_B_4_Kab t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_B_4_Kab
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid0,
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(AV ''B'' tid0),
                s(MV ''Text3'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_bdkey_B_4_P t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_B_4_P t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_B_4_P
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_B_4_Rpa t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_B_4_Rpa t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_B_4_Rpa
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_enc_4'', s(MV ''Rpa'' tid0), LN ''Rb'' tid0,
                s(MV ''Text6'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_bdkey_B_4_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_B_4_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_B_4_Text3
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_enc_3_2'', LN ''Rb'' tid0,
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(AV ''B'' tid0),
                s(MV ''Text3'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_bdkey_B_4_Text6 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_B_4_Text6 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_B_4_Text6
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_enc_4'', s(MV ''Rpa'' tid0), LN ''Rb'' tid0,
                s(MV ''Text6'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_bdkey_B_4_Text7 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_B_4_Text7 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_B_4_Text7
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_B_text_5_Text8 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_B_text_5_Text8 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_B_text_5_Text8
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_B_text_5_Text9 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_B_text_5_Text9 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_B_text_5_Text9
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_P_2_A t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_P_2_A t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_P_2_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_P_2_B t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_P_2_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_P_2_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_P_2_Ra t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_P_2_Ra t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_P_2_Ra
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_P_2_Rb t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_P_2_Rb t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_P_2_Rb
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_P_2_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_P_2_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_P_2_Text2
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_P_text_3_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_P_text_3_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_P_text_3_Text3
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_P_text_3_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_P_text_3_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_P_text_3_Text4
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_bdkey_P_text_3_Text5 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_bdkey_P_text_3_Text5 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_bdkey_P_text_3_Text5
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_A_2_Kab t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_A_2_Kab t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_A_2_Kab
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_special_TTP_enc_2_1'', LN ''TVPa'' tid0,
                s(MV ''Kab'' tid0), s(AV ''B'' tid0), s(MV ''Text3'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_A_2_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_A_2_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_A_2_Text3
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_special_TTP_enc_2_1'', LN ''TVPa'' tid0,
                s(MV ''Kab'' tid0), s(AV ''B'' tid0), s(MV ''Text3'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_A_2_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_A_2_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_A_2_Text4
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_A_2_TokenPA_for_B t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_A_2_TokenPA_for_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_A_2_TokenPA_for_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_A_text_3_Text5 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_A_text_3_Text5 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_A_text_3_Text5
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_A_text_3_Text6 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_A_text_3_Text6 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_A_text_3_Text6
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_A_4_TNb t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_A_4_TNb t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_A_4_TNb
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_special_TTP_enc_4'', s(MV ''TNb'' tid0),
                s(AV ''A'' tid0), s(MV ''Text7'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_A_4_Text7 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_A_4_Text7 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_A_4_Text7
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_special_TTP_enc_4'', s(MV ''TNb'' tid0),
                s(AV ''A'' tid0), s(MV ''Text7'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_A_4_Text8 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_A_4_Text8 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_A_4_Text8
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_A t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_A t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_B_3_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_Kab t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_Kab t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_B_3_Kab
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_special_TTP_enc_2_2'', s(MV ''TNp'' tid0),
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_P t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_P t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_B_3_P
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_TNa t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_TNa t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_B_3_TNa
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_special_TTP_enc_3'', s(MV ''TNa'' tid0),
                s(AV ''B'' tid0), s(MV ''Text5'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_TNp t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_TNp t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_B_3_TNp
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_special_TTP_enc_2_2'', s(MV ''TNp'' tid0),
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_B_3_Text2
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_special_TTP_enc_2_2'', s(MV ''TNp'' tid0),
                s(MV ''Kab'' tid0), s(MV ''A'' tid0), s(MV ''Text2'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_Text5 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_Text5 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_B_3_Text5
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_5_special_TTP_enc_3'', s(MV ''TNa'' tid0),
                s(AV ''B'' tid0), s(MV ''Text5'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_Text6 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_B_3_Text6 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_B_3_Text6
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_B_text_4_Text7 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_B_text_4_Text7 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_B_text_4_Text7
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_B_text_4_Text8 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_B_text_4_Text8 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_B_text_4_Text8
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_P_1_A t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_P_1_A t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_P_1_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_P_1_B t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_P_1_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_P_1_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_P_1_TVPa t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_P_1_TVPa t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_P_1_TVPa
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_P_1_Text1 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_P_1_Text1 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_P_1_Text1
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_P_text_2_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_P_text_2_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_P_text_2_Text2
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_P_text_2_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_P_text_2_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_P_text_2_Text3
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_5_special_TTP_bdkey_P_text_2_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_5_special_TTP_bdkey_P_text_2_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_5_special_TTP_bdkey_P_text_2_Text4
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_A_1_B t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_A_1_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_A_1_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_A_1_Rb t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_A_1_Rb t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_A_1_Rb
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_A_1_Text1 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_A_1_Text1 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_A_1_Text1
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_A_3_Kab t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_A_3_Kab t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_A_3_Kab
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_special_TTP_enc_3_1'', LN ''Ra'' tid0,
                s(MV ''Kab'' tid0), s(MV ''B'' tid0), s(MV ''Text4'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_A_3_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_A_3_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_A_3_Text4
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_special_TTP_enc_3_1'', LN ''Ra'' tid0,
                s(MV ''Kab'' tid0), s(MV ''B'' tid0), s(MV ''Text4'' tid0)
             |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_A_3_Text5 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_A_3_Text5 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_A_3_Text5
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_A_3_TokenPA_for_B t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_A_3_TokenPA_for_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_A_3_TokenPA_for_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_A_text_4_Text6 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_A_text_4_Text6 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_A_text_4_Text6
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_A_text_4_Text7 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_A_text_4_Text7 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_A_text_4_Text7
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_A_5_Text8 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_A_5_Text8 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_A_5_Text8
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_special_TTP_enc_5'', s(MV ''Rb'' tid0),
                LN ''Rpa'' tid0, s(MV ''Text8'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_A_5_Text9 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_A_5_Text9 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_A_5_Text9
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_Kab t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_Kab t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_B_4_Kab
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_special_TTP_enc_3_2'', LN ''Rb'' tid0,
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''Text3'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_P t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_P t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_B_4_P
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_Rpa t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_Rpa t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_B_4_Rpa
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_special_TTP_enc_4'', s(MV ''Rpa'' tid0),
                LN ''Rb'' tid0, s(MV ''Text6'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_B_4_Text3
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_special_TTP_enc_3_2'', LN ''Rb'' tid0,
                s(MV ''Kab'' tid0), s(AV ''A'' tid0), s(MV ''Text3'' tid0)
             |}
             ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_Text6 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_Text6 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_B_4_Text6
+    thus ?case
     proof(sources! "
         Enc {| LC ''isoiec_9798_2_6_special_TTP_enc_4'', s(MV ''Rpa'' tid0),
                LN ''Rb'' tid0, s(MV ''Text6'' tid0)
             |}
             ( s(MV ''Kab'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_Text7 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_B_4_Text7 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_B_4_Text7
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_B_text_5_Text8 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_B_text_5_Text8 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_B_text_5_Text8
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_B_text_5_Text9 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_B_text_5_Text9 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_B_text_5_Text9
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_P_2_A t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_P_2_A t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_P_2_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_P_2_B t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_P_2_B t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_P_2_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_P_2_Ra t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_P_2_Ra t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_P_2_Ra
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_P_2_Rb t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_P_2_Rb t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_P_2_Rb
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_P_2_Text2 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_P_2_Text2 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_P_2_Text2
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_P_text_3_Text3 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_P_text_3_Text3 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_P_text_3_Text3
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_P_text_3_Text4 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_P_text_3_Text4 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_P_text_3_Text4
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (isoiec_9798_2_6_special_TTP_bdkey_P_text_3_Text5 t r s tid0) note facts = this
+    case (isoiec_9798_2_6_special_TTP_bdkey_P_text_3_Text5 t r s tid0)
     then interpret state: isoiec_9798_2_bdkey_composed_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = isoiec_9798_2_6_special_TTP_bdkey_P_text_3_Text5
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   qed
   thus "isoiec_9798_2_bdkey_composed_typing_state t r s" by unfold_locales auto
@@ -1880,11 +2022,11 @@ proof -
                        |}
                        ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_1_bdkey_A_1_enc tid1) note_unified facts = this facts
     thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_2_bdkey_B_injective_agreement:
@@ -1919,11 +2061,11 @@ proof -
                            |}
                            ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_2_bdkey_A_2_enc tid1) note_unified facts = this facts
         thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -1960,11 +2102,11 @@ proof -
                        |}
                        ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_3_bdkey_B_2_enc tid1) note_unified facts = this facts
     thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_3_bdkey_B_non_injective_agreement:
@@ -1990,11 +2132,11 @@ proof -
                        |}
                        ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''A'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_3_bdkey_A_1_enc tid1) note_unified facts = this facts
     thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_4_bdkey_A_injective_agreement:
@@ -2029,7 +2171,7 @@ proof -
                            |}
                            ( Kbd ( s(AV ''A'' tid0) ) ( s(MV ''B'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_4_bdkey_B_3_enc tid1) note_unified facts = this facts
         hence "Kbd ( s(AV ''A'' tid1) )
@@ -2043,11 +2185,11 @@ proof -
                                |}
                                ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid1) ) ) ")
             case fake note_unified facts = this facts
-            thus ?thesis by (fastforce dest!: ltk_secrecy)
+            thus ?thesis by (auto dest!: ltk_secrecy)
           next
             case (isoiec_9798_2_4_bdkey_A_2_enc tid2) note_unified facts = this facts
             thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-          qed (insert facts, fastforce+)?
+          qed (safe?, simp_all?, insert facts, (fastforce+)?)
         next
           case swapped note_unified facts = this facts
           thus ?thesis proof(sources! "
@@ -2056,13 +2198,13 @@ proof -
                                |}
                                ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''A'' tid1) ) ) ")
             case fake note_unified facts = this facts
-            thus ?thesis by (fastforce dest!: ltk_secrecy)
+            thus ?thesis by (auto dest!: ltk_secrecy)
           next
             case (isoiec_9798_2_4_bdkey_A_2_enc tid2) note_unified facts = this facts
             thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-          qed (insert facts, fastforce+)?
+          qed (safe?, simp_all?, insert facts, (fastforce+)?)
         qed (fastforce+)?
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -2108,11 +2250,11 @@ proof -
                            |}
                            ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''B'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_4_bdkey_A_2_enc tid1) note_unified facts = this facts
         thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -2136,11 +2278,11 @@ lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_5_bdkey_P_secret_K
   shows "False"
 using facts proof(sources! " LN ''Kab'' tid0 ")
   case isoiec_9798_2_5_bdkey_P_2_Kab note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
+  thus ?thesis by (auto dest!: ltk_secrecy)
 next
   case isoiec_9798_2_5_bdkey_P_2_Kab_1 note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
-qed (insert facts, fastforce+)?
+  thus ?thesis by (auto dest!: ltk_secrecy)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_5_bdkey_A_secret_Kab:
   assumes facts:
@@ -2160,11 +2302,11 @@ proof -
                        |}
                        ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_5_bdkey_P_2_enc tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: isoiec_9798_2_5_bdkey_P_secret_Kab intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_5_bdkey_B_secret_Kab:
@@ -2185,11 +2327,11 @@ proof -
                        |}
                        ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_5_bdkey_P_2_enc_1 tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: isoiec_9798_2_5_bdkey_P_secret_Kab intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_5_bdkey_A_injective_agreement_B:
@@ -2228,7 +2370,7 @@ proof -
                            |}
                            ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_5_bdkey_P_2_enc tid1) note_unified facts = this facts
         thus ?thesis proof(sources! "
@@ -2268,11 +2410,11 @@ proof -
               next
                 case (isoiec_9798_2_5_bdkey_P_2_enc tid4) note_unified facts = this facts
                 thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-              qed (insert facts, fastforce+)?
-            qed (insert facts, fastforce+)?
-          qed (insert facts, fastforce+)?
-        qed (insert facts, fastforce+)?
-      qed (insert facts, fastforce+)?
+              qed (safe?, simp_all?, insert facts, (fastforce+)?)
+            qed (safe?, simp_all?, insert facts, (fastforce+)?)
+          qed (safe?, simp_all?, insert facts, (fastforce+)?)
+        qed (safe?, simp_all?, insert facts, (fastforce+)?)
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -2311,7 +2453,7 @@ proof -
                        |}
                        ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_5_bdkey_P_2_enc_1 tid1) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -2333,9 +2475,9 @@ proof -
       next
         case (isoiec_9798_2_5_bdkey_P_2_enc tid3) note_unified facts = this facts
         thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-      qed (insert facts, fastforce+)?
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_5_bdkey_A_injective_agreement_P:
@@ -2372,11 +2514,11 @@ proof -
                            |}
                            ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_5_bdkey_P_2_enc tid1) note_unified facts = this facts
         thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -2415,11 +2557,11 @@ proof -
                        |}
                        ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_5_bdkey_P_2_enc_1 tid1) note_unified facts = this facts
     thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_6_bdkey_P_secret_Kab:
@@ -2432,11 +2574,11 @@ lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_6_bdkey_P_secret_K
   shows "False"
 using facts proof(sources! " LN ''Kab'' tid0 ")
   case isoiec_9798_2_6_bdkey_P_3_Kab note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
+  thus ?thesis by (auto dest!: ltk_secrecy)
 next
   case isoiec_9798_2_6_bdkey_P_3_Kab_1 note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
-qed (insert facts, fastforce+)?
+  thus ?thesis by (auto dest!: ltk_secrecy)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_6_bdkey_A_secret_Kab:
   assumes facts:
@@ -2456,11 +2598,11 @@ proof -
                        |}
                        ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_6_bdkey_P_3_enc tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: isoiec_9798_2_6_bdkey_P_secret_Kab intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_6_bdkey_B_secret_Kab:
@@ -2481,11 +2623,11 @@ proof -
                        |}
                        ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_6_bdkey_P_3_enc_1 tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: isoiec_9798_2_6_bdkey_P_secret_Kab intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_6_bdkey_A_injective_agreement_B:
@@ -2524,7 +2666,7 @@ proof -
                            |}
                            ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_6_bdkey_P_3_enc tid1) note_unified facts = this facts
         thus ?thesis proof(sources! "
@@ -2555,10 +2697,10 @@ proof -
             next
               case (isoiec_9798_2_6_bdkey_A_4_enc tid3) note_unified facts = this facts
               thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-            qed (insert facts, fastforce+)?
-          qed (insert facts, fastforce+)?
-        qed (insert facts, fastforce+)?
-      qed (insert facts, fastforce+)?
+            qed (safe?, simp_all?, insert facts, (fastforce+)?)
+          qed (safe?, simp_all?, insert facts, (fastforce+)?)
+        qed (safe?, simp_all?, insert facts, (fastforce+)?)
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -2608,7 +2750,7 @@ proof -
                            |}
                            ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_6_bdkey_P_3_enc_1 tid1) note_unified facts = this facts
         thus ?thesis proof(sources! "
@@ -2630,9 +2772,9 @@ proof -
           next
             case (isoiec_9798_2_6_bdkey_P_3_enc tid3) note_unified facts = this facts
             thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-          qed (insert facts, fastforce+)?
-        qed (insert facts, fastforce+)?
-      qed (insert facts, fastforce+)?
+          qed (safe?, simp_all?, insert facts, (fastforce+)?)
+        qed (safe?, simp_all?, insert facts, (fastforce+)?)
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -2680,11 +2822,11 @@ proof -
                            |}
                            ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_6_bdkey_P_3_enc tid1) note_unified facts = this facts
         thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -2732,11 +2874,11 @@ proof -
                            |}
                            ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_6_bdkey_P_3_enc_1 tid1) note_unified facts = this facts
         thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -2761,11 +2903,11 @@ lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_5_special_TTP_bdke
   shows "False"
 using facts proof(sources! " LN ''Kab'' tid0 ")
   case isoiec_9798_2_5_special_TTP_bdkey_P_2_Kab note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
+  thus ?thesis by (auto dest!: ltk_secrecy)
 next
   case isoiec_9798_2_5_special_TTP_bdkey_P_2_Kab_1 note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
-qed (insert facts, fastforce+)?
+  thus ?thesis by (auto dest!: ltk_secrecy)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_5_special_TTP_bdkey_A_secret_Kab:
   assumes facts:
@@ -2784,7 +2926,7 @@ proof -
                        |}
                        ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_5_special_TTP_bdkey_P_2_enc tid1) note_unified facts = this facts
     hence "Kbd ( s(AV ''P'' tid1) )
@@ -2797,7 +2939,7 @@ proof -
       case swapped note_unified facts = this facts
       thus ?thesis by (fastforce dest: isoiec_9798_2_5_special_TTP_bdkey_P_secret_Kab intro: event_predOrdI)
     qed (fastforce+)?
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_5_special_TTP_bdkey_B_secret_Kab:
@@ -2817,7 +2959,7 @@ proof -
                        |}
                        ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_5_special_TTP_bdkey_P_2_enc_1 tid1) note_unified facts = this facts
     hence "Kbd ( s(AV ''P'' tid1) )
@@ -2830,7 +2972,7 @@ proof -
       case swapped note_unified facts = this facts
       thus ?thesis by (fastforce dest: isoiec_9798_2_5_special_TTP_bdkey_P_secret_Kab intro: event_predOrdI)
     qed (fastforce+)?
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_5_special_TTP_bdkey_A_injective_agreement_B:
@@ -2868,7 +3010,7 @@ proof -
                            |}
                            ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_5_special_TTP_bdkey_P_2_enc tid1) note_unified facts = this facts
         hence "Kbd ( s(AV ''P'' tid1) )
@@ -2916,12 +3058,12 @@ proof -
                 next
                   case (isoiec_9798_2_5_special_TTP_bdkey_P_2_enc_1 tid3) note_unified facts = this facts
                   thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-                qed (insert facts, fastforce+)?
-              qed (insert facts, fastforce+)?
-            qed (insert facts, fastforce+)?
-          qed (insert facts, fastforce+)?
+                qed (safe?, simp_all?, insert facts, (fastforce+)?)
+              qed (safe?, simp_all?, insert facts, (fastforce+)?)
+            qed (safe?, simp_all?, insert facts, (fastforce+)?)
+          qed (safe?, simp_all?, insert facts, (fastforce+)?)
         qed (fastforce+)?
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -2985,14 +3127,14 @@ proof -
                              |}
                              ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
           case fake note_unified facts = this facts
-          thus ?thesis by (fastforce dest!: ltk_secrecy)
+          thus ?thesis by (auto dest!: ltk_secrecy)
         next
           case (isoiec_9798_2_5_special_TTP_bdkey_P_2_enc_1 tid3) note_unified facts = this facts
           thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-        qed (insert facts, fastforce+)?
+        qed (safe?, simp_all?, insert facts, (fastforce+)?)
       qed (fastforce+)?
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_5_special_TTP_bdkey_A_injective_agreement_P:
@@ -3028,7 +3170,7 @@ proof -
                            |}
                            ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_5_special_TTP_bdkey_P_2_enc tid1) note_unified facts = this facts
         hence "Kbd ( s(AV ''P'' tid1) )
@@ -3041,7 +3183,7 @@ proof -
           case swapped note_unified facts = this facts
           thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
         qed (fastforce+)?
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -3079,7 +3221,7 @@ proof -
                        |}
                        ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_5_special_TTP_bdkey_P_2_enc_1 tid1) note_unified facts = this facts
     hence "Kbd ( s(AV ''P'' tid1) )
@@ -3106,13 +3248,13 @@ proof -
         next
           case (isoiec_9798_2_5_special_TTP_bdkey_P_2_enc tid3) note_unified facts = this facts
           thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-        qed (insert facts, fastforce+)?
-      qed (insert facts, fastforce+)?
+        qed (safe?, simp_all?, insert facts, (fastforce+)?)
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     next
       case swapped note_unified facts = this facts
       thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
     qed (fastforce+)?
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 
@@ -3127,11 +3269,11 @@ lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_6_special_TTP_bdke
   shows "False"
 using facts proof(sources! " LN ''Kab'' tid0 ")
   case isoiec_9798_2_6_special_TTP_bdkey_P_3_Kab note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
+  thus ?thesis by (auto dest!: ltk_secrecy)
 next
   case isoiec_9798_2_6_special_TTP_bdkey_P_3_Kab_1 note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
-qed (insert facts, fastforce+)?
+  thus ?thesis by (auto dest!: ltk_secrecy)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_6_special_TTP_bdkey_A_secret_Kab:
   assumes facts:
@@ -3150,7 +3292,7 @@ proof -
                        |}
                        ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_6_special_TTP_bdkey_P_3_enc tid1) note_unified facts = this facts
     hence "Kbd ( s(AV ''P'' tid1) )
@@ -3163,7 +3305,7 @@ proof -
       case swapped note_unified facts = this facts
       thus ?thesis by (fastforce dest: isoiec_9798_2_6_special_TTP_bdkey_P_secret_Kab intro: event_predOrdI)
     qed (fastforce+)?
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_6_special_TTP_bdkey_B_secret_Kab:
@@ -3183,7 +3325,7 @@ proof -
                        |}
                        ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (isoiec_9798_2_6_special_TTP_bdkey_P_3_enc_1 tid1) note_unified facts = this facts
     hence "Kbd ( s(AV ''P'' tid1) )
@@ -3196,7 +3338,7 @@ proof -
       case swapped note_unified facts = this facts
       thus ?thesis by (fastforce dest: isoiec_9798_2_6_special_TTP_bdkey_P_secret_Kab intro: event_predOrdI)
     qed (fastforce+)?
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_isoiec_9798_2_bdkey_state) isoiec_9798_2_6_special_TTP_bdkey_A_injective_agreement_B:
@@ -3234,7 +3376,7 @@ proof -
                            |}
                            ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_6_special_TTP_bdkey_P_3_enc tid1) note_unified facts = this facts
         hence "Kbd ( s(AV ''P'' tid1) )
@@ -3281,12 +3423,12 @@ proof -
                 next
                   case (isoiec_9798_2_6_special_TTP_bdkey_A_4_enc tid3) note_unified facts = this facts
                   thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-                qed (insert facts, fastforce+)?
+                qed (safe?, simp_all?, insert facts, (fastforce+)?)
               qed (fastforce+)?
-            qed (insert facts, fastforce+)?
-          qed (insert facts, fastforce+)?
+            qed (safe?, simp_all?, insert facts, (fastforce+)?)
+          qed (safe?, simp_all?, insert facts, (fastforce+)?)
         qed (fastforce+)?
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -3335,7 +3477,7 @@ proof -
                            |}
                            ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_6_special_TTP_bdkey_P_3_enc_1 tid1) note_unified facts = this facts
         hence "Kbd ( s(AV ''P'' tid1) )
@@ -3374,10 +3516,10 @@ proof -
                 case swapped note_unified facts = this facts
                 thus ?thesis by (fastforce dest: isoiec_9798_2_6_special_TTP_bdkey_different_actors_A_P intro: event_predOrdI)
               qed (fastforce+)?
-            qed (insert facts, fastforce+)?
-          qed (insert facts, fastforce+)?
+            qed (safe?, simp_all?, insert facts, (fastforce+)?)
+          qed (safe?, simp_all?, insert facts, (fastforce+)?)
         qed (fastforce+)?
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -3424,7 +3566,7 @@ proof -
                            |}
                            ( Kbd ( s(AV ''A'' tid0) ) ( s(AV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_6_special_TTP_bdkey_P_3_enc tid1) note_unified facts = this facts
         hence "Kbd ( s(AV ''P'' tid1) )
@@ -3437,7 +3579,7 @@ proof -
           case swapped note_unified facts = this facts
           thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
         qed (fastforce+)?
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this
@@ -3484,7 +3626,7 @@ proof -
                            |}
                            ( Kbd ( s(AV ''B'' tid0) ) ( s(MV ''P'' tid0) ) ) ")
         case fake note_unified facts = this facts
-        thus ?thesis by (fastforce dest!: ltk_secrecy)
+        thus ?thesis by (auto dest!: ltk_secrecy)
       next
         case (isoiec_9798_2_6_special_TTP_bdkey_P_3_enc_1 tid1) note_unified facts = this facts
         hence "Kbd ( s(AV ''P'' tid1) )
@@ -3497,7 +3639,7 @@ proof -
           case swapped note_unified facts = this facts
           thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
         qed (fastforce+)?
-      qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
     qed
   }
   note niagree = this

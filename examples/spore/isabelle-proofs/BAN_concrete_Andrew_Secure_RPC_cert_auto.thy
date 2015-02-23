@@ -60,31 +60,35 @@ proof -
   have "(t,r,s) : approx Andrew_msc_typing"
   proof(cases rule: reachable_in_approxI_ext
         [OF Andrew_msc_typing.monoTyp, completeness_cases_rule])
-    case (A_2_B t r s tid0) note facts = this
+    case (A_2_B t r s tid0)
     then interpret state: Andrew_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = A_2_B
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (A_2_Kab t r s tid0) note facts = this
+    case (A_2_Kab t r s tid0)
     then interpret state: Andrew_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = A_2_Kab
+    thus ?case
     proof(sources! "
         Enc {| LC ''2'', LN ''Na'' tid0, s(MV ''Kab'' tid0) |}
             ( Kbd ( s(AV ''A'' tid0) ) ( s(MV ''B'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (B_1_A t r s tid0) note facts = this
+    case (B_1_A t r s tid0)
     then interpret state: Andrew_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = B_1_A
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (B_1_Na t r s tid0) note facts = this
+    case (B_1_Na t r s tid0)
     then interpret state: Andrew_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = B_1_Na
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   qed
   thus "Andrew_msc_typing_state t r s" by unfold_locales auto
@@ -153,8 +157,8 @@ lemma (in restricted_Andrew_state) B_sec_Kab:
   shows "False"
 using facts proof(sources! " LN ''Kab'' tid0 ")
   case B_2_Kab note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
-qed (insert facts, fastforce+)?
+  thus ?thesis by (auto dest!: ltk_secrecy)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_Andrew_state) A_sec_Kab:
   assumes facts:
@@ -170,7 +174,7 @@ proof -
                    Enc {| LC ''2'', LN ''Na'' tid0, s(MV ''Kab'' tid0) |}
                        ( Kbd ( s(AV ''A'' tid0) ) ( s(MV ''B'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (B_2_enc tid1) note_unified facts = this facts
     hence "Kbd ( s(AV ''B'' tid1) )
@@ -183,7 +187,7 @@ proof -
       case swapped note_unified facts = this facts
       thus ?thesis by (fastforce dest: B_sec_Kab intro: event_predOrdI)
     qed (fastforce+)?
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 (* text: 
@@ -209,11 +213,11 @@ proof -
                    Enc {| LC ''2'', LN ''Na'' tid1, s(MV ''Kab'' tid1) |}
                        ( Kbd ( s(AV ''A'' tid1) ) ( s(MV ''B'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (B_2_enc tid2) note_unified facts = this facts
     thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_Andrew_state) B_noninjective_agreement:
@@ -236,7 +240,7 @@ proof -
   next
     case (A_3_enc tid2) note_unified facts = this facts
     thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 end

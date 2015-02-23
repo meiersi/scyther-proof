@@ -119,62 +119,71 @@ proof -
   have "(t,r,s) : approx TLS_msc_typing"
   proof(cases rule: reachable_in_approxI_ext
         [OF TLS_msc_typing.monoTyp, completeness_cases_rule])
-    case (C_2_ns t r s tid0) note facts = this
+    case (C_2_ns t r s tid0)
     then interpret state: TLS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = C_2_ns
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (C_2_ps t r s tid0) note facts = this
+    case (C_2_ps t r s tid0)
     then interpret state: TLS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = C_2_ps
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (C_ca2_CA t r s tid0) note facts = this
+    case (C_ca2_CA t r s tid0)
     then interpret state: TLS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = C_ca2_CA
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (C_ca2_pkS t r s tid0) note facts = this
+    case (C_ca2_pkS t r s tid0)
     then interpret state: TLS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = C_ca2_pkS
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_1_C t r s tid0) note facts = this
+    case (S_1_C t r s tid0)
     then interpret state: TLS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_1_C
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_1_nc t r s tid0) note facts = this
+    case (S_1_nc t r s tid0)
     then interpret state: TLS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_1_nc
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_1_pc t r s tid0) note facts = this
+    case (S_1_pc t r s tid0)
     then interpret state: TLS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_1_pc
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_1_sid t r s tid0) note facts = this
+    case (S_1_sid t r s tid0)
     then interpret state: TLS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_1_sid
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_3_pms t r s tid0) note facts = this
+    case (S_3_pms t r s tid0)
     then interpret state: TLS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_3_pms
+    thus ?case
     proof(sources! "
         Hash {| LC ''32'', LN ''ns'' tid0, s(AV ''S'' tid0), s(MV ''pms'' tid0)
              |} ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   qed
   thus "TLS_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -253,12 +262,12 @@ proof -
                      Enc {| LC ''cert'', s(AV ''S'' tid0), s(MV ''pkS'' tid0) |}
                          ( SK ( s(MV ''CA'' tid0) ) ) ")
       case fake note_unified facts = this facts
-      thus ?thesis by (fastforce dest!: ltk_secrecy)
+      thus ?thesis by (auto dest!: ltk_secrecy)
     next
       case (CA_ca2_enc tid1) note_unified facts = this facts
-      thus ?thesis by (fastforce dest!: ltk_secrecy)
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+      thus ?thesis by (auto dest!: ltk_secrecy)
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_TLS_state) C_PRF_sec:
@@ -279,15 +288,15 @@ next
                    Hash {| LC ''clientKey'', LN ''nc'' tid0, s(MV ''ns'' tid0),
                            Hash {| LC ''PRF'', LN ''pms'' tid0, LN ''nc'' tid0, s(MV ''ns'' tid0) |}
                         |} ")
-  qed (insert facts, (((clarsimp, order?) | order))+)?
+  qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
 next
   case (S_4_hash tid1) note_unified facts = this facts
   thus ?thesis proof(sources! "
                    Hash {| LC ''serverKey'', LN ''nc'' tid0, LN ''ns'' tid1,
                            Hash {| LC ''PRF'', LN ''pms'' tid0, LN ''nc'' tid0, LN ''ns'' tid1 |}
                         |} ")
-  qed (insert facts, (((clarsimp, order?) | order))+)?
-qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_TLS_state) C_clientKey_sec:
   assumes facts:
@@ -303,7 +312,7 @@ using facts proof(sources! "
                      |} ")
   case fake note_unified facts = this facts
   thus ?thesis by (fastforce dest: C_PRF_sec intro: event_predOrdI)
-qed (insert facts, fastforce+)?
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_TLS_state) C_serverKey_sec:
   assumes facts:
@@ -319,7 +328,7 @@ using facts proof(sources! "
                      |} ")
   case fake note_unified facts = this facts
   thus ?thesis by (fastforce dest: C_PRF_sec intro: event_predOrdI)
-qed (insert facts, fastforce+)?
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_TLS_state) S_pms_sec:
   assumes facts:
@@ -338,11 +347,11 @@ proof -
                        |}
                        ( SK ( s(MV ''C'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (C_3_enc_1 tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: C_pms_sec intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_TLS_state) S_PRF_sec:
@@ -375,7 +384,7 @@ proof -
     next
       case (C_3_hash_1 tid2) note_unified facts = this facts
       thus ?thesis by (fastforce dest: C_PRF_sec intro: event_predOrdI)
-    qed (insert facts, fastforce+)?
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
   next
     case (S_4_hash tid1) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -383,8 +392,8 @@ proof -
                              Hash {| LC ''PRF'', s(MV ''pms'' tid0), s(MV ''nc'' tid0), LN ''ns'' tid0
                                   |}
                           |} ")
-    qed (insert facts, (((clarsimp, order?) | order))+)?
-  qed (insert facts, fastforce+)?
+    qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_TLS_state) S_clientKey_sec:
@@ -407,7 +416,7 @@ proof -
                         |} ")
     case fake note_unified facts = this facts
     thus ?thesis by (fastforce dest: S_PRF_sec intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_TLS_state) S_serverKey_sec:
@@ -430,7 +439,7 @@ proof -
                         |} ")
     case fake note_unified facts = this facts
     thus ?thesis by (fastforce dest: S_PRF_sec intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 (* subsection:  Authentication Properties  *)
@@ -451,7 +460,7 @@ using facts proof(sources! " LN ''nc'' tid1 ")
 next
   case C_3_nc note_unified facts = this facts
   thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-qed (insert facts, fastforce+)?
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_TLS_state) ns_first_send:
   assumes facts:
@@ -464,7 +473,7 @@ using facts proof(sources! " LN ''ns'' tid1 ")
 next
   case S_4_ns note_unified facts = this facts
   thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-qed (insert facts, fastforce+)?
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_TLS_state) C_ni_synch:
   assumes facts:
@@ -520,8 +529,8 @@ proof -
     next
       case (C_3_enc tid3) note_unified facts = this facts
       thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_TLS_state) S_ni_synch:
@@ -572,7 +581,7 @@ proof -
     have f2: "LN ''ns'' tid2 : knows t" using facts by (auto intro: event_predOrdI)
     note facts = facts ns_first_send[OF f1 f2, simplified]
     thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 end

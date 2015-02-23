@@ -342,8 +342,8 @@ instance MarkupMonad m => MarkupMonad (TaggedIdentityT t m) where
 -- | Convert a triviality reason to a string representing the corresponding
 -- Isabelle tactic.
 isaTactic :: TrivReason -> String
-isaTactic TrivContradictoryPremises   = "((clarsimp, order?) | order)"
-isaTactic (TrivLongTermKeySecrecy _)  = "(fastforce dest!: ltk_secrecy)"
+isaTactic TrivContradictoryPremises   = "((clarsimp, order?) | order | fast)"
+isaTactic (TrivLongTermKeySecrecy _)  = "(auto dest!: ltk_secrecy)"
 isaTactic TrivPremisesImplyConclusion = "(fastforce intro: event_predOrdI split: if_splits)"
 
 -- | Isabelle proof of long-term key secrecy.
@@ -491,9 +491,9 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
       | any (`isPrefixOf` name) ["ik0", "fake"] || null newVars = text name
       | otherwise = parens $ text name <-> hsep (map ppNewVar newVars)
   prettyChainRuleQED _ trivCases
-    | null tactics = kwQED <-> text "(insert facts, fastforce+)?" -- be conservative
+    | null tactics = kwQED <-> text "(safe?, simp_all?, insert facts, (fastforce+)?)" -- be conservative
     | otherwise    =
-        kwQED <-> text "(insert facts, (" <> hsep (intersperse (text "|") tactics) <> text ")+)?"
+        kwQED <-> text "(safe?, simp_all?, insert facts, ((" <> hsep (intersperse (text "|") tactics) <> text ")+)?)"
     where
       tactics = map text . nub . map isaTactic . snd $ genericChainRuleSplitCases snd trivCases
 
@@ -519,10 +519,11 @@ instance MarkupMonad m => PrettyMonad (ReaderT IsarConf m) where
       monoTyp         = typName ++ ".monoTyp"
 
   prettyTypingCase typName name =
-      kwCase <-> text ("("++ name ++" t r s") <-> prettyTID 0 <> text") note facts = this" $-$
+      kwCase <-> text ("("++ name ++" t r s") <-> prettyTID 0 <> text")" $-$
           text ("then interpret state: "++ typingLocale typName ++" t r s") $-$
           nest 2 (text "by unfold_locales auto") $-$
-          text "show ?case using facts"
+          text ("note_prefix_closed (state) facts = " ++ name) $-$
+          text "thus ?case"
 
   -- equality splitting
   prettySplitEqCase name =

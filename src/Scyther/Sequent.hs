@@ -102,31 +102,37 @@ wellTypedCases se@(Sequent _ (FAtom (ATyping typ)) Standard) =
         proveRecvs S.empty (roleSteps role)
       where
         proveRecvs _    []                             = []
-        proveRecvs recv (      Send _ _       : steps) = proveRecvs recv steps
+        proveRecvs recv (Send _ _             : steps) = proveRecvs recv steps
+        proveRecvs recv (Match _ False _ _    : steps) = proveRecvs recv steps
         proveRecvs recv ((Recv _ (PMVar lid)) : steps) =
           -- don't prove single reiceves as they are handled directly by the tactic
           -- on the Isabelle side.
           proveRecvs (S.insert lid recv) steps
         proveRecvs recv (step@(Recv _ pt)     : steps) =
           let mvars = patFMV pt
-          in (S.toList mvars >>= proveVar) `mplus`
+          in (S.toList mvars >>= proveVar recv step) `mplus`
              (proveRecvs (recv `S.union` mvars) steps)
+        -- TODO: Merge? Special cases?
+        proveRecvs recv (step@(Match _ True _ pt) : steps) =
+          let mvars = patFMV pt
+          in (S.toList mvars >>= proveVar recv step) `mplus`
+             (proveRecvs (recv `S.union` mvars) steps)
+
+        proveVar recv step v
+          | v `S.member` recv = fail "proveVar: not first receive"
+          | otherwise         = return (name, Sequent prem concl Standard)
           where
-            proveVar v
-              | v `S.member` recv = fail "proveVar: not first receive"
-              | otherwise         = return (name, Sequent prem concl Standard)
-              where
-                name         = roleName role ++ "_" ++ stepLabel step ++ "_" ++ getId v
-                (tid, prem0) = freshTID (sePrem se)
-                mv           = MVar (LocalId (v, tid))
-                premErr      = error $ "wellTypedCases: could not add thread " ++ show tid ++ ". This should not happen."
-                prem1        = maybe premErr saturateFacts . join $
-                                 conjoinAtoms [AEv (Step tid step), AEq (E.TIDRoleEq (tid, role))] prem0
-                prem  = fromMaybe (error "failed to set typing") $ setTyping typ prem1
-                concl = FAtom $ case M.lookup (v, role) typ of
-                  Just ty -> AHasType (MMVar mv, ty, tid)
-                  Nothing -> error $
-                    "wellTypedCases: no type given for '"++show v++"' in role '"++roleName role++"'"
+            name         = roleName role ++ "_" ++ stepLabel step ++ "_" ++ getId v
+            (tid, prem0) = freshTID (sePrem se)
+            mv           = MVar (LocalId (v, tid))
+            premErr      = error $ "wellTypedCases: could not add thread " ++ show tid ++ ". This should not happen."
+            prem1        = maybe premErr saturateFacts . join $
+                             conjoinAtoms [AEv (Step tid step), AEq (E.TIDRoleEq (tid, role))] prem0
+            prem  = fromMaybe (error "failed to set typing") $ setTyping typ prem1
+            concl = FAtom $ case M.lookup (v, role) typ of
+              Just ty -> AHasType (MMVar mv, ty, tid)
+              Nothing -> error $
+                "wellTypedCases: no type given for '"++show v++"' in role '"++roleName role++"'"
 
 wellTypedCases _ = mzero
 

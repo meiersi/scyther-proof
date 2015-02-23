@@ -1,6 +1,6 @@
 build-type:         Simple
 name:               scyther-proof
-version:            0.8.0.0
+version:            0.10.0.0
 license:            GPL
 license-file:       LICENSE
 category:           Security, Theorem Provers
@@ -86,7 +86,6 @@ data-files:
   isabelle/Makefile
   isabelle/README
   isabelle/ROOT
-  isabelle/src/isar-keywords.el
   isabelle/src/*.thy
   isabelle/src/ESPLogic/*.thy
   isabelle/src/ESPLogic/*.ML
@@ -96,7 +95,7 @@ data-files:
 extra-source-files:
   .ghci
   interactive-only-src/Paths_scyther_proof.hs
-  src/Scyther/Theory/Lexer.x_src_only
+  src/Scyther/Theory/Lexer.x
   README.md
   CHANGES
 
@@ -108,8 +107,8 @@ flag threaded
 executable scyther-proof
     build-depends:
         base          == 4.*    ,
-        array         >= 0.3   && < 0.5 ,
-        containers    >= 0.4.2 && < 0.5 ,
+        array         >= 0.3   && < 0.6 ,
+        containers    >= 0.4.2 && < 0.6 ,
         safe          >= 0.2   && < 0.4 ,
 
         mtl           >= 2.1   && < 3.0,
@@ -117,15 +116,18 @@ executable scyther-proof
         cmdargs       >= 0.10.7 ,
         filepath      >= 1.2   && < 1.4 ,
         directory     >= 1.0   && < 1.3 ,
-        process       == 1.1.*  ,
-        time          >= 1.1   && < 1.3 ,
+        process       >= 1.1   && < 1.3 ,
+        time          >= 1.1   && < 1.5 ,
 
         parsec        == 3.1.*  ,
         pretty        >= 1.0   && < 1.2 ,
-        tagsoup       == 0.12.*  ,
+        tagsoup       >= 0.12  && < 0.14 ,
         json          == 0.5.*  ,
-        uniplate      == 1.6.*
+        uniplate      == 1.6.* ,
+        utf8-string   >= 0.3.7
 
+    build-tools:
+        alex          >= 3.0   && < 3.2
 
     if flag(threaded)
         ghc-options:    -threaded

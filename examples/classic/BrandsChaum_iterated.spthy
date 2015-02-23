@@ -1,0 +1,44 @@
+theory BrandsChaum_iterated
+begin
+
+text{*
+
+The same model of the Brands Chaum distance bounding protocol as in BrandsChaum.spthy
+except that now two challenges are exchanged.
+
+*}
+
+protocol BrandsChaum
+{
+  1.  P ->   : P, {m1, m2}k
+        -> V : P, c
+  21. P <- V : a1
+  31. P ->   : h(a1, m1)
+        -> V : b1
+  22. P <- V : a2
+  32. P ->   : h(a2, m2)
+        -> V : b2
+  4.  P ->   : m1, m2, m3, k, {a1, h(a1, m1), a2, h(a2, m2)}sk(P)
+        -> V : m1, m2, m3, k, {a1, b1, a2, b2}sk(P)
+  5.       V : c -> {m1, m2}k
+  61.      V : b1 -> h(a1, m1)
+  62.      V : b2 -> h(a2, m2)
+}
+
+property (of BrandsChaum) prover_recent:
+  premises
+    "role(0) = V"
+    "step(0, V_62)"
+    "uncompromised(P#0)"
+  injectively imply a thread 1 such that
+    "role(1) = P &
+    P#0 = P#1 &
+    m1#0 = m1#1 & m2#0 = m2#1 &
+    k#0 = k#1 &
+    a1#0 = a1#1 & a2#0 = a2#1 &
+    St(1, P_1) <
+      St(0, V_21) < St(1, P_31) < St(0, V_31) <
+      St(0, V_22) < St(1, P_32) < St(0, V_32)
+    "
+
+end

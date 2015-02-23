@@ -101,16 +101,18 @@ proof -
   have "(t,r,s) : approx AmendedNS_msc_typing"
   proof(cases rule: reachable_in_approxI_ext
         [OF AmendedNS_msc_typing.monoTyp, completeness_cases_rule])
-    case (I_4_S t r s tid0) note facts = this
+    case (I_4_S t r s tid0)
     then interpret state: AmendedNS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = I_4_S
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (I_4_TicketR t r s tid0) note facts = this
+    case (I_4_TicketR t r s tid0)
     then interpret state: AmendedNS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = I_4_TicketR
+    thus ?case
     proof(sources! "
         Enc {| LC ''2'', LN ''ni'' tid0, s(AV ''R'' tid0), s(MV ''kIR'' tid0),
                s(MV ''TicketR'' tid0)
@@ -120,63 +122,70 @@ proof -
       thus ?thesis proof(sources! "
                        Enc {| LC ''1'', s(AV ''I'' tid0), s(MV ''nr'' tid1) |}
                            ( K ( s(AV ''R'' tid0) ) ( s(AV ''S'' tid1) ) ) ")
-      qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+      qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (I_4_kIR t r s tid0) note facts = this
+    case (I_4_kIR t r s tid0)
     then interpret state: AmendedNS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = I_4_kIR
+    thus ?case
     proof(sources! "
         Enc {| LC ''2'', LN ''ni'' tid0, s(AV ''R'' tid0), s(MV ''kIR'' tid0),
                s(MV ''TicketR'' tid0)
             |}
             ( K ( s(AV ''I'' tid0) ) ( s(MV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (I_6_nr t r s tid0) note facts = this
+    case (I_6_nr t r s tid0)
     then interpret state: AmendedNS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = I_6_nr
+    thus ?case
     proof(sources! "
         Enc {| LC ''4'', s(MV ''nr'' tid0) |} ( s(MV ''kIR'' tid0) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (R_5_kIR t r s tid0) note facts = this
+    case (R_5_kIR t r s tid0)
     then interpret state: AmendedNS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = R_5_kIR
+    thus ?case
     proof(sources! "
         Enc {| LC ''3'', s(MV ''kIR'' tid0), LN ''nr'' tid0, s(MV ''I'' tid0) |}
             ( K ( s(AV ''R'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   next
-    case (S_3_I t r s tid0) note facts = this
+    case (S_3_I t r s tid0)
     then interpret state: AmendedNS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_3_I
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_3_R t r s tid0) note facts = this
+    case (S_3_R t r s tid0)
     then interpret state: AmendedNS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_3_R
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_3_ni t r s tid0) note facts = this
+    case (S_3_ni t r s tid0)
     then interpret state: AmendedNS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_3_ni
+    thus ?case
     by (fastforce intro: event_predOrdI split: if_splits)
   next
-    case (S_3_nr t r s tid0) note facts = this
+    case (S_3_nr t r s tid0)
     then interpret state: AmendedNS_msc_typing_state t r s
       by unfold_locales auto
-    show ?case using facts
+    note_prefix_closed (state) facts = S_3_nr
+    thus ?case
     proof(sources! "
         Enc {| LC ''1'', s(MV ''I'' tid0), s(MV ''nr'' tid0) |}
             ( K ( s(MV ''R'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
-    qed (insert facts, ((fastforce intro: event_predOrdI split: if_splits))+)?
+    qed (safe?, simp_all?, insert facts, (((fastforce intro: event_predOrdI split: if_splits))+)?)
   qed
   thus "AmendedNS_msc_typing_state t r s" by unfold_locales auto
 qed
@@ -249,15 +258,15 @@ using facts proof(sources! " LN ''kIR'' tid0 ")
                        |}
                        ( K ( s(AV ''I'' tid1) ) ( s(MV ''S'' tid1) ) ) ")
     case (S_4_enc tid2) note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
-  qed (insert facts, (((clarsimp, order?) | order))+)?
+    thus ?thesis by (auto dest!: ltk_secrecy)
+  qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
 next
   case S_4_kIR note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
+  thus ?thesis by (auto dest!: ltk_secrecy)
 next
   case S_4_kIR_1 note_unified facts = this facts
-  thus ?thesis by (fastforce dest!: ltk_secrecy)
-qed (insert facts, fastforce+)?
+  thus ?thesis by (auto dest!: ltk_secrecy)
+qed (safe?, simp_all?, insert facts, (fastforce+)?)
 
 lemma (in restricted_AmendedNS_state) I_kir_sec:
   assumes facts:
@@ -276,11 +285,11 @@ proof -
                        |}
                        ( K ( s(AV ''I'' tid0) ) ( s(MV ''S'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (S_4_enc tid1) note_unified facts = this facts
     thus ?thesis by (fastforce dest: S_kir_sec intro: event_predOrdI)
-  qed (insert facts, fastforce+)?
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_AmendedNS_state) R_kir_sec:
@@ -298,7 +307,7 @@ proof -
                    Enc {| LC ''3'', s(MV ''kIR'' tid0), LN ''nr'' tid0, s(MV ''I'' tid0) |}
                        ( K ( s(AV ''R'' tid0) ) ( s(AV ''S'' tid0) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (I_5_TicketR_enc tid1 tid2 a0 a1 a2 a3) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -309,11 +318,11 @@ proof -
                          ( K ( s(AV ''I'' tid1) ) ( s(MV ''S'' tid1) ) ) ")
       case (S_4_enc tid3) note_unified facts = this facts
       thus ?thesis by (fastforce dest: S_kir_sec intro: event_predOrdI)
-    qed (insert facts, (((clarsimp, order?) | order))+)?
+    qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
   next
     case (S_4_enc_1 tid1) note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
-  qed (insert facts, fastforce+)?
+    thus ?thesis by (auto dest!: ltk_secrecy)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_AmendedNS_state) I_ni_agree:
@@ -347,7 +356,7 @@ proof -
                        |}
                        ( K ( s(AV ''I'' tid1) ) ( s(MV ''S'' tid1) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (S_4_enc tid2) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -371,13 +380,13 @@ proof -
                              ( K ( s(AV ''I'' tid4) ) ( s(MV ''S'' tid4) ) ) ")
           case (S_4_enc tid5) note_unified facts = this facts
           thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-        qed (insert facts, (((clarsimp, order?) | order))+)?
+        qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
       next
         case (S_4_enc_1 tid4) note_unified facts = this facts
         thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-      qed (insert facts, fastforce+)?
-    qed (insert facts, fastforce+)?
-  qed (insert facts, fastforce+)?
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
+    qed (safe?, simp_all?, insert facts, (fastforce+)?)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 lemma (in restricted_AmendedNS_state) R_ni_agree:
@@ -409,7 +418,7 @@ proof -
                    Enc {| LC ''3'', s(MV ''kIR'' tid2), LN ''nr'' tid2, s(MV ''I'' tid2) |}
                        ( K ( s(AV ''R'' tid2) ) ( s(AV ''S'' tid2) ) ) ")
     case fake note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
+    thus ?thesis by (auto dest!: ltk_secrecy)
   next
     case (I_5_TicketR_enc tid3 tid4 a0 a1 a2 a3) note_unified facts = this facts
     thus ?thesis proof(sources! "
@@ -435,13 +444,13 @@ proof -
         next
           case (S_4_enc tid6) note_unified facts = this facts
           thus ?thesis by (fastforce intro: event_predOrdI split: if_splits)
-        qed (insert facts, fastforce+)?
-      qed (insert facts, fastforce+)?
-    qed (insert facts, (((clarsimp, order?) | order))+)?
+        qed (safe?, simp_all?, insert facts, (fastforce+)?)
+      qed (safe?, simp_all?, insert facts, (fastforce+)?)
+    qed (safe?, simp_all?, insert facts, ((((clarsimp, order?) | order | fast))+)?)
   next
     case (S_4_enc_1 tid3) note_unified facts = this facts
-    thus ?thesis by (fastforce dest!: ltk_secrecy)
-  qed (insert facts, fastforce+)?
+    thus ?thesis by (auto dest!: ltk_secrecy)
+  qed (safe?, simp_all?, insert facts, (fastforce+)?)
 qed
 
 end

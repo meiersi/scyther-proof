@@ -10,8 +10,8 @@ module Scyther.Formula (
 
 -- ** Queries
   , hasQuantifiers
-  , conjuncts
   , conjunctionToAtoms
+  , distributeOverDisj
   , isTypingFormula
   , destTypingFormula
   , atomTIDs
@@ -51,6 +51,7 @@ import Scyther.Typing
 data Atom =
     ABool Bool              -- ^ 'False' and 'True' in Isabelle.
   | AEq AnyEq               -- ^ An equality
+  | AIneq Inequality        -- ^ An inequality
   | AEv Event               -- ^ An event must have happened.
   | AEvOrd (Event, Event)   -- ^ An event order.
   | ACompr Message          -- ^ A compromised agent variable.
@@ -65,6 +66,7 @@ data Atom =
 data Formula =
     FAtom Atom
   | FConj Formula Formula
+  | FDisj Formula Formula
   | FExists (Either TID ArbMsgId) Formula
   deriving( Eq, Show, Ord, Data, Typeable )
 
@@ -87,6 +89,7 @@ relabelTIDs tids0 formula =
   where
   go (FAtom atom) = FAtom <$> ((substAtom . getMappingEqs) <$> ask <*> pure atom)
   go (FConj l r)  = FConj <$> go l <*> go r
+  go (FDisj l r)  = FDisj <$> go l <*> go r
   go (FExists (Left tid) inner) = do
     tids <- get
     case tids of
@@ -108,11 +111,13 @@ atomTIDs (ACompr m)     = msgTIDs m
 atomTIDs (AUncompr m)   = msgTIDs m
 atomTIDs (AHasType tya) = typeAnnTIDs tya
 atomTIDs (AEq eq)       = anyEqTIDs eq
+atomTIDs (AIneq eq)     = inequalityTIDs eq
 
 -- | Compute the free thread variables of the given formula.
 formulaTIDs :: Formula -> [TID]
 formulaTIDs (FAtom atom)           = atomTIDs atom
 formulaTIDs (FConj f1 f2)          = formulaTIDs f1 ++ formulaTIDs f2
+formulaTIDs (FDisj f1 f2)          = formulaTIDs f1 ++ formulaTIDs f2
 formulaTIDs (FExists (Left tid) f) = filter (tid /=) $ formulaTIDs f
 formulaTIDs (FExists (Right _)  f) =                   formulaTIDs f
 
@@ -127,12 +132,13 @@ formulaTIDs (FExists (Right _)  f) =                   formulaTIDs f
 substAtom :: Equalities -> Atom -> Atom
 substAtom eqs atom = case atom of
   ABool _      -> atom
-  AEq eq       -> AEq      $ substAnyEq   eqs eq
-  AEv ev       -> AEv      $ substEv      eqs ev
-  AEvOrd ord   -> AEvOrd   $ substEvOrd   eqs ord
-  ACompr m     -> ACompr   $ substMsg     eqs m
-  AUncompr m   -> AUncompr $ substMsg     eqs m
-  AHasType tya -> AHasType $ substTypeAnn eqs tya
+  AEq eq       -> AEq      $ substAnyEq      eqs eq
+  AIneq eq     -> AIneq    $ substInequality eqs eq
+  AEv ev       -> AEv      $ substEv         eqs ev
+  AEvOrd ord   -> AEvOrd   $ substEvOrd      eqs ord
+  ACompr m     -> ACompr   $ substMsg        eqs m
+  AUncompr m   -> AUncompr $ substMsg        eqs m
+  AHasType tya -> AHasType $ substTypeAnn    eqs tya
   ATyping _    -> atom
   AReachable _ -> atom
 
@@ -142,7 +148,10 @@ substAtom eqs atom = case atom of
 
 -- | True iff the formula does contain an existential quantifier.
 hasQuantifiers :: Formula -> Bool
-hasQuantifiers = isNothing . conjunctionToAtoms
+hasQuantifiers (FAtom _)     = False
+hasQuantifiers (FConj f1 f2) = hasQuantifiers f1 || hasQuantifiers f2
+hasQuantifiers (FDisj f1 f2) = hasQuantifiers f1 || hasQuantifiers f2
+hasQuantifiers (FExists _ _) = True
 
 -- | Convert a formula consisting of conjunctions only to a list of atoms. Uses
 -- 'fail' for error reporting.
@@ -151,12 +160,25 @@ conjunctionToAtoms (FAtom a)     = return [a]
 conjunctionToAtoms (FConj f1 f2) =
   (++) `liftM` conjunctionToAtoms f1 `ap` conjunctionToAtoms f2
 conjunctionToAtoms _             =
-  fail "conjunctionToAtoms: existential quantifier encountered."
+  fail "conjunctionToAtoms: existential quantifier or disjunction encountered."
 
--- | Split all toplevel conjunctions.
-conjuncts :: Formula -> [Formula]
-conjuncts (FConj f1 f2) = conjuncts f1 ++ conjuncts f2
-conjuncts f             = pure f
+-- | Produce a logically equivalent formula by pushing conjunctions and
+-- quantifiers inside, i.e., apply their respective distributive laws over
+-- disjunction. Obvious danger of exponential explosion!
+distributeOverDisj :: Formula -> Formula
+distributeOverDisj = go
+  where
+    go (FConj f1 f2) = distribConj (go f1) (go f2)
+    go (FDisj f1 f2) = FDisj (go f1) (go f2)
+    go (FExists v f) = distribEx v (go f)
+    go f             = f
+
+    distribConj f (FDisj f1 f2) = FDisj (distribConj f f1) (distribConj f f2)
+    distribConj (FDisj f1 f2) f = FDisj (distribConj f1 f) (distribConj f2 f)
+    distribConj f1 f2           = FConj f1 f2
+
+    distribEx v (FDisj f1 f2) = FDisj (distribEx v f1) (distribEx v f2)
+    distribEx v f             = FExists v f
 
 -- | Find the first conjoined thread to role equality for this thread, if there
 -- is any.
@@ -168,9 +190,21 @@ findRole tid = go
         | otherwise   = mzero
     go (FAtom _)     = mzero
     go (FConj f1 f2) = go f1 `mplus` go f2
+    go (FDisj f1 f2) = do
+        r1 <- go f1
+        r2 <- go f2
+        guard (r1 == r2)
+        return r1
     go (FExists v f)
         | Left tid == v = mzero
         | otherwise     = go f
+
+-- | Add all thread to role equalities which are (immediate) conjuncts of a
+-- formula to a mapping.
+addRoles :: Formula -> Mapping -> Mapping
+addRoles (FAtom (AEq (TIDRoleEq (tid, role)))) = addTIDRoleMapping tid role
+addRoles (FConj f1 f2) = addRoles f1 . addRoles f2
+addRoles _             = id
 
 
 ------------------------------------------------------------------------------
@@ -199,6 +233,7 @@ isaAtom conf mapping atom = case atom of
     ABool False       -> text "False"
     ABool True        -> text "True"
     AEq eq            -> ppIsar eq
+    AIneq eq          -> ppIsar eq
     AEv ev            -> isaEvent    conf mapping ev
     AEvOrd ord        -> isaEventOrd conf mapping ord
     ACompr av         -> isaCompr   conf av
@@ -220,6 +255,7 @@ sptAtom mapping atom = case atom of
     ABool False    -> text "False"
     ABool True     -> text "True"
     AEq eq         -> sptAnyEq eq
+    AIneq eq       -> sptInequality eq
     AEv ev         -> sptEvent    mapping ev
     AEvOrd (e1,e2) -> sptEventOrd mapping [e1,e2]
     ACompr av      -> sptCompr   av
@@ -237,28 +273,34 @@ isaFormula conf = pp
     ppIsar = isar conf
 
     pp m (FAtom atom)  = isaAtom conf m atom
-    pp m (FConj f1 f2) = sep [pp m f1 <-> isaAnd conf, pp m f2]
+    pp m (FConj f1 f2) = sep [ppConjunct m f1 <-> isaAnd conf, ppConjunct m f2]
+    pp m (FDisj f1 f2) =
+        sep [ppDisjunct (addRoles f1 m) f1 <-> isaOr conf, ppDisjunct (addRoles f2 m) f2]
     pp m (FExists v f) = parens $
         sep [ isaExists conf <-> (either ppIsar ppIsar v) <> char '.'
-            , nest 2 $ pp m' f
+            , nest 2 $ pp (addRoles f m) f
             ]
-      where
-        m' = case v of
-               Left tid -> maybe id (addTIDRoleMapping tid) (findRole tid f) m
-               Right _  -> m
+
+    ppConjunct m f@(FDisj _ _) = parens $ pp m f
+    ppConjunct m f             = pp m f
+    ppDisjunct m f@(FConj _ _) = parens $ pp m f
+    ppDisjunct m f             = pp m f
+
 
 -- | A formula in security protocol theory format.
 sptFormula :: Mapping -> Formula -> Doc
 sptFormula = pp
   where
     pp m (FAtom atom)  = sptAtom m atom
-    pp m (FConj f1 f2) = sep [pp m f1 <-> char '&', pp m f2]
+    pp m (FConj f1 f2) = sep [ppConjunct m f1 <-> char '&', ppConjunct m f2]
+    pp m (FDisj f1 f2) =
+        sep [ppDisjunct (addRoles f1 m) f1 <-> char '|', ppDisjunct (addRoles f2 m) f2]
     pp m (FExists v f) = parens $
         sep [ char '?' <-> (either sptTID sptArbMsgId v) <> char '.'
-            , nest 2 $ pp m' f
+            , nest 2 $ pp (addRoles f m) f
             ]
-      where
-        m' = case v of
-               Left tid -> maybe id (addTIDRoleMapping tid) (findRole tid f) m
-               Right _  -> m
 
+    ppConjunct m f@(FDisj _ _) = parens $ pp m f
+    ppConjunct m f             = pp m f
+    ppDisjunct m f@(FConj _ _) = parens $ pp m f
+    ppDisjunct m f             = pp m f

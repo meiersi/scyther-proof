@@ -25,12 +25,14 @@ module Text.Isar (
   , isaForall
   , isaLambda
   , isaAnd
+  , isaOr
   , isaImplies
   , isaNotIn
   , isaIn
   , isaSubsetEq
   , isaAlpha
   , isaSublocale
+  , isaNotEq
 
     -- * Extensions of 'Text.PrettyPrint'
   , module Text.PrettyPrint.Class
@@ -266,6 +268,12 @@ isaAnd conf
   | isPlainStyle conf = text "&"
   | otherwise         = symbol "\\<and>"
 
+-- | The logical or symbol: @|@
+isaOr :: Document d => IsarConf -> d
+isaOr conf
+  | isPlainStyle conf = text "|"
+  | otherwise         = symbol "\\<or>"
+
 -- | The logical and symbol: @-->@
 isaImplies :: Document d => IsarConf -> d
 isaImplies conf
@@ -283,6 +291,12 @@ isaSublocale :: Document d => IsarConf -> d
 isaSublocale conf
   | isPlainStyle conf = text "<"
   | otherwise         = symbol "\\<subseteq>"
+
+-- | The not equal symbol: @~=@
+isaNotEq :: Document d => IsarConf -> d
+isaNotEq conf
+  | isPlainStyle conf = text "~="
+  | otherwise         = symbol "\\<noteq>"
 
 ------------------------------------------------------------------------------
 -- Isabelle theory components

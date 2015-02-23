@@ -1,5 +1,11 @@
 Simon Meier <iridcode@gmail.com>
 
-Port to Isabelle 2013:
+Port to Isabelle 2014:
 ----------------------
 Andreas Lochbihler <andreas.lochbihler@inf.ethz.ch>
+
+
+Primitive support for matching and non-matching:
+------------------------------------------------
+Joshua Schneider <dev@jshs.de>
+

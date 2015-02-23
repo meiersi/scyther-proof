@@ -1,0 +1,53 @@
+theory PrivateCommit
+begin
+
+section{* Simple commitment protocol with privacy *}
+
+text{*
+  In this protocol, agent C commits itself to a data value c, which we model as
+  a nonce. c shall remain secret, assuming uncompromised C and verifier V.
+  The predefined public-key infrastructure is used to indentify each party.
+  We allow the verifier V to be compromised for the hiding property, such that
+  the adversary could fully impersonate V. The hiding property, which is proven
+  for the adversary, therefore extends to V.
+*}
+
+protocol PrivateCommit
+{
+  1. V -> C : n
+  2. C ->   : {C, V, n, h(r, c)}sk(C)
+       -> V : {C, V, n, t}sk(C)
+  (* C decides to open the commitment *)
+  3. C -> V : {n, r, c}pk(V)
+  4.      V : t -> h(r, c)
+}
+
+properties (of PrivateCommit)
+  C_privacy: secret(C, -, c, {V})
+  V_privacy: secret(V, 4, c, {C, V})
+
+property (of PrivateCommit) hiding:
+  premises
+    "role(1) = C"
+    "knows(c#1)"
+  imply
+    "step(1, C_3)"
+
+property (of PrivateCommit) binding:
+  premises
+    "role(0) = V"
+    "step(0, V_4)"
+    "uncompromised(C#0)"
+  injectively imply a thread 1 such that
+    "role(1) = C &
+    C#0 = C#1 &
+    V#0 = V#1 &
+
+    n#0 = n#1 &
+    r#0 = r#1 &
+    c#0 = c#1 &
+
+    St(0, V_1) < St(1, C_2) < St(1, C_3) < St(0, V_4)
+    "
+
+end
