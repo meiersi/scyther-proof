@@ -703,7 +703,9 @@ nextTID = maybe 0 (succ . fst) . S.maxView . tidQuantifiers
 -- | The next free agent identifier
 nextArbMsgId :: Facts -> ArbMsgId
 nextArbMsgId = FreeVarId . maybe 0 (next . fst) . S.maxView . amQuantifiers
-  where next (FreeVarId aid) = succ aid
+  where
+    next (FreeVarId aid) = succ aid
+    next (BoundVarId bid) = error ("nextArbMsgId: amQuantifiers contains BoundVarId " ++ show bid)
 
 -- | Try to retrieve the typing; equal to 'mzero' if there is none.
 getTyping :: MonadPlus m => Facts -> m Typing
