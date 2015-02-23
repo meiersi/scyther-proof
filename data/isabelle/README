@@ -3,9 +3,9 @@ README: The scyther-proof security protocol verification tool
 
 ![master branch build-status](https://travis-ci.org/meiersi/scyther-proof.svg?branch=master)
 
-Authors: Simon Meier <iridcode@gmail.com>
-Creation Date: 2011-05-13
-Last Updated:  2015-02-20 by Andreas Lochbihler <andreas.lochbihler@inf.ethz.ch>
+- Authors: Simon Meier <iridcode@gmail.com>
+- Creation Date: 2011-05-13
+- Last Updated:  2015-02-20 by Andreas Lochbihler <andreas.lochbihler@inf.ethz.ch>
 
 1. Introduction
 ===============
