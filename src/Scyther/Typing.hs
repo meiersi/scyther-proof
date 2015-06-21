@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, DeriveDataTypeable, FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances, DeriveDataTypeable, FlexibleInstances, FlexibleContexts #-}
 -- | Building typing invariants for security protocol in order to enable
 -- verification in an untyped model.
 module Scyther.Typing (

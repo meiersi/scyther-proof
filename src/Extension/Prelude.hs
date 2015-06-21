@@ -1,5 +1,58 @@
+{-# LANGUAGE CPP #-}
 -- Functions that could/should have made it into the Prelude or one of the base libraries
-module Extension.Prelude where
+module Extension.Prelude
+  (
+  -- * Bool
+    implies
+
+  -- *  Lists
+  , singleton
+  , unique
+  , sortednub
+  , sortednubOn
+  , nubOn
+  , groupOn
+  , sortOn
+  , sortOnMemo
+  , groupSortOn
+  , eqClasses
+  , eqClassesBy
+  , splitBy
+  , choose
+  , leaveOneOut
+  , keepFirst
+
+  -- *  Pairs
+  , swap
+  , sortPair
+
+  -- *  Either
+  , isRight
+  , isLeft
+
+  -- *  Strings
+  , Named
+  , flushRightBy
+  , flushRight
+  , flushLeftBy
+  , flushLeft
+
+  -- *  IO
+  , warning
+  , putErr
+  , putErrLn
+
+  -- *  Applicative
+  , oneOfList
+  , oneOfSet
+  , oneOfMap
+
+  -- *  Monads
+  , ifM
+  , errorFree
+  , errorFree1
+
+  ) where
 
 import Data.Maybe
 import Data.List
@@ -51,9 +104,13 @@ nubOn proj = nubBy ((==) `on` proj)
 groupOn :: Eq b => (a -> b) -> [a] -> [[a]]
 groupOn proj = groupBy ((==) `on` proj)
 
+#if MIN_VERSION_base(4,8,0)
+-- 'sortOn' is included in base >= 4.8.0
+#else
 -- | sort on a projection of the data to sort
 sortOn :: Ord b => (a -> b) -> [a] -> [a]
 sortOn proj = sortBy (comparing proj)
+#endif
 
 -- | sort on a projection of the data to sort, memorizing the results of the
 -- projection in order to avoid recomputation.
