@@ -105,7 +105,7 @@ newtype MVar = MVar { getMVar :: LocalId }
 -- | A fresh message.
 newtype Fresh = Fresh { getFresh :: LocalId }
   deriving( Eq, Ord, Show, Data, Typeable )
-  
+
 
 -- | Denotations of messages as they occurr during reasoning. Note that we do
 -- not model agents, as in the proofs that we want to do no actual agent
@@ -113,13 +113,13 @@ newtype Fresh = Fresh { getFresh :: LocalId }
 --
 -- Note: This is /no free algebra/ due to the nested equalities on thread
 -- identifiers and the key-inversion function. However, there is still a most
--- general unifier. The easiest way to understand these messages is to map 
+-- general unifier. The easiest way to understand these messages is to map
 -- them to the corresponding Isabelle proof states.
-data Message = 
+data Message =
     MConst  Id          -- ^ A global constant.
   | MFresh  Fresh       -- ^ A freshly generated message.
   | MAVar   AVar        -- ^ A symbolically instantiated agent variable.
-  | MMVar   MVar        -- ^ A symbolically instantiated message variable; 
+  | MMVar   MVar        -- ^ A symbolically instantiated message variable;
                         --   @MVar (LocalId (Id \"v\", TID 1))@ corresponds to @s(|MV ''v'' tid1|)@.
   | MArbMsg ArbMsgId    -- ^ An arbitrary message; i.e., a logical message variable.
   | MHash   Message            -- ^ Hashing
@@ -145,11 +145,11 @@ lidTID = snd . getLocalId
 
 -- | The thread corresponding to an agent variable
 avarTID :: AVar -> TID
-avarTID = snd . getLocalId . getAVar 
+avarTID = snd . getLocalId . getAVar
 
 -- | The thread corresponding to an message variable
 mvarTID :: MVar -> TID
-mvarTID = snd . getLocalId . getMVar 
+mvarTID = snd . getLocalId . getMVar
 
 -- | Thread identifiers of a message.
 msgTIDs :: Message -> [TID]
@@ -306,7 +306,7 @@ normMsg (MHash  m)            = MHash (normMsg m)
 normMsg (MTup  m1 m2)         = MTup (normMsg m1) (normMsg m2)
 normMsg (MEnc  m1 m2)         = MEnc (normMsg m1) (normMsg m2)
 normMsg (MSymK m1 m2)         = MSymK (normMsg m1) (normMsg m2)
-normMsg (MShrK m1 m2)  
+normMsg (MShrK m1 m2)
   | m1' < m2' = MShrK m1' m2'
   | otherwise = MShrK m2' m1'
   where
@@ -323,7 +323,7 @@ normMsg (MAsymSK m)           = MAsymSK (normMsg m)
 splitNonTrivial :: Message -> [Message]
 splitNonTrivial (MTup m1 m2) = splitNonTrivial m1 `mplus` splitNonTrivial m2
 splitNonTrivial m            = do
-  guard (not $ trivial m) 
+  guard (not $ trivial m)
   return m
 
 
@@ -335,7 +335,7 @@ splitNonTrivial m            = do
 -- | Textual symbolic application of the substitution.
 -- TODO: Remove hack about thread identifier to state assignment.
 esplSubst :: LocalId -> IsarConf -> Doc -> Doc
-esplSubst (LocalId (_,tid)) conf var 
+esplSubst (LocalId (_,tid)) conf var
   | tid == 0 = isarSubst conf <> parens var
   | otherwise = text "s" <> parens var
 
@@ -361,7 +361,7 @@ instance Isar MVar where
 instance Isar Message where
   isar conf x = case x of
       (MConst i)    -> text "LC" <-> isar conf i
-      (MFresh i)    -> isar conf i 
+      (MFresh i)    -> isar conf i
       (MAVar i)     -> isar conf i
       (MMVar i)     -> isar conf i
       (MArbMsg i)   -> isar conf i
@@ -381,9 +381,9 @@ instance Isar Message where
       split (MTup m1 m2) = m1 : split m2
       split m = [m]
       -- determine output parameters
-      (n,ldelim,rdelim) 
+      (n,ldelim,rdelim)
         | isPlainStyle conf = (3, text "{|", text "|}")
-        | otherwise        = (2, symbol "\\<lbrace>", symbol "\\<rbrace>") 
+        | otherwise        = (2, symbol "\\<lbrace>", symbol "\\<rbrace>")
 
 
 ------------------------------------------------------------------------------
@@ -426,7 +426,7 @@ sptMessage x = case x of
   (MInvKey m)   -> text "inv" <> ppBetween 1 "(" ")" m
   where
   -- pretty print a tuple as right associate list
-  ppBetween n lead finish m@(MTup _ _) = 
+  ppBetween n lead finish m@(MTup _ _) =
     fcat . (text lead :) . (++[text finish]) . map (nest n) . punctuate (text ", ") . map sptMessage $ split m
   ppBetween _ lead finish m = text lead <> sptMessage m <> text finish
   -- split right associate nested tuples

@@ -54,7 +54,7 @@ emptyLine :: Document d => d
 emptyLine = text ""
 
 dfgProblem :: Problem -> Doc
-dfgProblem prob = 
+dfgProblem prob =
   vcat . intersperse emptyLine $
     [ text $ "begin_problem(" ++ probIdent prob ++ ")."
     , dfgDescription $ probDesc   prob
@@ -91,16 +91,16 @@ dfgSignature sig =
      , mkList "functions"  (dfgSym funId funSorts) funs
      , mkList "predicates" (dfgSym relId relSorts) rels
      , mkList "sorts"      dfgSort                 sorts
-     ] 
+     ]
    $-$ emptyLine $-$
    dfgList "declarations" (map declPred rels ++ map declFun funs)
    where
    sorts = nub $ sigSorts sig
    funs  = nub $ sigFuns  sig
    rels  = nub $ sigRels  sig
-   dfgSym selId selSorts sym = 
+   dfgSym selId selSorts sym =
      parens $ dfgId (selId sym) <> comma <-> int (length (selSorts sym))
-   mkList name dfg list = 
+   mkList name dfg list =
      sep [text name <> lbrack, nest 2 . fsep . punctuate comma $ map dfg list, text "]."]
    warning
      | nubOn funId funs /= funs || nubOn relId rels /= rels =
@@ -108,10 +108,10 @@ dfgSignature sig =
      | otherwise = emptyDoc
    declPred r =
      text "predicate(" <>
-     (text . getId . relId $ r) <> 
+     (text . getId . relId $ r) <>
      (hcat . map (\s -> comma <-> text (getSort s)) $ relSorts r) <>
      text ")."
-   declFun f@(Fun (_,sort) _) = 
+   declFun f@(Fun (_,sort) _) =
      (dfgFormula $ quant $ In (Rel (Id (getSort sort)) (error "declFun: don't inspect")) [t]) <>
      text "."
      where
@@ -124,18 +124,18 @@ dfgProperties :: Article Formula -> Doc
 dfgProperties = dfgFormulaArticle "conjectures"
 
 dfgFormulaArticle :: String -> Article Formula -> Doc
-dfgFormulaArticle origin article = 
+dfgFormulaArticle origin article =
   dfgList ("formulae(" ++ origin ++ ")") (map dfgSectioned $ getArticle article)
   where
   dfgSectioned :: Sectioned Formula -> Doc
-  dfgSectioned (Math a) = 
+  dfgSectioned (Math a) =
     sep [text "formula(", nest 1 (dfgFormula a) <-> text ")."] $-$ emptyLine
   dfgSectioned (Text t) = text $ "% " ++ t
-  dfgSectioned (Section i header) = 
+  dfgSectioned (Section i header) =
     (case i of
-       0 -> emptyLines 1 $-$ 
+       0 -> emptyLines 1 $-$
             (linesToDoc . overline "%". underline "%" $ "%% " ++ header ++ " %%")
-       1 -> emptyLines 1 $-$ 
+       1 -> emptyLines 1 $-$
             (linesToDoc . overline "%". underline "%" $ "% " ++ header)
        2 -> (linesToDoc . underline "%" $ "% " ++ header)
        _ -> text $ "% " ++ header)
@@ -157,7 +157,7 @@ underline style t = unlines [t, take (length . last $ lines t) (cycle style)]
 -- | Convert string line breaks to document line breaks.
 linesToDoc :: Document d => String -> d
 linesToDoc = vcat . map text . lines
-        
+
 -- | n empty lines.
 emptyLines :: Document d => Int -> d
 emptyLines n = vcat . replicate n $ text ""
@@ -175,7 +175,7 @@ dfgSortedId (i, s) = dfgSort s <> parens (dfgId i)
 dfgTerm :: Document d => Term -> d
 dfgTerm (Var (i,_)) = dfgId i
 dfgTerm (App (Fun (i,_) _) []) = dfgId i
-dfgTerm (App (Fun (i,_) _) ts) = 
+dfgTerm (App (Fun (i,_) _) ts) =
   sep (dfgId i <> lparen <> arg : args)
   where
   (arg:args) = map (nest 1) . mapLast (<> rparen) . punctuate comma $ map dfgTerm ts
@@ -183,7 +183,7 @@ dfgTerm (App (Fun (i,_) _) ts) =
 dfgFormula :: Document d => Formula -> d
 dfgFormula Top = text "true"
 dfgFormula Bot = text "false"
-dfgFormula (In (Rel i _) ts) =     
+dfgFormula (In (Rel i _) ts) =
   text istr <> sep (lparen <> arg : map (nest 1) args)
   where
   (arg:args) = mapLast (<> rparen) . punctuate comma $ map dfgTerm ts
@@ -192,14 +192,14 @@ dfgFormula (In (Rel i _) ts) =
     "=" -> "equal"
     str -> str
 dfgFormula (Neg a) = text "not" <> parens (dfgFormula a)
-dfgFormula (BinOp op a b) = 
+dfgFormula (BinOp op a b) =
   sep [text (dfgOp op) <> lparen <> dfgFormula a <> comma, nest 1 $ dfgFormula b <> rparen]
   where
   dfgOp Conj  = "and"
   dfgOp Disj  = "or"
   dfgOp Imp   = "implies"
   dfgOp Equiv = "equiv"
-dfgFormula fo0@(Quant q _ _) = 
+dfgFormula fo0@(Quant q _ _) =
   sep [ text (dfgQuant q) <> lparen <> brackets sis' <> comma
       , nest 1 $ dfgFormula fo <> rparen]
   where
@@ -208,7 +208,7 @@ dfgFormula fo0@(Quant q _ _) =
   dfgQuant All = "forall"
   dfgQuant Ex  = "exists"
 
--- | MOVE 
+-- | MOVE
 gatherQuants :: Quant -> Formula -> ([SortedId], Formula)
 gatherQuants q = go []
   where

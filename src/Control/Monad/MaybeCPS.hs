@@ -11,9 +11,9 @@ module Control.Monad.MaybeCPS where
 import Control.Monad
 
 newtype MaybeCPS a = MaybeCPS { unMaybeCPS :: forall r. (a -> Maybe r) -> Maybe r }
- 
+
 runMaybeCPS m = unMaybeCPS m return
- 
+
 -- The Cont definitions of return and (>>=)
 instance Monad MaybeCPS where
     return a = MaybeCPS (\k -> k a)

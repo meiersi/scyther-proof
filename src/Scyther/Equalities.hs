@@ -89,7 +89,7 @@ import Scyther.Message
 -- Equalities
 ------------------------------------------------------------------------------
 
--- | Equalities over thread identifers. 
+-- | Equalities over thread identifers.
 --
 -- Logically these are equalities between logical thread identifier variables.
 type TIDEq   = (TID, TID)
@@ -109,7 +109,7 @@ type ArbMsgEq = (ArbMsgId, Message)
 -- equalities.
 type ArbMsgEqs = M.Map ArbMsgId Message
 
--- | Equalities between different agent variables. 
+-- | Equalities between different agent variables.
 --
 -- We do not have to reason about equalities between an agent variable and some
 -- other message because our semantics guarantees that agent variables are only
@@ -125,10 +125,10 @@ type MVarEqs = M.Map MVar Message
 
 -- | Equalities between messages.
 type MsgEq  = (Message, Message)
-type MsgEqs = U.UnionFind Message 
+type MsgEqs = U.UnionFind Message
 
 -- | Some representable equality.
-data AnyEq = 
+data AnyEq =
     TIDEq     !TIDEq
   | TIDRoleEq !TIDRoleEq
   | RoleEq    !RoleEq
@@ -151,11 +151,11 @@ newtype Inequality = Inequality { getInequality :: AnyEq }
 --
 --        forall tid : ran(tideqs).     substTID eqs tid = tid
 --        forall tid : dom(roleeqs).    substTID eqs tid = tid
---        forall (lid, lid') : avareqs. substLocalId eqs lid = lid 
+--        forall (lid, lid') : avareqs. substLocalId eqs lid = lid
 --                                    & substAVar eqs lid' = lid'
---        forall (lid, m)    : mvareqs. substLocalId eqs lid = lid 
+--        forall (lid, m)    : mvareqs. substLocalId eqs lid = lid
 --                                    & substMsg eqs m = m
---        
+--
 --     TODO: Complete properties for Agent ID's
 --
 --        forall aid : dom(arbmeqs).    substAMID eqs aid = MArbMsg aid
@@ -240,8 +240,8 @@ substMsg eqs = normMsg . go
     go (MTup m1 m2)   = MTup (go m1) (go m2)
     go (MEnc m1 m2)   = MEnc (go m1) (go m2)
     go (MSymK m1 m2)  = MSymK (go m1) (go m2)
-    go (MShrK m1 m2)  = 
-        U.findWithDefault m' m' $ postEqs eqs 
+    go (MShrK m1 m2)  =
+        U.findWithDefault m' m' $ postEqs eqs
       where
         m' = MShrK (go m1) (go m2)
     go (MAsymPK m)    = MAsymPK (go m)
@@ -345,7 +345,7 @@ getPostEqs = U.toList . postEqs
 -- | Convert a set of equalities ot the tuple with lists for each individual
 -- equality type.
 toLists :: Equalities -> ([TIDEq], [TIDRoleEq], [ArbMsgEq], [AVarEq], [MVarEq], [MsgEq])
-toLists eqs = 
+toLists eqs =
   (getTIDEqs eqs, getTIDRoleEqs eqs, getArbMsgEqs eqs
   , getAVarEqs eqs, getMVarEqs eqs, getPostEqs eqs)
 
@@ -353,8 +353,8 @@ toLists eqs =
 --
 -- POST: Order of equalities equal to order in result of 'toLists'.
 toAnyEqs :: Equalities -> [AnyEq]
-toAnyEqs eqs = 
-  map TIDEq a ++ map TIDRoleEq b ++ map ArbMsgEq c ++ map AVarEq d ++ 
+toAnyEqs eqs =
+  map TIDEq a ++ map TIDRoleEq b ++ map ArbMsgEq c ++ map AVarEq d ++
   map  MVarEq e ++ map MsgEq f
   where (a, b, c, d, e, f) = toLists eqs
 
@@ -395,7 +395,7 @@ inequalityAMIDs = anyEqAMIDs . getInequality
 -- | Substitute and normalize the postponed equalities with respect to the
 -- other equalities.
 normPostEqs :: Equalities -> Equalities
-normPostEqs eqs0 = 
+normPostEqs eqs0 =
     eqs { postEqs = U.map (substMsg eqs) (postEqs eqs0) }
   where
     eqs = eqs0 { postEqs = U.empty }
@@ -407,8 +407,8 @@ normPostEqs eqs0 =
 -- equalities over fresh messages. Bidirectional keys are handled by delaying
 -- their solution until only one solution is possible.
 solve :: Monad m => [AnyEq] -> Equalities -> m Equalities
-solve ueqs eqs = 
-  -- trace ("SOLVE: " ++ render (fsep $ punctuate comma $ map sptAnyEq ueqs)) $ 
+solve ueqs eqs =
+  -- trace ("SOLVE: " ++ render (fsep $ punctuate comma $ map sptAnyEq ueqs)) $
   fst `liftM` solveRepeated ueqs eqs False
 
 -- | Repeatedly solve unification equations until the solution doesn't change
@@ -420,7 +420,7 @@ solve ueqs eqs =
 -- equalities has changed.
 solveRepeated :: Monad m => [AnyEq] -> Equalities -> Bool -> m (Equalities, Bool)
 solveRepeated [] eqs False = return (eqs, False)
-solveRepeated [] eqs True  = 
+solveRepeated [] eqs True  =
     solveRepeated (map MsgEq $ getPostEqs eqs) (eqs { postEqs = U.empty }) False
 solveRepeated (ueq:ueqs) eqs improved = do
     (ueqs', eqs', improved') <- solve1 ueq eqs
@@ -428,14 +428,14 @@ solveRepeated (ueq:ueqs) eqs improved = do
 
 -- | Solve a single unification equation.
 solve1 :: Monad m => AnyEq -> Equalities -> m ([AnyEq], Equalities, Bool)
-solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) = 
+solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
  -- trace ("solve1: " ++ show (sptAnyEq ueq)) $
   case ueq of
     TIDEq (tid1, tid2) ->
       let tid1' = substTID eqs tid1
           tid2' = substTID eqs tid2
           elimTID x y = return
-            ( mkAnyEqs TIDRoleEq roleeqs ++ mkAnyEqs ArbMsgEq arbmeqs ++ 
+            ( mkAnyEqs TIDRoleEq roleeqs ++ mkAnyEqs ArbMsgEq arbmeqs ++
               mkAnyEqs AVarEq aveqs ++ mkAnyEqs MVarEq mveqs ++
               map MsgEq (U.toList posteqs)
             , empty { tidEqs = M.insert x y tideqs }
@@ -452,13 +452,13 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
       in
         case M.lookup tid' roleeqs of
           Just role' | role' /= role -> different "role" role role'
-          _                          -> 
+          _                          ->
             updateSolution (eqs { roleEqs = M.insert tid' role roleeqs })
 
     RoleEq (role1, role2)
       | role1 == role2 -> skipEq
       | otherwise      -> different "role" role1 role2
-            
+
     AVarEq (av1, av2) ->
       let av1' = substAVar eqs av1
           av2' = substAVar eqs av2
@@ -473,18 +473,18 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
 
     ArbMsgEq (lhs, rhs) ->
       let elimArbMsgId x y
-            | x `elem` msgAMIDs y = case y of 
-                MInvKey _ -> postpone (MArbMsg x) y 
+            | x `elem` msgAMIDs y = case y of
+                MInvKey _ -> postpone (MArbMsg x) y
                   -- Here, we have to postpone the equality as 'x = inv(x)'
                   -- has a solution.
-                  -- 
+                  --
                   -- This is a hacky solution. The real solution is to
                   -- implement an occurs check strong enough to deal with the
                   -- 'inv(inv(x)) = x' cancellation rule.
                   --
                   -- FIXME: Implement proper equational unification, as done
                   -- in the tamarin-prover.
-                _  -> noUnifier $ "occurs check failed for '" ++ show x ++ 
+                _  -> noUnifier $ "occurs check failed for '" ++ show x ++
                                   "' in '" ++ show y ++ "'"
             | otherwise =
                 updateSolution (eqs {
@@ -499,20 +499,20 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
           (lhs'          , (MArbMsg aid2)) -> elimArbMsgId aid2 lhs'
           ((MArbMsg aid1), rhs'          ) -> elimArbMsgId aid1 rhs'
           (lhs'          , rhs'          ) -> newEqs [MsgEq (lhs', rhs')]
-    
+
     MVarEq (lhs, rhs) ->
-      let elimMVar x y 
+      let elimMVar x y
             | x `elem` msgFMV y = case y of
-                MInvKey _ -> postpone (MMVar x) y 
+                MInvKey _ -> postpone (MMVar x) y
                   -- Here, we have to postpone the equality as 'x = inv(x)'
                   -- has a solution.
-                  -- 
+                  --
                   -- This is a hacky solution. The real solution is to
                   -- implement an occurs check strong enough to deal with the
                   -- 'inv(inv(x)) = x' cancellation rule.
                 _ -> noUnifier $ "occurs check failed for '" ++ show x ++
                                  "' in '" ++ show y ++ "'"
-            | otherwise = 
+            | otherwise =
                 updateSolution (eqs {
                     mvarEqs =  M.insert x y $ M.map (substMsg elimEqs) mveqs
                   })
@@ -524,7 +524,7 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
           (lhs'            ,      (MMVar mv2)) -> elimMVar mv2 lhs'
           (     (MMVar mv1), rhs'            ) -> elimMVar mv1 rhs'
           (lhs'            , rhs'            ) -> newEqs [MsgEq (lhs', rhs')]
-            
+
     MsgEq eq -> case (substMsg eqs *** substMsg eqs) eq of
       -- The order of pattern matches ensures that message variables are always
       -- substituted by arbitrary-message ids.
@@ -575,7 +575,7 @@ solve1 ueq eqs@(Equalities tideqs roleeqs aveqs mveqs arbmeqs posteqs) =
         | otherwise -> different "constant" c1 c2
 
       (m1, m2) -> different "message" m1 m2
-  
+
   where
     skipEq              = return ([],   eqs , False)
     newEqs ueqs         = return (ueqs, eqs , False)
@@ -671,13 +671,13 @@ addTIDMapping from to = mapMapping $ \eqs ->
 -- | Add a mapping from one arbitrary-message id to another arbitrary-message
 -- id, possibly overriding an existing mapping.
 addArbMsgIdMapping :: ArbMsgId -> ArbMsgId -> Mapping -> Mapping
-addArbMsgIdMapping from to = mapMapping $ \eqs -> 
+addArbMsgIdMapping from to = mapMapping $ \eqs ->
   eqs { arbmEqs = M.insert from (MArbMsg to) $ arbmEqs eqs }
 
 -- | Add a mapping from one thread identifier to an other role, possibly
 -- overriding an existing mapping.
 addTIDRoleMapping :: TID -> Role -> Mapping -> Mapping
-addTIDRoleMapping tid role = mapMapping $ \eqs -> 
+addTIDRoleMapping tid role = mapMapping $ \eqs ->
   let tid' = substTID eqs tid
   in  eqs { roleEqs = M.insert tid' role $ roleEqs eqs }
 
@@ -770,14 +770,14 @@ sptInequality eq = if L.null boundVars
 
 {-
 -- | Convert the equalities for pretty printing.
-sptEqualities :: Equalities -> 
+sptEqualities :: Equalities ->
                  ([Doc], [Doc], [Doc]) -- ^ quantified variables, representable
                                        --   equalities, non-representable equalities
 sptEqualities (Equalities tideqs roleeqs aveqs mveqs arbmeqs) =
   ( map sptTID (M.keys roleeqs) ++
     [ sptArbMsgId aid | (aid, Nothing) <- M.toList arbmeqs]
-  , ppMapMaybe ppTIDRoleEq roleeqs ++ 
-    ppVarEqs ppAVar ppAVar                 aveqs ++ 
+  , ppMapMaybe ppTIDRoleEq roleeqs ++
+    ppVarEqs ppAVar ppAVar                 aveqs ++
     ppVarEqs ppMVar sptMessage             mveqs ++
     ppVarEqs ppAgent (maybe emptyDoc (either ppAgent ppAVar)) arbmeqs
   , ppMap      ppTIDEq  tideqs ++

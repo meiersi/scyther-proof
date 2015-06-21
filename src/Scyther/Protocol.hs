@@ -57,7 +57,7 @@ module Scyther.Protocol (
 
 -- * Output
   , isaRoleStep
-  , sptId 
+  , sptId
   , sptLabel
   , sptPattern
   , sptRoleStep
@@ -92,7 +92,7 @@ data VarId =
   deriving( Eq, Ord, Show, Data, Typeable {-! NFData !-} )
 
 -- | A message pattern.
-data Pattern = 
+data Pattern =
     PConst  Id                -- ^ A global constant.
   | PFresh  Id                -- ^ A message to be freshly generated.
   | PAVar   Id                -- ^ An agent variable.
@@ -113,7 +113,7 @@ newtype Label = Label { getLabel :: String }
   deriving( Eq, Ord, Show, Data, Typeable {-! NFData !-} )
 
 -- | A role step.
-data RoleStep = 
+data RoleStep =
     Send Label Pattern              -- ^ A send step.
   | Recv Label Pattern              -- ^ A receive step.
   | Match Label Bool VarId Pattern  -- ^ A match or not-match step.
@@ -121,15 +121,15 @@ data RoleStep =
 
 -- | A role of a protocol. Its name has no operational meaning, but is carried
 -- along to allow for human readable printing.
-data Role = Role { 
+data Role = Role {
     roleName  :: String
-  , roleSteps :: [RoleStep] 
+  , roleSteps :: [RoleStep]
   }
   deriving( Eq, Ord, Show, Data, Typeable {-! NFData !-} )
 
 -- | A protocol. As for roles, its name has no operational meaning, but is
 -- carried along to allow for human readable printing.
-data Protocol = Protocol { 
+data Protocol = Protocol {
     protoName  :: String
   , protoRoles :: [Role]
   }
@@ -299,14 +299,14 @@ wfProto = concatMap wfRole . protoRoles
 -- | Pretty print a protocol ill-formedness.
 sptProtoIllformedness :: ProtoIllformedness -> Doc
 sptProtoIllformedness pif = case pif of
-  NonUnique role -> 
+  NonUnique role ->
     text $ "role '" ++ roleName role ++ "' contains duplicate steps."
   UseBeforeBind role step v ->
-    text (roleName role) <> colon <-> 
+    text (roleName role) <> colon <->
     sptRoleStep Nothing step <> colon <->
     text "message variable" <-> quotes (sptId v) <-> text "used before bound."
   AccessibleLongTermKey role step _ ->
-    text (roleName role) <> colon <-> 
+    text (roleName role) <> colon <->
     sptRoleStep Nothing step <> colon <->
     text "long-term keys must not be accessible."
 
@@ -321,17 +321,17 @@ type RoleStepOrder = [((RoleStep,Role),(RoleStep,Role))]
 roleOrd :: Role -> RoleStepOrder
 roleOrd role = zip steps (tailDef [] steps)
   where
-  steps = zip (roleSteps role) (repeat role) 
+  steps = zip (roleSteps role) (repeat role)
 
 -- | The order of role steps in the protocol such that every send step
 -- occurs before every receive step having the same label.
 labelOrd :: Protocol -> RoleStepOrder
-labelOrd proto = 
-  [ (send, recv) | send@(Send l  _, _) <- steps, 
+labelOrd proto =
+  [ (send, recv) | send@(Send l  _, _) <- steps,
                    recv@(Recv l' _, _) <- steps, l == l' ]
   where
   steps = concat [ zip (roleSteps role) (repeat role) | role <- protoRoles proto ]
- 
+
 -- | The combination of all role orders and the label order of the protocol.
 protoOrd :: Protocol -> RoleStepOrder
 protoOrd proto = labelOrd proto ++ concatMap roleOrd (protoRoles proto)
@@ -373,7 +373,7 @@ restrictedStateLocale proto = "restricted_" ++ protoName proto ++ "_state"
 -- | Pretty print a rolestep in ISAR format. If a role is given, then the label
 -- of the role step in this role is used to abbreviate the step name.
 isaRoleStep :: IsarConf -> Maybe Role -> RoleStep -> Doc
-isaRoleStep conf optRole step = 
+isaRoleStep conf optRole step =
   case optRole of
     Just role | step `elem` roleSteps role -> -- abbreviate
       text $ roleName role ++ "_" ++ stepLabel step
@@ -419,7 +419,7 @@ instance Isar Pattern where
       -- determine output parameters
       (n,left,right)
         | isPlainStyle conf = (3, text "<|", text "|>")
-        | otherwise         = (2, symbol "\\<langle>", symbol "\\<rangle>") 
+        | otherwise         = (2, symbol "\\<langle>", symbol "\\<rangle>")
       -- extract a variable of a bi-directional key
       keyVar (PAVar v) = parens $ text "AVar" <-> isar conf v
       keyVar (PMVar v) = parens $ text "MVar" <-> isar conf v
@@ -439,7 +439,7 @@ instance Isar RoleStep where
       ppPat pt            = nestShort' "(" ")" (isar conf pt)
 
 instance Isar Role where
-  isar conf (Role name steps) = 
+  isar conf (Role name steps) =
     text "role" <-> text name $-$
     text "where" <-> text "\"" <> text name <-> text "=" $-$
     nest 2 (
@@ -455,7 +455,7 @@ instance Isar Protocol where
     text "protocol" <-> text name $-$
     sep [text "where" <-> text "\"" <> text name <-> text "=", roleSet]
     where
-    roleSet = nestShort' "{" "}\"" 
+    roleSet = nestShort' "{" "}\""
       (fsep $ punctuate comma $ map (text . roleName) roles)
 
 
@@ -486,7 +486,7 @@ sptPattern x = case x of
     (PAny)        -> char '_'
   where
     -- pretty print a tuple as right associate list
-    ppBetween n lead finish pt@(PTup _ _) = 
+    ppBetween n lead finish pt@(PTup _ _) =
       fcat . (text lead :) . (++[text finish]) . map (nest n) . punctuate (text ", ") . map sptPattern $ split pt
     ppBetween _ lead finish pt = text lead <> sptPattern pt <> text finish
     -- split right associate nested tuples
@@ -496,7 +496,7 @@ sptPattern x = case x of
 -- | Pretty print a rolestep. If a role is given, then the label of the role
 -- step in this role is used to abbreviate the step name.
 sptRoleStep :: Maybe Role -> RoleStep -> Doc
-sptRoleStep optRole step = 
+sptRoleStep optRole step =
   case optRole of
     Just role | step `elem` roleSteps role -> -- abbreviate
       text $ roleName role ++ "_" ++ stepLabel step
@@ -517,7 +517,7 @@ sptRoleStep optRole step =
 
 -- | Pretty print a role in SP theory format.
 sptRole :: Role -> Doc
-sptRole(Role name steps) = 
+sptRole(Role name steps) =
   text "role" <-> text name $-$
   nestBetween 2 lbrace rbrace (
     (vcat $ map (sptRoleStep Nothing) steps)

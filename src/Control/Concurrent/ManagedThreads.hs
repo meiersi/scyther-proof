@@ -1,4 +1,4 @@
--- NOTE: The first part of this module is based on Chapter 24 from 
+-- NOTE: The first part of this module is based on Chapter 24 from
 -- "Real World Haskell Programming" cf:
 -- (http://book.realworldhaskell.org/read/concurrent-and-multicore-programming.html)
 
@@ -87,7 +87,7 @@ waitAll (Mgr mgr) = modifyMVar mgr elems >>= mapM_ takeMVar
 
 -- | Extract the head of the list in the MVar if possible.
 takeHead :: MVar [a] -> IO (Maybe a)
-takeHead v = 
+takeHead v =
     modifyMVar v (return . extract)
   where
     extract []     = ([], Nothing)
@@ -95,7 +95,7 @@ takeHead v =
 
 -- | Do a parallel sequencing of a list of IO commands using n worker threads
 -- and gather their results in a list again.
-nParSequenceIO :: Int -> [IO a] -> IO [a] 
+nParSequenceIO :: Int -> [IO a] -> IO [a]
 nParSequenceIO n ios = do
     inMv <- newMVar $ zip [(1::Int)..] ios
     resMv <- newMVar []
@@ -150,7 +150,7 @@ nParCmd_ nThreads display cmds = do
     waitAll mgr
   where
     nCmds = length cmds
-    displayThread ch i 
+    displayThread ch i
       | nCmds < i = do return ()
       | otherwise = do msg <- readChan ch
                        display nCmds i msg
@@ -158,7 +158,7 @@ nParCmd_ nThreads display cmds = do
 
 -- | Like @nParCmd_@ but uses the number of processing cores+1 as a default for
 -- the number of worker treads. You can change their number by adding to the
--- command line of a program linked with the threaded library: 
+-- command line of a program linked with the threaded library:
 --    +RTS -N<no-of-cores> -RTS
 parCmd_ :: (Int -> Int -> b -> IO ()) -> [Chan b -> IO a] -> IO ()
 parCmd_ display cmds = nParCmd_ (numCapabilities+1) display cmds

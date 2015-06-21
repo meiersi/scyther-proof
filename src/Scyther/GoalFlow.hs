@@ -32,7 +32,7 @@ patternFlows ptSend ptRecv = do
   isEncOrHash (MEnc _ _) = True
   isEncOrHash (MHash _)  = True
   isEncOrHash _          = False
-  
+
 -- | All flows between different protocols
 protoFlows :: Protocol -> [(((Role,RoleStep),Message),((Role,RoleStep),Message),Equalities)]
 protoFlows proto = do
@@ -65,14 +65,14 @@ roleRel = concatMap rel . protoRoles
 -- computing the msg-variable-nonces
 --
 --   1. determine combined relation: roleOrd + msgFlow
---   2. toposort 
+--   2. toposort
 --   3. in order of toposort, for every receive determine
 --      first received msg. vars
 --   4. for every first received msg. var, for every flow
 --      equating it, transfer assignments
 --
 sptMsgVarAnn :: Protocol -> Doc
-sptMsgVarAnn proto = 
+sptMsgVarAnn proto =
   (if acyclic then emptyDoc else text "WARNING: full relation is cyclic") $-$
   (fsep . punctuate (text " <") $ map ppStep steps)
   where
@@ -91,7 +91,7 @@ sptMsgVarAnn proto =
      do guard (m2 == v)
         extractTarget m1)
     where
-    extractTarget m = case m of 
+    extractTarget m = case m of
       Fresh  _ -> return . Left $ m2
       MsgVar _ -> return . Right $ m2
       _        -> mzero -- TODO: Make this more precise; i.e. its not
@@ -109,8 +109,8 @@ sptMsgVarAnn proto =
     ann `S.union`
     S.fromList [
     where
-    
-inFlows :: Protocol -> Pattern -> 
+
+inFlows :: Protocol -> Pattern ->
            [(((Role,RoleStep),(Message,TID),(Message,TID),Equalities)]
 inFlows proto ptRecv = do
   send@(_, Send _ ptSend) <- protoSteps proto
@@ -129,7 +129,7 @@ inFlows proto ptRecv = do
 -}
 
 firstRecvs :: Role -> RoleStep -> S.Set Id
-firstRecvs role recv@(Recv _ pt) = 
+firstRecvs role recv@(Recv _ pt) =
   patFMV pt `S.difference`
   (S.unions . map (patFMV . stepPat) $ takeWhile (/= recv) (roleSteps role))
 firstRecvs _         _           = S.empty
@@ -149,10 +149,10 @@ sptFirstRecvs proto = vcat $ map ppStep steps
 
 existsFlow :: Pattern -> Pattern -> Bool
 existsFlow ptSend ptRecv = or
-  [ unifiable m1 m2 
-  | m1 <- S.toList $ messageparts mSend, 
+  [ unifiable m1 m2
+  | m1 <- S.toList $ messageparts mSend,
     m2 <- S.toList $ submessages mRecv,
-    isEncOrHash m1, 
+    isEncOrHash m1,
     isEncOrHash m2
   ]
   where
@@ -179,7 +179,7 @@ flowRel proto = do
   steps = protoSteps proto
 
 sptProtoOrders :: Protocol -> Doc
-sptProtoOrders proto = 
+sptProtoOrders proto =
   text "role ord:" $-$
   nest 2 (ppRel $ roleRel proto) $-$
   text "flow rel:" $-$
@@ -197,10 +197,10 @@ sptProtoOrders proto =
 
 
 goalFlowAnalysis :: Theory -> Doc
-goalFlowAnalysis (Theory _ items) = 
+goalFlowAnalysis (Theory _ items) =
   vcat . intersperse (text "") $ [ analyzeProto p | ThyProtocol p <- items ]
   where
-  analyzeProto proto = 
+  analyzeProto proto =
     sptProtocol proto $-$
     text "" $-$
     sptProtoOrders proto

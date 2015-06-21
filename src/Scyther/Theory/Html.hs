@@ -65,7 +65,7 @@ data GenerationInput = GenerationInput {
   , giTemplate    :: FilePath  -- ^ Path to template index.
   , giOutDir      :: FilePath  -- ^ Path to the output directory.
   , giMarkup      :: HtmlMarkup Doc -- ^ Document representing theory to output.
-  , giProofScript :: FilePath -> String    
+  , giProofScript :: FilePath -> String
                                -- ^ A function mapping the output file name to a
                                --   string representation of Isabelle/HOL
                                --   certificate. The generation time will be
@@ -95,7 +95,7 @@ pathInfo input = info
   where
     info = PathInfo
       { inputFileCopy   = filesDir info </> takeFileName (giInputFile input)
-      , proofScriptFile = filesDir info </> 
+      , proofScriptFile = filesDir info </>
           addExtension (takeBaseName (giInputFile input) ++ "_cert_auto") "thy"
       , outDir          = giOutDir input
       , imageDir        = "img"
@@ -116,7 +116,7 @@ requiredDirs info = map (mkAbsolute info) [".", imageDir info, filesDir info]
 -- theories for exporting as JSON.
 jsGenerationInfo :: GenerationInput
                  -> NominalDiffTime  -- ^ Proof script generation time.
-                 -> Maybe (Bool, NominalDiffTime) 
+                 -> Maybe (Bool, NominalDiffTime)
                                      -- ^ Proof checking time.
                  -> JSObject JSValue
 jsGenerationInfo input genTime optCheckInfo = toJSObject $
@@ -133,7 +133,7 @@ jsGenerationInfo input genTime optCheckInfo = toJSObject $
     fileLink file = (toJSString (takeFileName file), toJSString file)
     genTimeString = "generated in " ++ show genTime
 
-    checkInfo Nothing                              = 
+    checkInfo Nothing                              =
         [ ("certificateStatus", showJSON . toJSString $ genTimeString) ]
     checkInfo (Just (success, checkTime)) =
         [ ( "certificateStatus", showJSON . toJSString $ genTimeString ++ status) ]
@@ -151,7 +151,7 @@ theoryToHtml input = do
   copyFile (giInputFile input) (mkAbsolute paths $ inputFileCopy paths)
   -- timed proof script generation
   putStr " generating proof script: " >> hFlush stdout
-  genTime <- timed_ $ writeAbsolute (proofScriptFile paths) 
+  genTime <- timed_ $ writeAbsolute (proofScriptFile paths)
                         (giProofScript input $ proofScriptFile paths)
   putStrLn $ show genTime
   -- timed isabelle check
@@ -159,7 +159,7 @@ theoryToHtml input = do
     Nothing           -> return Nothing
     Just machineCheck -> do
       putStr " checking proof script: " >> hFlush stdout
-      (optErrMsg, checkTime) <- timed $ 
+      (optErrMsg, checkTime) <- timed $
         machineCheck (mkAbsolute paths $ proofScriptFile paths)
       putStrLn $ show checkTime
       -- write log file copy
@@ -231,12 +231,12 @@ copyTemplate templateFile targetDir = do
 type Attributes = [(String,String)]
 
 -- | Output a document surrounded by a tag.
-withTag :: Document d => 
+withTag :: Document d =>
            String      -- ^ Tag name
         -> Attributes  -- ^ Name, value pairs for attributes (no escaping done!)
         -> d           -- ^ Inner document
         -> d
-withTag tag atts d = 
+withTag tag atts d =
   zeroWidthText ("<" ++ tag ++ attsStr ++ ">") <> d <> zeroWidthText ("</" ++ tag ++ ">")
   where
   attsStr | null atts = ""
@@ -265,14 +265,14 @@ data HtmlMarkupState = HtmlMarkupState {
   , htmlThmDefs     :: M.Map (String, String) HtmlSequent
   , htmlThmRefs     :: M.Map Int HtmlSequent
   , htmlGraphRefs   :: M.Map Int HtmlSequent
-  , htmlExpls       :: M.Map String Int 
+  , htmlExpls       :: M.Map String Int
   , htmlNextExplRef :: Int
   }
 
 type GraphDesc = String
 
 newtype HtmlMarkup a = HtmlMarkup {
-    unHtmlMarkup :: StateT HtmlMarkupState 
+    unHtmlMarkup :: StateT HtmlMarkupState
                       (ConsistentLabelsT GraphDesc GraphIdx Identity) a
   }
   deriving( Functor, Applicative, Monad )
@@ -342,7 +342,7 @@ emptyHtmlMarkupState :: HtmlMarkupState
 emptyHtmlMarkupState = HtmlMarkupState M.empty M.empty M.empty M.empty M.empty 0
 
 runHtmlMarkup :: HtmlMarkup a -> (a, (HtmlMarkupState, M.Map GraphDesc GraphIdx))
-runHtmlMarkup m = 
+runHtmlMarkup m =
   case runIdentity . flip runConsistentLabelsT [1..] .
        flip runStateT emptyHtmlMarkupState . unHtmlMarkup $ m of
     ((res, st), (_, sequentIdxs)) -> (res, (st, sequentIdxs))
@@ -382,5 +382,5 @@ instance MarkupMonad HtmlMarkup where
 
   keyword tag d = withSpan [("class","kw-"++tag)] d
 
-  
+
 

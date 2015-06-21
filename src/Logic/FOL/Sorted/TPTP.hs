@@ -65,7 +65,7 @@ tptpSeparator :: Doc
 tptpSeparator = text $ "%" ++ replicate 79 '-'
 
 tptpProblem :: Problem -> Doc
-tptpProblem prob = 
+tptpProblem prob =
   vcat . intersperse emptyLine $
     [ text $ "% begin_problem(" ++ probIdent prob ++ ")."
     , tptpDescription $ probDesc   prob
@@ -102,16 +102,16 @@ tptpSignature sig = emptyDoc
      , mkList "functions"  (tptpSym funId funSorts) funs
      , mkList "predicates" (tptpSym relId relSorts) rels
      , mkList "sorts"      tptpSort                 sorts
-     ] 
+     ]
    $-$ emptyLine $-$
    tptpList "declarations" (map declPred rels ++ map declFun funs)
    where
    sorts = nub $ sigSorts sig
    funs  = nub $ sigFuns  sig
    rels  = nub $ sigRels  sig
-   tptpSym selId selSorts sym = 
+   tptpSym selId selSorts sym =
      parens $ tptpId (selId sym) <> comma <-> int (length (selSorts sym))
-   mkList name tptp list = 
+   mkList name tptp list =
      sep [text name <> lbrack, nest 2 . fsep . punctuate comma $ map tptp list, text "]."]
    warning
      | nubOn funId funs /= funs || nubOn relId rels /= rels =
@@ -119,10 +119,10 @@ tptpSignature sig = emptyDoc
      | otherwise = emptyDoc
    declPred r =
      text "predicate(" <>
-     (text . getId . relId $ r) <> 
+     (text . getId . relId $ r) <>
      (hcat . map (\s -> comma <-> text (getSort s)) $ relSorts r) <>
      text ")."
-   declFun f@(Fun (_,sort) _) = 
+   declFun f@(Fun (_,sort) _) =
      (tptpFormula $ quant $ In (Rel (Id (getSort sort)) (error "declFun: don't inspect")) [t]) <>
      text "."
      where
@@ -136,18 +136,18 @@ tptpProperties :: Article (Labeled Formula) -> Doc
 tptpProperties = tptpFormulaArticle "conjecture"
 
 tptpFormulaArticle :: String -> Article (Labeled Formula) -> Doc
-tptpFormulaArticle origin article = 
+tptpFormulaArticle origin article =
   tptpList ("formulae(" ++ origin ++ ")") (map tptpSectioned $ getArticle article)
   where
-  tptpSectioned (Math (lbl,a)) = 
-    sep [text $ "fof("++lbl++","++origin++",(", nest 1 (tptpFormula a) <-> text ") )."] 
+  tptpSectioned (Math (lbl,a)) =
+    sep [text $ "fof("++lbl++","++origin++",(", nest 1 (tptpFormula a) <-> text ") )."]
     $-$ emptyLine
   tptpSectioned (Text t) = text $ "% " ++ t
-  tptpSectioned (Section i header) = 
+  tptpSectioned (Section i header) =
     (case i of
-       0 -> emptyLines 1 $-$ 
+       0 -> emptyLines 1 $-$
             (linesToDoc . overline "%". underline "%" $ "%% " ++ header ++ " %%")
-       1 -> emptyLines 1 $-$ 
+       1 -> emptyLines 1 $-$
             (linesToDoc . overline "%". underline "%" $ "% " ++ header)
        2 -> (linesToDoc . underline "%" $ "% " ++ header)
        _ -> text $ "% " ++ header)
@@ -169,7 +169,7 @@ underline style t = unlines [t, take (length . last $ lines t) (cycle style)]
 -- | Convert string line breaks to document line breaks.
 linesToDoc :: Document d => String -> d
 linesToDoc = vcat . map text . lines
-        
+
 -- | n empty lines.
 emptyLines :: Document d => Int -> d
 emptyLines n = vcat . replicate n $ text ""
@@ -192,7 +192,7 @@ tptpSortedId = tptpId . fst
 tptpTerm :: Document d => Term -> d
 tptpTerm (Var (i,_)) = tptpId i
 tptpTerm (App (Fun (i,_) _) []) = tptpLowerId i
-tptpTerm (App (Fun (i,_) _) ts) = 
+tptpTerm (App (Fun (i,_) _) ts) =
   sep (tptpLowerId i <> lparen <> arg : args)
   where
   (arg:args) = map (nest 1) . mapLast (<> rparen) . punctuate comma $ map tptpTerm ts
@@ -200,7 +200,7 @@ tptpTerm (App (Fun (i,_) _) ts) =
 tptpFormula :: Document d => Formula -> d
 tptpFormula Top = text "$true"
 tptpFormula Bot = text "$false"
-tptpFormula (In (Rel i _) ts) =     
+tptpFormula (In (Rel i _) ts) =
   case getId i of
     []  -> error "tptpFormula: empty identifier encountered"
     op | head op `elem` "=!<>" && length ts == 2 ->
@@ -210,7 +210,7 @@ tptpFormula (In (Rel i _) ts) =
   where
   (arg:args) = mapLast (<> rparen) . punctuate comma $ map tptpTerm ts
 tptpFormula (Neg a) = text "~" <> parens (tptpFormula a)
-tptpFormula (BinOp op a b) = 
+tptpFormula (BinOp op a b) =
   sep [ parens (tptpFormula a) <-> text (tptpOp op)
       , nest 1 . parens $ tptpFormula b]
   where
@@ -219,7 +219,7 @@ tptpFormula (BinOp op a b) =
   tptpOp Imp   = "=>"
   tptpOp Equiv = "<=>"
 tptpFormula fo0@(Quant q _ _)
-  | any (isLower.head.getId.fst) sis = 
+  | any (isLower.head.getId.fst) sis =
       error $ "tptpFormula: lowercase variables '"++show sis++"' encountered."
   | otherwise =
       sep [ text (tptpQuant q) <-> brackets sis' <-> colon
@@ -230,7 +230,7 @@ tptpFormula fo0@(Quant q _ _)
   tptpQuant All = "!"
   tptpQuant Ex  = "?"
 
--- | MOVE 
+-- | MOVE
 gatherQuants :: Quant -> Formula -> ([SortedId], Formula)
 gatherQuants q = go []
   where

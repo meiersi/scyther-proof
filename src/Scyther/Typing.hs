@@ -38,7 +38,7 @@ import Text.Isar
 
 
 data Type =
-    AgentT 
+    AgentT
   | ConstT Id
   | NonceT Role Id
   | HashT Type
@@ -51,7 +51,7 @@ data Type =
   | SumT Type Type
   deriving( Eq, Ord, Show, Data, Typeable )
 
--- | Partial normalization: rewrites with 
+-- | Partial normalization: rewrites with
 --
 -- > SumT ty (KnownT _) = SumT (KnownT _) ty
 --
@@ -82,11 +82,11 @@ type TypeAnn = (Message, Type, TID)
 
 -- | The TIDs of a type annotation.
 typeAnnTIDs :: TypeAnn -> [TID]
-typeAnnTIDs (m, _, tid) = tid : msgTIDs m 
+typeAnnTIDs (m, _, tid) = tid : msgTIDs m
 
 -- | The AMIDs of a type annotation.
 typeAnnAMIDs :: TypeAnn -> [ArbMsgId]
-typeAnnAMIDs (m, _, _) = msgAMIDs m 
+typeAnnAMIDs (m, _, _) = msgAMIDs m
 
 -- | Substitute a type annotation.
 substTypeAnn :: E.Equalities -> TypeAnn -> TypeAnn
@@ -105,7 +105,7 @@ type Typing = M.Map (Id, Role) Type
 --
 -- FIXME: This is quite a hack and could be done much better: do it!
 mscTyping :: Protocol -> Maybe Typing
-mscTyping proto = 
+mscTyping proto =
     (`execStateT` M.empty) $ foldM typeStep E.empty steps
   where
     roleeqs = M.fromList $ zip [1..] (protoRoles proto)
@@ -247,13 +247,13 @@ sptType optRole = go
     SumT ty1 ty2  -> parens (sep [go ty1 <-> text "|", go ty2])
 
 sptTypeAnn :: (TID -> Maybe Role) -> TypeAnn -> Doc
-sptTypeAnn tidToRole (m,ty,i) = hsep 
+sptTypeAnn tidToRole (m,ty,i) = hsep
     [sptMessage m, text "::", parens (sptType (tidToRole i) ty) <> sptTID i]
 
 sptTyping :: Typing -> Doc
-sptTyping = vcat . map ppTyEq . M.toList 
+sptTyping = vcat . map ppTyEq . M.toList
   where
-    ppTyEq ((v,role),ty) = 
+    ppTyEq ((v,role),ty) =
       sep [ text $ getId v ++ "@" ++ roleName role
           , nest 2 $ text "::" <-> sptType (Just role) ty ]
 
@@ -261,7 +261,7 @@ instance Isar Type where
   isar conf = isaType conf Nothing
 
 instance Isar Typing where
-  isar conf = 
+  isar conf =
       ($$ rbrack) . vcat . zipWith (<->) seps . map ppTyEq . M.toList
     where
       seps = map char $ '[' : repeat ','

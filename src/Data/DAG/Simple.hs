@@ -17,10 +17,10 @@ import Control.Monad.Writer
 -- cyclic, then the result is at least some permutation of all elements of
 -- the given relation.
 toposort :: Ord a => [(a, a)] -> [a]
-toposort dag = 
+toposort dag =
     execWriter . foldM visit S.empty $ map fst dag ++ map snd dag
-  where 
-    visit visited x 
+  where
+    visit visited x
       | x `S.member` visited = return visited
       | otherwise            =
           foldM visit (S.insert x visited) preds <* tell (pure x)
@@ -30,10 +30,10 @@ toposort dag =
 
 -- | Compute the set of nodes reachable from the given set of nodes.
 reachableSet :: Ord a => [a] -> [(a,a)] -> S.Set a
-reachableSet start dag = 
+reachableSet start dag =
     foldl' visit S.empty start
-  where 
-    visit visited x 
+  where
+    visit visited x
       | x `S.member` visited = visited
       | otherwise            =
           foldl' visit (S.insert x visited) succs
@@ -42,17 +42,17 @@ reachableSet start dag =
 
 -- | Is the relation cyclic.
 cyclic :: Ord a => [(a,a)] -> Bool
-cyclic rel = 
+cyclic rel =
     maybe True (const False) $ foldM visitForest S.empty $ map fst rel
-  where 
+  where
     visitForest visited x
       | x `S.member` visited = return visited
       | otherwise            = findLoop S.empty visited x
 
-    findLoop parents visited x 
+    findLoop parents visited x
       | x `S.member` parents = mzero
       | x `S.member` visited = return visited
-      | otherwise            = 
+      | otherwise            =
           S.insert x <$> foldM (findLoop parents') visited next
       where
         next     = [ e' | (e,e') <- rel, e == x ]

@@ -137,7 +137,7 @@ type Encoder = State EncoderState
 -- sequence of prefix_id<n> for n = eps, 1, 2, ... is tested.
 aquireId :: String -> Id -> Encoder F.Id
 aquireId prefix = aquire modifiers . addPrefix . getId
-  where 
+  where
   addPrefix = ((prefix++"_") ++)
   modifiers = id : map (flip (++) . show) [1..]
   aquire (mod:mods) i0 = do
@@ -148,9 +148,9 @@ aquireId prefix = aquire modifiers . addPrefix . getId
        else do
          put (s {esIds = S.insert i (esIds s)})
          return (F.Id i)
-       
 
-    
+
+
 
 -- | Get the sorted id corresponding to a thread identifier.
 tidSid :: TID -> F.SortedId
@@ -198,7 +198,7 @@ encMVar (LocalId (v, tid)) = do
 
 -- | Encode a symbolically instantiated message.
 encMsg :: Message -> Encoder F.Term
-encMsg (MConst c) = 
+encMsg (MConst c) =
   F.const <$> encFOConst (esConst, \m s -> s {esConst = m}) id msgS "c" c
 encMsg (MFresh (LocalId (f, tid))) = do
   f' <- F.const <$> encFOConst (esFresh, \m s -> s {esFresh = m}) id freshS "f" f
@@ -258,7 +258,7 @@ roleOrdAxiom role (s1, s2) = do
   step1' <- encEv s1
   step2' <- encEv s2
   role'  <- encRole role
-  return . mkArticle . allTID tid $ 
+  return . mkArticle . allTID tid $
     (runsRole tid role' F..&& inSteps tid s2') F..==> (step1' .<. step2')
 
 roleAxioms :: Role -> Encoder (Article F.Formula)
@@ -289,7 +289,7 @@ msgVar = sortedVar msgS
 atomicChainAxioms :: Protocol -> Encoder (Article F.Formula)
 atomicChainAxioms proto = do
   -- F.univ mv <$> genChainAxiom proto (m, True, const True)
-  formulas <- sequenceA 
+  formulas <- sequenceA
     [ encQuant <$> genChainAxiom proto (enc, False, isEnc)
     , hashQuant <$> genChainAxiom proto (hash, False, isHash)
     , symQuant <$> genChainAxiom proto (sym, True, isSym)
@@ -305,7 +305,7 @@ atomicChainAxioms proto = do
       , "nonces"
       ]
   where
-  addComment f info = 
+  addComment f info =
     Article [Text $ "Chain rule for " ++ info ++ ".", Math f]
 
   (av, a) = msgVar "A0"
@@ -368,7 +368,7 @@ genChainAxiom proto (m, maybeInIK0, approxEq) = do
   ik0 = guard maybeInIK0 *> pure (inIK0 m)
 
   hash = do
-    guard (approxEq (MHash err)) 
+    guard (approxEq (MHash err))
     return $ F.ex xv $ F.conj [F.eq m h, x .<. h]
     where
     err = error $ "chainAxiom: fake hash - unknown inner structure"
@@ -390,7 +390,7 @@ genChainAxiom proto (m, maybeInIK0, approxEq) = do
 
   send = msum . map roleChains $ protoRoles proto
     where
-    roleChains role = 
+    roleChains role =
       msum . map stepChains $ roleSteps role
       where
       stepChains      (Recv _ _)  = mzero
@@ -402,9 +402,9 @@ genChainAxiom proto (m, maybeInIK0, approxEq) = do
         return . exTID tid $
           runsRole tid role' F..&& chain
         where
-        msgChains :: [F.Term] -> Message -> 
+        msgChains :: [F.Term] -> Message ->
                      ListT (StateT EncoderState Identity) F.Formula
-        msgChains from msg = 
+        msgChains from msg =
           do guard (approxEq msg)
              msg' <- lift $ encMsg msg
              return . F.conj $ (map (.<. msg') from) ++ [msg' F..== m]
@@ -425,14 +425,14 @@ protocolAxioms proto = do
   chains <- atomicChainAxioms proto
   let header = "Axiomatization of protocol '"++protoName proto++"'"
   return . subArticle header $ roleAxs `mappend` chains
-  
+
 -- | Encode a set of equalities.
 encEqualities :: Equalities -> Encoder [F.Formula]
 encEqualities (Equalities tideqs roleqs avareqs mvareqs agnteqs) =
   concat <$> sequenceA
     [ conv encTIDEq tideqs
     , mapM encRoleEq [(k, v) | (k, Just v) <- M.toList roleqs]
-    , conv encAVarEq avareqs 
+    , conv encAVarEq avareqs
     , conv encMVarEq mvareqs
     , conv encAgntEq agnteqs
     ]
@@ -499,8 +499,8 @@ textArticle = Article . return . Text
 
 -- | The axioms underlying the model.
 modelAxioms :: Article F.Formula
-modelAxioms = 
-  mconcat . map (uncurry subArticle) $ 
+modelAxioms =
+  mconcat . map (uncurry subArticle) $
     [ ("Initial intruder knowledge", ik0)
     , ("Event order", evord)
     , ("Splitting tuples", unpair)
@@ -513,7 +513,7 @@ modelAxioms =
   commentedMath :: [(String,a)] -> Article a
   commentedMath = mconcat . map (uncurry mappend . (textArticle *** mathArticle))
 
-  eventConstrs = 
+  eventConstrs =
     mconcat . map mathArticle $ F.freeAlgebra [learnF, stepF]
 
   ik0 = mconcat . map mathArticle $
@@ -572,8 +572,8 @@ modelAxioms =
     -- ++
     -- [ F.univ av $ agentName a F..==> invAp a F..== a ]
     ++
-    [ F.univ xv . F.univ av $ (invAp x F..== pk) F..==> x F..== sk 
-    , F.univ xv . F.univ av $ (invAp x F..== sk) F..==> x F..== pk 
+    [ F.univ xv . F.univ av $ (invAp x F..== pk) F..==> x F..== sk
+    , F.univ xv . F.univ av $ (invAp x F..== sk) F..==> x F..== pk
     ] ++
     map invsymkey symKeyCo
     ++
@@ -601,7 +601,7 @@ freeAlgebra = mconcat . map mathArticle . F.freeAlgebra
 
 encodingAxioms :: EncoderState -> Article F.Formula
 encodingAxioms state =
-  mconcat . map (uncurry subArticle) $ 
+  mconcat . map (uncurry subArticle) $
     [ ("Free message algebra", msgAlg)
     , ("Global constants", consts)
     , ("Agent variables", avars)
@@ -616,10 +616,10 @@ encodingAxioms state =
   varids      = freeAlgebra $ M.elems (esAVar state) ++ M.elems (esMVar state)
   rolestepids = freeAlgebra $ M.elems (esRoleStep state)
   roleids     = freeAlgebra $ M.elems (esRole state)
-  consts = 
-    mconcat . map (mathArticle . F.neg . agentName . F.const) $ 
+  consts =
+    mconcat . map (mathArticle . F.neg . agentName . F.const) $
       M.elems (esConst state)
-  avars = 
+  avars =
     mconcat . map (mathArticle . agent) $ M.elems (esAVar state)
     where
     tid = 0
@@ -637,15 +637,15 @@ test = runEncoder $ encMsg (MTup (MFresh (LocalId (Id "ni", TID 1))) (MConst (Id
 -- | Encode a security protocol theory into a list of axioms and a list of
 -- formulas corresponding to the expected security properties.
 encTheory :: Theory -> (Signature, Article F.Formula, [Article F.Formula])
-encTheory thy = 
-  ( Signature 
+encTheory thy =
+  ( Signature
       theSorts
       (theFuns ++ concatMap M.elems [esConst s, esFresh s, esAVar s, esMVar s]
                ++ M.elems (esRoleStep s) ++ M.elems (esRole s)
       )
       theRels
-  , mconcat 
-    [ subArticle "Model Axiomatization" modelAxioms 
+  , mconcat
+    [ subArticle "Model Axiomatization" modelAxioms
     , mconcat protos
     , subArticle "Encoding Axiomatization" (encodingAxioms s)
     ]
@@ -659,9 +659,9 @@ encTheory thy =
     se' <- F.conj <$> encSequent se
     return . Right . Article $
       [ Text $ "Sequent '"++name++"'"
-      , Math se' 
+      , Math se'
       ]
-  encThyItem (ThyTheorem _) = 
+  encThyItem (ThyTheorem _) =
     return $ Left mempty
 
 prettyFOLTheory :: Theory -> Doc
@@ -669,17 +669,17 @@ prettyFOLTheory thy =
   vcat . map ppContent . getArticle $ theory
   where
   (_, axioms, props) = encTheory thy
-  theory = 
+  theory =
     subArticle "Axiomatization" axioms `mappend`
     subArticle "Properties" (mconcat props)
   ppContent :: Sectioned F.Formula -> Doc
   ppContent (Math a) = F.ppFormula a $-$ text ""
   ppContent (Text t) = text $ "% " ++ t
-  ppContent (Section i header) = 
+  ppContent (Section i header) =
     (case i of
-       0 -> emptyLines 1 $-$ 
+       0 -> emptyLines 1 $-$
             (linesToDoc . overline "%". underline "%" $ "%% " ++ header ++ " %%")
-       1 -> emptyLines 1 $-$ 
+       1 -> emptyLines 1 $-$
             (linesToDoc . overline "%". underline "%" $ "% " ++ header)
        2 -> (linesToDoc . underline "%" $ "% " ++ header)
        _ -> text $ "% " ++ header)
@@ -687,21 +687,21 @@ prettyFOLTheory thy =
 
 
 toTPTP :: Theory -> Problem
-toTPTP thy = 
-  Problem (thyName thy) desc sign 
-    (labelMath axLbls axioms) 
+toTPTP thy =
+  Problem (thyName thy) desc sign
+    (labelMath axLbls axioms)
     (mathArticle . ((,) "properties") . F.conj . getMath $ mconcat conjectures)
   where
-  desc = Description 
-    "scytherP - FOL backend" 
-    "auto-generated security protocol verification problem" 
+  desc = Description
+    "scytherP - FOL backend"
+    "auto-generated security protocol verification problem"
     Satisfiable
   (sign, axioms, conjectures) = encTheory thy
   axLbls = map (("ax"++) . show) [1..]
   coLbls = map (("co"++) . show) [1..]
 
 labelMath :: [b] -> Article a -> Article (b,a)
-labelMath labels = 
+labelMath labels =
   Article . (`evalState` labels) . mapM label . getArticle
   where
   label (Math a) = do

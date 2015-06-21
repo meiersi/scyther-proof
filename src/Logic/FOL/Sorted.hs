@@ -49,7 +49,7 @@ data Fun = Fun SortedId [Sort]
 data Rel = Rel Id       [Sort]
   deriving(Eq, Ord, Show)
 
-data Term = 
+data Term =
     Var SortedId
   | App Fun [Term]
   deriving(Eq, Ord, Show)
@@ -60,7 +60,7 @@ data BinOp = Conj | Disj | Imp | Equiv
 data Quant = All | Ex
   deriving(Eq, Ord, Show)
 
-data Formula = 
+data Formula =
     Top
   | Bot
   | In Rel [Term]
@@ -88,9 +88,9 @@ var = (Var.) . sid
 apply :: Fun -> [Term] -> Term
 apply f@(Fun _ ss) ts
   | ss == map termSort ts = App f ts
-  | otherwise = 
+  | otherwise =
       error $ "apply: '"++show f++"' to '"++show ts++"' - sorts don't agree"
-  
+
 
 const = flip apply []
 
@@ -110,7 +110,7 @@ ex :: SortedId -> Formula -> Formula
 ex = Quant Ex
 
 eq :: Term -> Term -> Formula
-eq x y 
+eq x y
   | sx == sy  = In (Rel (Id "=") [sx,sx]) [x,y]
   | otherwise = error $ "eq: sorts '"++show sx++"' and '"++show sy++"' do not agree."
   where
@@ -118,7 +118,7 @@ eq x y
   sy = termSort y
 
 inRel :: Rel -> [Term] -> Formula
-inRel r@(Rel _ sorts)  ts 
+inRel r@(Rel _ sorts)  ts
   | tss == sorts = In r ts
   | otherwise    = error $ "inRel: sorts '"++show tss++"' disagree with expected sorts '"++show sorts++"'"
   where
@@ -149,9 +149,9 @@ sortedVars v sorts = (sids, map Var sids)
   where sids = sortedSids v sorts
 
 allArguments :: String -> Fun -> (Formula -> Formula, Term, [Term])
-allArguments v f@(Fun _ sorts) = 
+allArguments v f@(Fun _ sorts) =
   (\t -> foldr univ t is, App f ts, ts)
-  where 
+  where
   (is, ts) = sortedVars v sorts
 
 injective :: MonadPlus m => Fun -> m Formula
@@ -161,7 +161,7 @@ injective f@(Fun _ sorts) = return . xquant . yquant $
   where
   (xquant, fxs, xs) = allArguments "X" f
   (yquant, fys, ys) = allArguments "Y" f
-    
+
 free :: Fun -> [Fun] -> [Formula]
 free f@(Fun _ sorts) fs = do
   f'@(Fun _ sorts') <- fs
@@ -174,7 +174,7 @@ free f@(Fun _ sorts) fs = do
 
 
 freeAlgebra :: [Fun] -> [Formula]
-freeAlgebra fs = 
+freeAlgebra fs =
   (fs >>= injective) <|>
   (zip fs (tail (tails fs)) >>= uncurry free)
 
@@ -194,7 +194,7 @@ ppSortedId (i, s) = ppId i <> colon <> ppSort s
 ppTerm :: Document d => Term -> d
 ppTerm (Var (i,_)) = ppId i
 ppTerm (App (Fun (i,_) _) []) = ppId i
-ppTerm (App (Fun (i,_) _) ts) = 
+ppTerm (App (Fun (i,_) _) ts) =
   sep (ppId i <> lparen <> arg : args)
   where
   (arg:args) = map (nest 1) . mapLast (<> rparen) . punctuate comma $ map ppTerm ts
@@ -211,14 +211,14 @@ ppFormula (In (Rel i _) ts) = case getId i of
   where
   (arg:args) = mapLast (<> rparen) . punctuate comma $ map ppTerm ts
 ppFormula (Neg a) = text "not" <> parens (ppFormula a)
-ppFormula (BinOp op a b) = 
+ppFormula (BinOp op a b) =
   sep [parens (ppFormula a) <-> text (ppOp op), parens (ppFormula b)]
   where
   ppOp Conj  = "&"
   ppOp Disj  = "|"
   ppOp Imp   = "==>"
   ppOp Equiv = "<=>"
-ppFormula (Quant q si a) = 
+ppFormula (Quant q si a) =
   sep [text (ppQuant q) <-> ppSortedId si <> text ".", nest 1 $ ppFormula a]
   where
   ppQuant All = "!"

@@ -28,7 +28,7 @@ mapIndent f x                 = x
 -- | Make the given article a sub-article with a given heading. All its
 -- sections are indented accordingly.
 subArticle :: String -> Article a -> Article a
-subArticle header = 
+subArticle header =
   Article . (Section 0 header:) . map (mapIndent succ) . getArticle
 
 prependMath :: a -> Article a -> Article a

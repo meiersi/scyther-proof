@@ -11,7 +11,7 @@ module Text.PrettyPrint.Class (
      ,  P.Mode(..)
 
      , ($--$)
-     , semi 
+     , semi
      , colon
      , comma
      , space
@@ -22,7 +22,7 @@ module Text.PrettyPrint.Class (
      , rbrack
      , lbrace
      , rbrace
-  
+
      , int
      , integer
      , float
@@ -33,7 +33,7 @@ module Text.PrettyPrint.Class (
      , parens
      , brackets
      , braces
-  
+
      , hang
      , punctuate
 ) where
@@ -41,7 +41,7 @@ module Text.PrettyPrint.Class (
 import Prelude
 import qualified Text.PrettyPrint.HughesPJ as P
 
-infixl 6 <> 
+infixl 6 <>
 infixl 6 <->
 infixl 5 $$, $-$, $--$
 
@@ -85,10 +85,10 @@ instance Document P.Doc where
 
 -- | Vertical concatentation of two documents with an empty line in between.
 ($--$) :: Document d => d -> d -> d
-d1 $--$ d2 = 
+d1 $--$ d2 =
    caseEmptyDoc d2 (caseEmptyDoc d1 (d1 $-$ text "" $-$ d2) d2) d1
 
-semi, colon, comma, space, equals, 
+semi, colon, comma, space, equals,
   lparen, rparen, lbrack, rbrack, lbrace, rbrace :: Document d => d
 
 semi  = char ';'

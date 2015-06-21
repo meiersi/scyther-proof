@@ -33,7 +33,7 @@ checkTheoryFile isabelleTool threads esplSrc thyFile = do
   let thyName     = takeBaseName thyFile
       rootName    = "ROOT"
       sessionName = "scyther-proof-" ++ thyName
-  
+
   -- setup temporary directory
   tmpDir <- createTempDirectory
   copyFile thyFile (tmpDir </> addExtension thyName "thy")
@@ -47,7 +47,7 @@ checkTheoryFile isabelleTool threads esplSrc thyFile = do
       removeDirectoryRecursive tmpDir
       return Nothing
     else
-      return (Just (errMsg out))        
+      return (Just (errMsg out))
   where
   -- | Extract the error message from the isabelle output
   errMsg str = case break ("***" `isPrefixOf`) (lines str) of

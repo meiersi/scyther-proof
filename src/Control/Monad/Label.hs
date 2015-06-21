@@ -82,7 +82,7 @@ evalConsistentLabels m = fst . runConsistentLabels m
 
 -- | Execute a computation requiring consistent labels.
 execConsistentLabels :: ConsistentLabels k l a -> [l] -> ([l], M.Map k l)
-execConsistentLabels m = snd . runConsistentLabels m 
+execConsistentLabels m = snd . runConsistentLabels m
 
 
 

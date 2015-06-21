@@ -40,11 +40,11 @@ import Extension.Prelude
 ------------------------------------------------------------------------------
 
 -- | Round a number to the given amount of decimals.
-roundDecimal :: RealFrac a 
+roundDecimal :: RealFrac a
              => Int  -- ^ Number of decimals after the decimal point
              -> a -> a
 roundDecimal d n = fromIntegral ((round (multiplier * n))::Integer) / multiplier
-  where 
+  where
   multiplier :: RealFrac a => a
   multiplier = 10 ^^ d
 
@@ -72,7 +72,7 @@ toDenseList def m = case maxKey m of
 
 -- | Convert a dense list to an 'IntMap' assuming the list has consecutive
 -- indexes starting from '0'.
-fromDenseList :: [a] -> IM.IntMap a 
+fromDenseList :: [a] -> IM.IntMap a
 fromDenseList = IM.fromList . zip [0..]
 
 ------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ data Alignment = AlignLeft | AlignRight
   deriving( Eq, Ord, Show )
 
 -- | A table with aligned rows.
-data Table a = Table { 
+data Table a = Table {
     alignments :: IM.IntMap Alignment  -- ^ The alignment for each column
   , headers    :: IM.IntMap a          -- ^ The headers for each column
   , getCells   :: Cells a              -- ^ Cells indexed first by rows then by columns
@@ -115,7 +115,7 @@ rows = denseLength . getCells
 -- | Retrieve the contents of a cell if it exists.
 getCell :: (Int,Int) -> Table a -> Maybe a
 getCell (rowIdx, colIdx) = (IM.lookup colIdx =<<) . IM.lookup rowIdx . getCells
-  
+
 -- | View the index and the contents of the last cell.
 viewLastCell :: Table a -> Maybe ((Int, Int), a)
 viewLastCell t = do
@@ -150,10 +150,10 @@ mapCells :: (Cells a -> Cells a) -> Table a -> Table a
 mapCells f = mapCellsAndHeaders f id
 
 -- | Updtate the headers and the cells
-mapCellsAndHeaders :: (Cells a -> Cells b) 
-                   -> (IM.IntMap a -> IM.IntMap b) 
+mapCellsAndHeaders :: (Cells a -> Cells b)
+                   -> (IM.IntMap a -> IM.IntMap b)
                    -> Table a -> Table b
-mapCellsAndHeaders fCells fHeaders t = 
+mapCellsAndHeaders fCells fHeaders t =
   t { headers = fHeaders (headers t), getCells = fCells (getCells t) }
 
 
@@ -178,7 +178,7 @@ setHeader colIdx header = mapHeaders (IM.insert colIdx header)
 
 -- | Set the contents of a cell.
 setCell :: (Int,Int) -> a -> Table a -> Table a
-setCell idx@(rowIdx, colIdx) x 
+setCell idx@(rowIdx, colIdx) x
   | rowIdx < 0 || colIdx < 0 = error $ "setCell: index out of range" ++ show idx
   | otherwise                = mapCells (IM.alter changeRow rowIdx)
   where
@@ -191,9 +191,9 @@ newRow = mapCells $ \cells -> case maxKey cells of
   Just rowIdx -> IM.insert (succ rowIdx) IM.empty cells
   Nothing     -> IM.singleton 0 IM.empty
 
--- | Append a cell at the end of the last row 
+-- | Append a cell at the end of the last row
 appendCell :: a -> Table a -> Table a
-appendCell cell = mapCells $ \cells -> 
+appendCell cell = mapCells $ \cells ->
   case IM.maxViewWithKey cells of
     Just ((rowIdx,row),cellsNoRow) ->
       case maxKey row of
@@ -216,7 +216,7 @@ headerLastCell header t = case lastCellIndex t of
 appendNumCell :: (Show a, RealFrac a )
               => Int -- ^ Number of digits after the decimal point
               -> a -> Table String -> Table String
-appendNumCell dec x = 
+appendNumCell dec x =
   alignLastCell AlignRight . appendCell (show $ roundDecimal dec x)
 
 
@@ -237,12 +237,12 @@ alignBy expand rs = map (expand maxLength) rs
 
 -- | Align the contents of each cell using the given aligment for each row.
 alignCellsBy :: [Aligner a] -> [[[a]]] -> [[[a]]]
-alignCellsBy expanders = 
+alignCellsBy expanders =
   transpose . zipWith alignBy (cycle expanders) . transpose . alignBy (flushLeftBy [[]])
 
 -- | Convert a table to the body of a LaTeX table.
 toLaTeX :: (a -> String) -> Table a -> String
-toLaTeX toStr t = 
+toLaTeX toStr t =
   formatLines . map formatLine . alignCells . addHeaders . toList "" . fmap toStr $ t
   where
   addHeaders
@@ -264,5 +264,5 @@ toLaTeX toStr t =
 test = fromList $ [["simon","where","a"],["new","","world"],[],["order"]]
 test1 = setHeader 1 "URGH" .setHeader 1 "WORDL" . appendNumCell 2 10.2 . alignLastCell AlignRight . appendCell "w" $ test
 
-latex = putStrLn . toLaTeX id 
+latex = putStrLn . toLaTeX id
 -}

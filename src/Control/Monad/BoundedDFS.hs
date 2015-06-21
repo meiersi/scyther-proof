@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, 
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts,
              FunctionalDependencies, GeneralizedNewtypeDeriving #-}
 -- | A monad for implemented bounded depth-first-search and branch-and-bound
 -- search.
@@ -6,7 +6,7 @@ module Control.Monad.BoundedDFS (
   -- * Costful operations
     MonadCost(..)
 
-  -- * Unbounded depth-first-search 
+  -- * Unbounded depth-first-search
   , UnboundedDFS(..)
 
   -- * Bounded depth-first-search
@@ -91,16 +91,16 @@ execBoundedDFS :: BoundedDFS c a -> (c -> Bool) -> c -> Maybe c
 execBoundedDFS m cond = fmap snd . runBoundedDFS m cond
 
 -- | A branch and bound monad for finding results with the smallest costs.
-newtype BranchAndBound c a = 
-  BranchAndBound { 
-    unBranchAndBound :: ReaderT (c -> Bool) (StateT c Maybe) a 
+newtype BranchAndBound c a =
+  BranchAndBound {
+    unBranchAndBound :: ReaderT (c -> Bool) (StateT c Maybe) a
   }
   deriving( Functor, Applicative, Monad )
 
 -- | Run a branch and bound search.
 runBranchAndBound :: Cost c => BranchAndBound c a -> c -> Maybe (a, c)
-runBranchAndBound m bound 
-  | zeroCost `lessEqCost` bound = 
+runBranchAndBound m bound
+  | zeroCost `lessEqCost` bound =
       runStateT (runReaderT (unBranchAndBound m) (`lessEqCost` bound)) zeroCost
   | otherwise = mzero
 
@@ -148,7 +148,7 @@ instance (Ord a, Num a) => Cost (Maybe a) where
 
 instance Cost c => MonadPlus (BranchAndBound c) where
   mzero = BranchAndBound $ mzero
-  m1 `mplus` m2 = BranchAndBound $ 
+  m1 `mplus` m2 = BranchAndBound $
     (do -- see if m1 get's through
         used <- get
         x1 <- unBranchAndBound m1

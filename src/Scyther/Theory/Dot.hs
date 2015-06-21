@@ -36,7 +36,7 @@ findWithError msg k = fromMaybe (error msg) . M.lookup k
 
 -- | Find a value and display the key in case it cannot be found.
 findShowError :: (Ord k, Show k) => k -> M.Map k v -> v
-findShowError k = 
+findShowError k =
   findWithError ("findShowError: key '"++show k++"' not in map.") k
 
 -- | The style of an edge between two nodes of the same thread.
@@ -111,13 +111,13 @@ threadColors se = M.fromList $ assocs
   threadsOfRole optRole = [ tid | (tid, optRole') <- roleeqs, optRole == optRole' ]
 
   tidGroupEqs :: [[(TID, (Int, Int))]]
-  tidGroupEqs = 
-    [(intruderTID, (0,0))] : 
-    [  [ (tid, (roleIdx, tidIdx)) 
+  tidGroupEqs =
+    [(intruderTID, (0,0))] :
+    [  [ (tid, (roleIdx, tidIdx))
        | (tidIdx, tid) <- zip [0..] $ threadsOfRole optRole ]
     | (roleIdx, optRole) <- optRoles ]
 
-  getColor idx = 
+  getColor idx =
       maybe (error $ "color of " ++ show idx ++ " not found") snd $
       find ((idx ==) . fst) $ colors
 
@@ -165,7 +165,7 @@ liftDot = lift . lift
 
 -- | Lift a unary operation to our custom dot monad.
 liftDot1 :: (Dot (a, DotState) -> Dot (b, DotState)) -> (MyDot a -> MyDot b)
-liftDot1 f m = ReaderT $ \env -> StateT $ \s -> 
+liftDot1 f m = ReaderT $ \env -> StateT $ \s ->
   f (runStateT (runReaderT m env) s)
 
 -- | A lifted version of the @cluster@ method for constructing a graph cluster.
@@ -191,7 +191,7 @@ dotEvent ev = do
       color <- case ev of
         Learn _    -> asks $ getColorWithDefault intruderTID . colorMap
         Step tid _ -> asks $ getColorWithDefault tid         . colorMap
-      nid <- liftDot $ node 
+      nid <- liftDot $ node
         [ ("label", label)
         , ("shape", shape)
         , ("style", "filled")
@@ -220,7 +220,7 @@ resetThreadAtoms info = do
   s <- get
   put $ s { threadAtoms = M.fromList $ mapMaybe prepare info }
   where
-  prepare (optTid, optRole) = do 
+  prepare (optTid, optRole) = do
     role <- optRole
     tid  <- optTid
     return (optTid, [AEq (E.TIDRoleEq (tid, role))])
@@ -239,7 +239,7 @@ dotThreads :: Bool  -- ^ True iff the threads are quantified here.
 dotThreads quantified = do
   threadInfo <- gets $ M.toList . threadAtoms
   mapM_ (uncurry (dotThread quantified)) threadInfo
-  
+
 -- | Produce the dot code to for a single thread described by the list of
 -- atoms.
 dotThread :: Bool                             -- ^ True iff the thread is quantified
@@ -312,8 +312,8 @@ dotThread quantified optTid atoms = do
 -- | Produce the dot code of the facts.
 dotFacts :: Facts -> MyDot ()
 dotFacts facts = do
-  resetThreadAtoms $ 
-    map (\tid -> (Just tid, threadRole tid facts)) (quantifiedTIDs facts) 
+  resetThreadAtoms $
+    map (\tid -> (Just tid, threadRole tid facts)) (quantifiedTIDs facts)
   mapM_ dotAtom $ toAtoms facts
   dotThreads True
 
@@ -326,7 +326,7 @@ localThreadInfo tid optRole m = do
   x <- local (tryNoteRole tid optRole) $ m
   -- restore thread atoms
   let optTid       = Just tid
-      restoreAtoms = maybe (M.delete optTid) (M.insert optTid) 
+      restoreAtoms = maybe (M.delete optTid) (M.insert optTid)
                            (M.lookup optTid (threadAtoms s))
   modify $ \s' -> s' { threadAtoms = restoreAtoms $ threadAtoms s' }
   -- return the result
@@ -335,7 +335,7 @@ localThreadInfo tid optRole m = do
 -- | Modify the thread to role assignment.
 tryNoteRole :: TID -> Maybe Role -> DotEnv -> DotEnv
 tryNoteRole _   Nothing     env = env
-tryNoteRole tid (Just role) env = 
+tryNoteRole tid (Just role) env =
   env { threadMapping = E.addTIDRoleMapping tid role (threadMapping env) }
 
 -- | Produce the dot code of a formula without disjunctions.
@@ -346,8 +346,8 @@ dotFormula (FDisj _f1 _f2) = error "dotFormula: disjunction encountered."
 dotFormula (FExists (Left tid) inner) = do
   localThreadInfo tid (findRole tid inner) $ do
     dotFormula inner
-    optAtoms <- gets $ M.lookup (Just tid) . threadAtoms 
-    maybe (return ()) (dotThread True (Just tid)) optAtoms 
+    optAtoms <- gets $ M.lookup (Just tid) . threadAtoms
+    maybe (return ()) (dotThread True (Just tid)) optAtoms
 dotFormula (FExists (Right aid) inner) = do
   _ <- liftDot $ node [("label", "some agent " ++ show aid)]
   dotFormula inner
@@ -387,7 +387,7 @@ dotSequent se = do
     dotFacts $ sePrem se
   -- restore state before premise dotting because premise and conclusion should
   -- not share nodes
-  put s 
+  put s
   _ <- myCluster $ do
     liftDot $ attribute ("label","conclusion")
     dotConclusion $ seConcl se
@@ -395,7 +395,7 @@ dotSequent se = do
 
 -- | Dot a sequent with some marked events.
 dotSequentMarked :: S.Set Event -> Sequent -> Dot ()
-dotSequentMarked markedEvs se = 
+dotSequentMarked markedEvs se =
   runMyDot (threadColors se) (eqsToMapping $ sePrem se) markedEvs $ dotSequent se
 
 -- | Convert a protocol to a dot graph.
@@ -414,7 +414,7 @@ dotProtocol proto = do
 
   rMap = M.fromList $ zip (map roleName roles) [2..]
   cMap = colorGroups intruderHue (replicate (length roles + 2) 1)
-  getColor gIdx eIdx = 
+  getColor gIdx eIdx =
      maybe (error "color not found") snd $ find (((gIdx, eIdx) == ) . fst) cMap
   getRoleColor role = hsvToHex $ getColor (findShowError role rMap) 0
 
@@ -425,7 +425,7 @@ dotProtocol proto = do
       , ("fillcolor",color)
       ] ++ attrs
 
-  dotStep (role, step) = 
+  dotStep (role, step) =
     mkNode (render $ sptRoleStep Nothing step) (getRoleColor role) []
 
   dotSend stepMap send@(_, Send l _) = sequence_
@@ -439,7 +439,7 @@ dotProtocol proto = do
         ids = roleId : map getStepId (roleSteps role)
         mkEdge (from, to) = edge from to threadEdgeStyle
     mapM_ mkEdge (zip ids (tail ids))
-    
+
 
 ------------------------------------------------------------------------------
 -- Calling Graphviz' dot tool
@@ -454,6 +454,6 @@ graphvizDotToPng :: FilePath    -- ^ Path to dot tool.
 graphvizDotToPng dotTool dotFile pngFile msgChan = do
   let cmd = dotTool ++ " -Tpng -o " ++ pngFile ++ " " ++ dotFile
   writeChan msgChan cmd
-  hProc <- runCommand cmd 
+  hProc <- runCommand cmd
   _ <- waitForProcess hProc
   return ()

@@ -50,19 +50,19 @@ type EventOrder = S.Set (Event,Event)
 
 -- | Is the event order cyclic?
 cyclic :: EventOrder -> Bool
-cyclic evord = 
+cyclic evord =
   maybe True (const False) $ foldM visitForest S.empty (map fst evPairs)
-  where 
+  where
   evPairs = S.toList evord
   visitForest visited x
     | x `S.member` visited = return visited
     | otherwise            = findLoop S.empty visited x
 
   -- findLoop :: Ord n => S.Set n -> S.Set n -> n -> Maybe (S.Set n)
-  findLoop parents visited x 
+  findLoop parents visited x
     | x `S.member` parents = mzero
     | x `S.member` visited = return visited
-    | otherwise            = 
+    | otherwise            =
         S.insert x `liftM` foldM (findLoop parents') visited next
     where
     next = [ e' | (e,e') <- evPairs, e == x ]
@@ -82,7 +82,7 @@ before evord from to = existsPath S.empty [from]
   existsPath visited (x:xs)
     | x == to              = True
     | x `S.member` visited = existsPath visited xs
-    | otherwise            = 
+    | otherwise            =
         existsPath (S.insert x visited) (next ++ xs)
     where
     next = [ e' | (e,e') <- evPairs, e == x ]
@@ -116,7 +116,7 @@ evOrdTIDs (e1, e2) = evTIDs e1 `mplus` evTIDs e2
 eventTag :: (Event -> Doc) -- ^ Raw pretty printing function
          -> (Doc -> Doc)   -- ^ Modifier for learn events
          -> (Doc -> Doc)   -- ^ Modifier for step events
-         -> Event -> Doc 
+         -> Event -> Doc
 eventTag pp ln _  ev@(Learn _)  = ln (pp ev)
 eventTag pp _  st ev@(Step _ _) = st (pp ev)
 
@@ -133,29 +133,29 @@ esplBefore conf e1 e2
 isaRawEvent :: Bool -> IsarConf -> Mapping -> Event -> Doc
 isaRawEvent addParens conf _       (Learn m)       =
     (if addParens then parens else id) $ isar conf m
-isaRawEvent _         conf mapping (Step tid step) = 
+isaRawEvent _         conf mapping (Step tid step) =
     nestShort 2 lparen rparen (fsep [isar conf tid <> comma, ppStep])
   where
     ppStep = isaRoleStep conf (threadRole tid (getMappingEqs mapping)) step
 
 -- | Render an event in the Isar format.
-isaEvent :: IsarConf 
+isaEvent :: IsarConf
          -> Mapping   -- ^ A mapping of the logical variables. The thread id to
                       -- role assigment is used for resolving steps to their
                       -- abbreviated notation consisting of role name plus step
                       -- label.
          -> Event -> Doc
-isaEvent conf m = 
+isaEvent conf m =
     eventTag (isaRawEvent False conf m) (inSet "knows t") (inSet "steps t")
-  where 
+  where
     inSet set d = d <-> isaIn conf <-> text set
 
 -- | Render an event order in the Isar format. See 'isaEvent' for an
 -- explanation of the mapping.
 isaEventOrd :: IsarConf -> Mapping -> (Event, Event) -> Doc
-isaEventOrd conf m (e1, e2) = 
+isaEventOrd conf m (e1, e2) =
     esplBefore conf (ppEv e1) (ppEv e2)
-  where 
+  where
     ppEv = eventTag (isaRawEvent True conf m) (text "Ln" <>) (text "St" <>)
 
 instance Isar Event where
@@ -171,7 +171,7 @@ instance Isar Event where
 -- possible).
 sptRawEvent :: Mapping -> Event -> Doc
 sptRawEvent _       (Learn m)       = sptMessage m
-sptRawEvent mapping (Step tid step) = 
+sptRawEvent mapping (Step tid step) =
     parens $ fsep [sptTID tid <> comma, ppStep]
   where
     ppStep = sptRoleStep (threadRole tid (getMappingEqs mapping)) step
@@ -182,9 +182,9 @@ sptEvent m = eventTag (sptRawEvent m) ((text "knows" <>) . parens) (text "step" 
 
 -- | Render an event order in security protocol theory format.
 sptEventOrd :: Mapping -> [Event] -> Doc
-sptEventOrd m = 
+sptEventOrd m =
     fcat . punctuate (text " < ") . map ppEv
-  where 
+  where
     ppEv = eventTag (sptRawEvent m) ((text "Ln" <>) . parens) (text "St" <>)
 
 

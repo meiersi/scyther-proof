@@ -21,7 +21,7 @@ instance Applicative f => Ap (f (a -> b)) (f a) where
   (#) = (<*>)
 
 {- Interesting case: overlaps with case below: Either arguments or functions get auto-lifted
- 
+
 instance Applicative f => Ap (f (a -> b)) (a) where
   type Res (f (a -> b)) a = f b
   f # a = f <*> pure a
@@ -37,12 +37,12 @@ instance Functor f => Ap (a -> b) (f a) where
     Conflicting family instance declarations:
       type instance Res (f (Fun a b)) (f a)
       type instance Res (Fun a b) (f a)
-   
+
    Due to:
       type instance Res (f1 (Fun a1 b1)) (f1 a1)
     ==
       type instance Res (Fun a2 b2) (f2 a2)
- 
+
     for
       f1 = Fun a2
       a1 = a2
@@ -53,7 +53,7 @@ instance Functor f => Ap (a -> b) (f a) where
 
    The first argument can be interpreted both as function in the functor 'Fun
    a2' or as an unlifted function mapping from 'a2' to 'Fun a2 b1'.
-     
+
 instance Functor f => Ap (Fun a b) (f a) where
   type Res (Fun a b) (f a) = f b
   f # a = fmap (apply f) a

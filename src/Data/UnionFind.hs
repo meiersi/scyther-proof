@@ -6,14 +6,14 @@ module Data.UnionFind (
   , map
   , empty
   , size
-  , equate 
-  , fromList 
+  , equate
+  , fromList
   , equateList
   , toList
   , union
-  , find 
-  , findWithDefault 
-  , equiv 
+  , find
+  , findWithDefault
+  , equiv
   ) where
 
 import Prelude hiding (map)
@@ -71,18 +71,18 @@ size = M.size . unUnionFind
 
 -- | @equate x y uf@ inserts the equality @x = y@ into @uf@.
 equate :: Ord a => a -> a -> UnionFind a -> UnionFind a
-equate x y (UnionFind uf) 
+equate x y (UnionFind uf)
   | x == y    = UnionFind uf
-  | otherwise = UnionFind $ 
+  | otherwise = UnionFind $
       case (M.lookup x uf, M.lookup y uf) of
          (Nothing, Nothing)
            | x <= y    -> M.insert y x uf
            | otherwise -> M.insert x y uf
-         
+
          (Just xr, Nothing)
            | xr <= x   -> M.insert y xr uf
            | otherwise -> M.insert y x $ update xr x uf
-         
+
          (Nothing, Just yr)
            | yr <= y   -> M.insert x yr uf
            | otherwise -> M.insert x y $ update yr y uf
@@ -96,7 +96,7 @@ equate x y (UnionFind uf)
         upd rep | rep == old_rep = new_rep
                 | otherwise      = rep
 
-fromList :: Ord a => [(a,a)] -> UnionFind a 
+fromList :: Ord a => [(a,a)] -> UnionFind a
 fromList = equateList empty
 
 equateList :: Ord a => UnionFind a -> [(a,a)] -> UnionFind a
@@ -106,7 +106,7 @@ toList :: UnionFind a -> [(a,a)]
 toList = M.toList . unUnionFind
 
 union :: Ord a => UnionFind a -> UnionFind a -> UnionFind a
-union uf1 uf2 
+union uf1 uf2
   | size uf1 < size uf2 = equateList uf2 $ toList uf1
   | otherwise           = equateList uf1 $ toList uf2
 
